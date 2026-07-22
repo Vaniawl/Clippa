@@ -7,6 +7,9 @@ struct PanelView: View {
     var isMonitoringPaused: Bool
     var isAutoPasteReady: Bool
     var onPasteSelected: @MainActor () -> Void
+    var onCopy: @MainActor (ClipboardItem) -> Void
+    var onOpen: @MainActor (ClipboardItem) -> Void
+    var onReveal: @MainActor (ClipboardItem) -> Void
     var onTogglePin: @MainActor (ClipboardItem) -> Void
     var onDelete: @MainActor (ClipboardItem) -> Void
     var onClose: @MainActor () -> Void
@@ -43,6 +46,17 @@ struct PanelView: View {
                 .focused($searchFocused)
                 .font(.body)
                 .accessibilityLabel(Text("Search clipboard"))
+            if !store.searchQuery.isEmpty {
+                Button {
+                    store.searchQuery = ""
+                } label: {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(.tertiary)
+                }
+                .buttonStyle(.plain)
+                .help(String(localized: "Clear search"))
+                .accessibilityLabel(Text("Clear search"))
+            }
             Text("⌘⇧V")
                 .font(.caption)
                 .foregroundStyle(.tertiary)
@@ -54,14 +68,37 @@ struct PanelView: View {
     }
 
     private var filterRow: some View {
-        Picker("Filter", selection: $store.selectedFilter) {
+        HStack(spacing: 4) {
             ForEach(ClipboardFilter.allCases) { filter in
-                Text(filter.displayName).tag(filter)
+                Button {
+                    store.selectedFilter = filter
+                } label: {
+                    Image(systemName: filter.symbolName)
+                        .font(.system(size: 13, weight: .medium))
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 26)
+                        .contentShape(.rect)
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(store.selectedFilter == filter ? Color.accentColor : Color.secondary)
+                .background(filterBackground(filter))
+                .clipShape(.rect(cornerRadius: 7))
+                .help(filter.displayName)
+                .accessibilityLabel(Text(filter.displayName))
+                .accessibilityAddTraits(store.selectedFilter == filter ? [.isSelected] : [])
             }
         }
-        .pickerStyle(.segmented)
-        .controlSize(.small)
+        .padding(2)
+        .background(.tertiary.opacity(0.10), in: .rect(cornerRadius: 9))
         .accessibilityLabel(Text("Filter"))
+    }
+
+    @ViewBuilder
+    private func filterBackground(_ filter: ClipboardFilter) -> some View {
+        if store.selectedFilter == filter {
+            RoundedRectangle(cornerRadius: 7)
+                .fill(contrast == .increased ? Color.accentColor.opacity(0.26) : Color.accentColor.opacity(0.14))
+        }
     }
 
     @ViewBuilder
@@ -84,6 +121,19 @@ struct PanelView: View {
                             item: item,
                             isSelected: item.id == store.selectedItemID,
                             contrast: contrast,
+                            onPaste: {
+                                store.select(item)
+                                onPasteSelected()
+                            },
+                            onCopy: {
+                                onCopy(item)
+                            },
+                            onOpen: {
+                                onOpen(item)
+                            },
+                            onReveal: {
+                                onReveal(item)
+                            },
                             onTogglePin: {
                                 onTogglePin(item)
                             },
@@ -155,6 +205,10 @@ private struct ClipboardRow: View {
     let item: ClipboardItem
     let isSelected: Bool
     let contrast: ColorSchemeContrast
+    let onPaste: @MainActor () -> Void
+    let onCopy: @MainActor () -> Void
+    let onOpen: @MainActor () -> Void
+    let onReveal: @MainActor () -> Void
     let onTogglePin: @MainActor () -> Void
     let onDelete: @MainActor () -> Void
     @State private var isHovering = false
@@ -170,7 +224,7 @@ private struct ClipboardRow: View {
                 HStack(spacing: 6) {
                     Text(item.kind.displayName)
                     Text(item.createdAt, style: .relative)
-                    if let source = item.sourceBundleIdentifier {
+                    if let source = sourceName {
                         Text(source)
                             .lineLimit(1)
                             .truncationMode(.middle)
@@ -191,6 +245,32 @@ private struct ClipboardRow: View {
         .padding(.horizontal, 8)
         .background(selectionBackground)
         .clipShape(.rect(cornerRadius: DesignSystem.rowCornerRadius))
+        .contextMenu {
+            Button("Paste") {
+                onPaste()
+            }
+            Button("Copy") {
+                onCopy()
+            }
+            Divider()
+            if canOpen {
+                Button(openTitle) {
+                    onOpen()
+                }
+            }
+            if canReveal {
+                Button("Reveal in Finder") {
+                    onReveal()
+                }
+            }
+            Button(item.isPinned ? "Unpin" : "Pin") {
+                onTogglePin()
+            }
+            Divider()
+            Button("Delete", role: .destructive) {
+                onDelete()
+            }
+        }
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(isSelected ? [.isSelected] : [])
     }
@@ -222,6 +302,17 @@ private struct ClipboardRow: View {
     private var rowActions: some View {
         HStack(spacing: 2) {
             Button {
+                onCopy()
+            } label: {
+                Image(systemName: "doc.on.doc")
+                    .frame(width: DesignSystem.symbolButtonSize, height: DesignSystem.symbolButtonSize)
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(.secondary)
+            .help(String(localized: "Copy"))
+            .accessibilityLabel(Text("Copy"))
+
+            Button {
                 onTogglePin()
             } label: {
                 Image(systemName: item.isPinned ? "pin.fill" : "pin")
@@ -242,6 +333,46 @@ private struct ClipboardRow: View {
             .foregroundStyle(.secondary)
             .help(String(localized: "Delete"))
             .accessibilityLabel(Text("Delete"))
+        }
+    }
+
+    private var sourceName: String? {
+        guard let identifier = item.sourceBundleIdentifier else {
+            return nil
+        }
+        guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: identifier) else {
+            return identifier
+        }
+        return FileManager.default.displayName(atPath: url.path)
+    }
+
+    private var canOpen: Bool {
+        switch item.payload {
+        case .url:
+            true
+        case .files(let refs):
+            refs.contains(where: \.exists)
+        case .text, .image:
+            false
+        }
+    }
+
+    private var canReveal: Bool {
+        if case .files(let refs) = item.payload {
+            refs.contains(where: \.exists)
+        } else {
+            false
+        }
+    }
+
+    private var openTitle: String {
+        switch item.payload {
+        case .url:
+            String(localized: "Open URL")
+        case .files:
+            String(localized: "Open File")
+        case .text, .image:
+            String(localized: "Open")
         }
     }
 

@@ -57,6 +57,13 @@ final class AppState {
         }
     }
 
+    func copySelectedItem() {
+        guard let id = store.selectedItemID, let item = store.visibleItems.first(where: { $0.id == id }) else {
+            return
+        }
+        copy(item)
+    }
+
     func performPanelAction(_ action: PanelKeyAction) {
         switch action {
         case .selectNext:
@@ -65,8 +72,18 @@ final class AppState {
             store.selectPrevious()
         case .paste:
             pasteSelectedItem()
-        case .close:
-            panelController.close()
+        case .copy:
+            copySelectedItem()
+        case .open:
+            openSelectedItem()
+        case .reveal:
+            revealSelectedItem()
+        case .closeOrClearSearch:
+            if store.searchQuery.isEmpty {
+                panelController.close()
+            } else {
+                store.searchQuery = ""
+            }
         case .togglePin:
             store.togglePinSelected()
         case .delete:
@@ -82,6 +99,52 @@ final class AppState {
         if outcome == .copiedOnlyRequiresAccessibility {
             notice = String(localized: "Copied. Enable Accessibility access for automatic paste.")
         }
+    }
+
+    func copy(_ item: ClipboardItem) {
+        pasteService.copyPayload(item.payload)
+        store.use(item)
+        notice = String(localized: "Copied to clipboard.")
+        panelController.close()
+    }
+
+    func openSelectedItem() {
+        guard let id = store.selectedItemID, let item = store.visibleItems.first(where: { $0.id == id }) else {
+            return
+        }
+        open(item)
+    }
+
+    func open(_ item: ClipboardItem) {
+        switch item.payload {
+        case .url(let url):
+            NSWorkspace.shared.open(url)
+            panelController.close()
+        case .files(let refs):
+            refs.filter(\.exists).forEach { NSWorkspace.shared.open($0.url) }
+            panelController.close()
+        case .text, .image:
+            copy(item)
+        }
+    }
+
+    func revealSelectedItem() {
+        guard let id = store.selectedItemID, let item = store.visibleItems.first(where: { $0.id == id }) else {
+            return
+        }
+        reveal(item)
+    }
+
+    func reveal(_ item: ClipboardItem) {
+        guard case .files(let refs) = item.payload else {
+            return
+        }
+        let urls = refs.filter(\.exists).map(\.url)
+        guard !urls.isEmpty else {
+            return
+        }
+        NSWorkspace.shared.activateFileViewerSelecting(urls)
+        panelController.close()
     }
 
     func openSettings() {
@@ -124,6 +187,9 @@ final class PanelController {
             isMonitoringPaused: appState.settings.isMonitoringPaused,
             isAutoPasteReady: appState.isAutoPasteReady,
             onPasteSelected: { [weak appState] in appState?.pasteSelectedItem() },
+            onCopy: { [weak appState] item in appState?.copy(item) },
+            onOpen: { [weak appState] item in appState?.open(item) },
+            onReveal: { [weak appState] item in appState?.reveal(item) },
             onTogglePin: { [weak appState] item in appState?.store.togglePin(item) },
             onDelete: { [weak appState] item in appState?.store.delete(item) },
             onClose: { [weak self] in self?.close() }
@@ -184,8 +250,14 @@ final class PanelController {
             return .selectPrevious
         case (UInt16(kVK_Return), _), (UInt16(kVK_ANSI_KeypadEnter), _):
             return .paste
+        case (UInt16(kVK_ANSI_C), true):
+            return .copy
+        case (UInt16(kVK_ANSI_O), true):
+            return .open
+        case (UInt16(kVK_ANSI_R), true):
+            return .reveal
         case (UInt16(kVK_Escape), _):
-            return .close
+            return .closeOrClearSearch
         case (UInt16(kVK_ANSI_P), true):
             return .togglePin
         case (UInt16(kVK_Delete), true), (UInt16(kVK_ForwardDelete), true):
@@ -226,7 +298,10 @@ enum PanelKeyAction: Sendable {
     case selectNext
     case selectPrevious
     case paste
-    case close
+    case copy
+    case open
+    case reveal
+    case closeOrClearSearch
     case togglePin
     case delete
 }

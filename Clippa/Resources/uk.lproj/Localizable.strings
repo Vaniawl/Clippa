@@ -1,5 +1,6 @@
 "All" = "Усі";
 "Images" = "Зображення";
+"Links" = "Посилання";
 "Text" = "Текст";
 "URL" = "URL";
 "Image" = "Зображення";
@@ -21,6 +22,7 @@
 "Copy only" = "Лише копіювання";
 "Clippa clipboard history" = "Історія буфера Clippa";
 "Search clipboard" = "Пошук у буфері";
+"Clear search" = "Очистити пошук";
 "Filter" = "Фільтр";
 "No matching clipboard items" = "Немає відповідних елементів";
 "Copied text, links, images, and files will appear here." = "Скопійований текст, посилання, зображення й файли з’являться тут.";
@@ -29,6 +31,13 @@
 "Unpin" = "Відкріпити";
 "Pin" = "Закріпити";
 "Delete" = "Видалити";
+"Paste" = "Вставити";
+"Copy" = "Скопіювати";
+"Open" = "Відкрити";
+"Open URL" = "Відкрити URL";
+"Open File" = "Відкрити файл";
+"Reveal in Finder" = "Показати у Finder";
+"Copied to clipboard." = "Скопійовано в буфер.";
 "Paused" = "Призупинено";
 "Watching" = "Відстежує";
 "Permissions" = "Дозволи";

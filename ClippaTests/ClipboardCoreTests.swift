@@ -76,8 +76,13 @@ final class ClipboardCoreTests: XCTestCase {
         store.add(payload: .text("alpha note"), sourceBundleIdentifier: nil)
         store.add(payload: .url(URL(string: "https://example.com/beta")!), sourceBundleIdentifier: nil)
         store.add(payload: .image(data: Data([1]), uti: nil), sourceBundleIdentifier: nil)
+        store.add(payload: .files([FileReference(url: URL(fileURLWithPath: "/tmp/report.pdf"))]), sourceBundleIdentifier: nil)
+        store.togglePin(store.items.first { $0.preview == "alpha note" }!)
         XCTAssertEqual(store.filteredItems(query: "beta", filter: .all).count, 1)
         XCTAssertEqual(store.filteredItems(query: "", filter: .image).first?.kind, .image)
+        XCTAssertEqual(store.filteredItems(query: "", filter: .url).first?.kind, .url)
+        XCTAssertEqual(store.filteredItems(query: "", filter: .files).first?.kind, .files)
+        XCTAssertEqual(store.filteredItems(query: "", filter: .pinned).first?.preview, "alpha note")
         XCTAssertEqual(store.filteredItems(query: "alpha", filter: .text).first?.preview, "alpha note")
     }
 

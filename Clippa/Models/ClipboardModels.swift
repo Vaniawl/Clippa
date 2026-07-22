@@ -28,16 +28,33 @@ enum ClipboardItemKind: String, Codable, CaseIterable, Sendable {
 
 enum ClipboardFilter: String, CaseIterable, Identifiable, Sendable {
     case all
+    case pinned
     case text
+    case url
     case image
+    case files
 
     var id: String { rawValue }
 
     var displayName: String {
         switch self {
         case .all: String(localized: "All")
+        case .pinned: String(localized: "Pinned")
         case .text: String(localized: "Text")
+        case .url: String(localized: "Links")
         case .image: String(localized: "Images")
+        case .files: String(localized: "Files")
+        }
+    }
+
+    var symbolName: String {
+        switch self {
+        case .all: "tray.full"
+        case .pinned: "pin"
+        case .text: "text.alignleft"
+        case .url: "link"
+        case .image: "photo"
+        case .files: "doc.on.doc"
         }
     }
 }

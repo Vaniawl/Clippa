@@ -121,10 +121,16 @@ final class ClipboardStore {
         switch filter {
         case .all:
             filteredByKind = items
+        case .pinned:
+            filteredByKind = items.filter(\.isPinned)
         case .text:
-            filteredByKind = items.filter { $0.kind == .text || $0.kind == .url }
+            filteredByKind = items.filter { $0.kind == .text }
+        case .url:
+            filteredByKind = items.filter { $0.kind == .url }
         case .image:
             filteredByKind = items.filter { $0.kind == .image }
+        case .files:
+            filteredByKind = items.filter { $0.kind == .files }
         }
 
         let cleanedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)

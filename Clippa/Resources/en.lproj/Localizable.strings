@@ -1,5 +1,6 @@
 "All" = "All";
 "Images" = "Images";
+"Links" = "Links";
 "Text" = "Text";
 "URL" = "URL";
 "Image" = "Image";
@@ -21,6 +22,7 @@
 "Copy only" = "Copy only";
 "Clippa clipboard history" = "Clippa clipboard history";
 "Search clipboard" = "Search clipboard";
+"Clear search" = "Clear search";
 "Filter" = "Filter";
 "No matching clipboard items" = "No matching clipboard items";
 "Copied text, links, images, and files will appear here." = "Copied text, links, images, and files will appear here.";
@@ -29,6 +31,13 @@
 "Unpin" = "Unpin";
 "Pin" = "Pin";
 "Delete" = "Delete";
+"Paste" = "Paste";
+"Copy" = "Copy";
+"Open" = "Open";
+"Open URL" = "Open URL";
+"Open File" = "Open File";
+"Reveal in Finder" = "Reveal in Finder";
+"Copied to clipboard." = "Copied to clipboard.";
 "Paused" = "Paused";
 "Watching" = "Watching";
 "Permissions" = "Permissions";
