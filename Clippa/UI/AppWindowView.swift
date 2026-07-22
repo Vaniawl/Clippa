@@ -37,6 +37,7 @@ struct AppWindowView: View {
     let onReveal: @MainActor (ClipboardItem) -> Void
     @State private var selectedSection: AppWindowSection?
     @State private var confirmClearUnpinned = false
+    @State private var actionMessage: String?
 
     init(
         settings: AppSettings,
@@ -73,6 +74,14 @@ struct AppWindowView: View {
             detail
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
+        .overlay(alignment: .bottom) {
+            if let actionMessage {
+                statusToast(actionMessage)
+                    .padding(.bottom, 16)
+                    .transition(.opacity.combined(with: .move(edge: .bottom)))
+            }
+        }
+        .animation(.snappy(duration: 0.18), value: actionMessage)
         .toolbar {
             ToolbarItemGroup {
                 Button {
@@ -96,6 +105,7 @@ struct AppWindowView: View {
         .confirmationDialog("Clear unpinned clipboard history?", isPresented: $confirmClearUnpinned) {
             Button("Clear unpinned history", role: .destructive) {
                 store.clearUnpinned()
+                showActionMessage(String(localized: "Unpinned history cleared."))
             }
         }
     }
@@ -109,9 +119,13 @@ struct AppWindowView: View {
                 isMonitoringPaused: settings.isMonitoringPaused,
                 isAutoPasteReady: AccessibilityService.isTrusted,
                 onPaste: onPaste,
-                onCopy: onCopy,
+                onCopy: { item in
+                    onCopy(item)
+                    showActionMessage(String(localized: "Copied to clipboard."))
+                },
                 onOpen: onOpen,
-                onReveal: onReveal
+                onReveal: onReveal,
+                onActionMessage: showActionMessage
             )
         case .settings:
             SettingsView(
@@ -126,6 +140,26 @@ struct AppWindowView: View {
             PrivacyDashboardView(settings: settings)
         }
     }
+
+    private func statusToast(_ message: String) -> some View {
+        Label(message, systemImage: "checkmark.circle.fill")
+            .font(.caption)
+            .foregroundStyle(.primary)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(.regularMaterial, in: .rect(cornerRadius: 8))
+            .shadow(radius: 8, y: 4)
+    }
+
+    private func showActionMessage(_ message: String) {
+        actionMessage = message
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(2))
+            if actionMessage == message {
+                actionMessage = nil
+            }
+        }
+    }
 }
 
 private struct HistoryDashboardView: View {
@@ -136,6 +170,7 @@ private struct HistoryDashboardView: View {
     let onCopy: @MainActor (ClipboardItem) -> Void
     let onOpen: @MainActor (ClipboardItem) -> Void
     let onReveal: @MainActor (ClipboardItem) -> Void
+    let onActionMessage: @MainActor (String) -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorSchemeContrast) private var contrast
 
@@ -264,7 +299,13 @@ private struct HistoryDashboardView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 List(store.visibleItems, selection: $store.selectedItemID) { item in
-                    DashboardClipboardRow(item: item)
+                    DashboardClipboardRow(
+                        item: item,
+                        onDoubleClick: {
+                            store.select(item)
+                            onPaste(item)
+                        }
+                    )
                         .tag(item.id)
                         .contextMenu {
                             itemMenu(for: item)
@@ -284,8 +325,14 @@ private struct HistoryDashboardView: View {
                     onCopy: { onCopy(selectedItem) },
                     onOpen: { onOpen(selectedItem) },
                     onReveal: { onReveal(selectedItem) },
-                    onTogglePin: { store.togglePin(selectedItem) },
-                    onDelete: { store.delete(selectedItem) }
+                    onTogglePin: {
+                        store.togglePin(selectedItem)
+                        onActionMessage(selectedItem.isPinned ? String(localized: "Unpinned.") : String(localized: "Pinned."))
+                    },
+                    onDelete: {
+                        store.delete(selectedItem)
+                        onActionMessage(String(localized: "Deleted."))
+                    }
                 )
             } else {
                 ContentUnavailableView(
@@ -336,11 +383,14 @@ private struct HistoryDashboardView: View {
             Button("Reveal in Finder") { onReveal(item) }
         }
         Button(item.isPinned ? "Unpin" : "Pin") {
+            let wasPinned = item.isPinned
             store.togglePin(item)
+            onActionMessage(wasPinned ? String(localized: "Unpinned.") : String(localized: "Pinned."))
         }
         Divider()
         Button("Delete", role: .destructive) {
             store.delete(item)
+            onActionMessage(String(localized: "Deleted."))
         }
     }
 
@@ -355,6 +405,7 @@ private struct HistoryDashboardView: View {
 
 private struct DashboardClipboardRow: View {
     let item: ClipboardItem
+    let onDoubleClick: @MainActor () -> Void
 
     var body: some View {
         HStack(spacing: 10) {
@@ -379,6 +430,10 @@ private struct DashboardClipboardRow: View {
             }
         }
         .padding(.vertical, 3)
+        .contentShape(.rect)
+        .onTapGesture(count: 2) {
+            onDoubleClick()
+        }
     }
 }
 
@@ -457,12 +512,14 @@ private struct SelectedItemDetail: View {
                 } label: {
                     Label(item.isPinned ? "Unpin" : "Pin", systemImage: item.isPinned ? "pin.slash" : "pin")
                 }
+                .keyboardShortcut("p", modifiers: .command)
 
                 Button(role: .destructive) {
                     onDelete()
                 } label: {
                     Label("Delete", systemImage: "trash")
                 }
+                .keyboardShortcut(.delete, modifiers: [])
             }
         }
         .padding(18)

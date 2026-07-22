@@ -168,7 +168,7 @@ final class ClipboardStore {
 
         let unpinned = items.filter { !$0.isPinned }
         if unpinned.count > maxUnpinnedCount {
-            let allowed = Set(unpinned.sorted { $0.createdAt > $1.createdAt }.prefix(maxUnpinnedCount).map(\.id))
+            let allowed = Set(unpinned.sorted { activityDate($0) > activityDate($1) }.prefix(maxUnpinnedCount).map(\.id))
             items.removeAll { !$0.isPinned && !allowed.contains($0.id) }
         }
     }
@@ -178,8 +178,12 @@ final class ClipboardStore {
             if $0.isPinned != $1.isPinned {
                 return $0.isPinned && !$1.isPinned
             }
-            return $0.createdAt > $1.createdAt
+            return activityDate($0) > activityDate($1)
         }
+    }
+
+    private func activityDate(_ item: ClipboardItem) -> Date {
+        max(item.createdAt, item.lastUsedAt)
     }
 
     private func persist() {

@@ -25,6 +25,18 @@ final class ClipboardCoreTests: XCTestCase {
         XCTAssertEqual(store.items.first?.sourceBundleIdentifier, "b")
     }
 
+    func testUsingOlderItemMovesItToTop() {
+        let store = ClipboardStore()
+        store.add(payload: .text("old"), sourceBundleIdentifier: nil, date: Date(timeIntervalSince1970: 10))
+        store.add(payload: .text("new"), sourceBundleIdentifier: nil, date: Date(timeIntervalSince1970: 20))
+
+        let oldItem = store.items.first { $0.preview == "old" }!
+        store.use(oldItem, date: Date(timeIntervalSince1970: 30))
+
+        XCTAssertEqual(store.items.first?.preview, "old")
+        XCTAssertEqual(store.items.first?.lastUsedAt, Date(timeIntervalSince1970: 30))
+    }
+
     func testPinnedItemsSortBeforeNewestUnpinned() {
         let store = ClipboardStore()
         store.add(payload: .text("old"), sourceBundleIdentifier: nil, date: Date(timeIntervalSince1970: 1))

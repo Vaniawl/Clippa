@@ -172,6 +172,20 @@ final class AppState {
         openAppWindow(selection: .settings)
     }
 
+    func confirmClearUnpinned() {
+        let alert = NSAlert()
+        alert.messageText = String(localized: "Clear unpinned clipboard history?")
+        alert.informativeText = String(localized: "Pinned items will stay in history.")
+        alert.alertStyle = .warning
+        alert.addButton(withTitle: String(localized: "Clear unpinned history"))
+        alert.addButton(withTitle: String(localized: "Cancel"))
+        NSApp.activate(ignoringOtherApps: true)
+        if alert.runModal() == .alertFirstButtonReturn {
+            store.clearUnpinned()
+            notice = String(localized: "Unpinned history cleared.")
+        }
+    }
+
     func quit() {
         NSApp.terminate(nil)
     }

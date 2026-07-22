@@ -17,7 +17,7 @@ struct ClippaApp: App {
                 appDelegate.appState.settings.isMonitoringPaused.toggle()
             }
             Button("Clear Unpinned") {
-                appDelegate.appState.store.clearUnpinned()
+                appDelegate.appState.confirmClearUnpinned()
             }
             Divider()
             Button("Settings") {
