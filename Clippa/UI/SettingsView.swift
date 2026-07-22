@@ -125,6 +125,11 @@ struct SettingsView: View {
                     confirmClearAll = true
                 }
             }
+
+            Section("About") {
+                LabeledContent("Version", value: appVersion)
+                LabeledContent("Bundle", value: Bundle.main.bundleIdentifier ?? String(localized: "Unknown"))
+            }
         }
         .formStyle(.grouped)
         .frame(
@@ -179,6 +184,12 @@ struct SettingsView: View {
             get: { settings.pinShortcut },
             set: { onPinShortcutChange($0) }
         )
+    }
+
+    private var appVersion: String {
+        let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.0.0"
+        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "0"
+        return "\(version) (\(build))"
     }
 
     private func statusRow(title: String, value: String, symbol: String, color: Color) -> some View {
