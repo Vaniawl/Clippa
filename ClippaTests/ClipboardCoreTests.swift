@@ -195,7 +195,7 @@ final class ClipboardCoreTests: XCTestCase {
         XCTAssertEqual(opened, payload)
     }
 
-    func testKeyStoreUsesExistingFallbackKeyWithoutKeychainPrompt() async throws {
+    func testKeyStoreUsesExistingLocalKeyWithoutKeychainPrompt() async throws {
         let folder = FileManager.default.temporaryDirectory
             .appendingPathComponent("ClippaTests.\(UUID().uuidString)", isDirectory: true)
         let keyURL = folder.appendingPathComponent("history.key")
@@ -203,10 +203,26 @@ final class ClipboardCoreTests: XCTestCase {
         let key = Data(repeating: 7, count: 32)
         try key.write(to: keyURL)
 
-        let store = KeychainKeyStore(fallbackURL: keyURL)
+        let store = LocalHistoryKeyStore(fallbackURL: keyURL)
         let loaded = try await store.loadOrCreateKey()
 
         XCTAssertEqual(loaded, key)
+        try? FileManager.default.removeItem(at: folder)
+    }
+
+    func testKeyStoreCreatesLocalKeyFile() async throws {
+        let folder = FileManager.default.temporaryDirectory
+            .appendingPathComponent("ClippaTests.\(UUID().uuidString)", isDirectory: true)
+        let keyURL = folder.appendingPathComponent("history.key")
+
+        let store = LocalHistoryKeyStore(fallbackURL: keyURL)
+        let key = try await store.loadOrCreateKey()
+        let saved = try Data(contentsOf: keyURL)
+        let attributes = try FileManager.default.attributesOfItem(atPath: keyURL.path)
+
+        XCTAssertEqual(key.count, 32)
+        XCTAssertEqual(saved, key)
+        XCTAssertEqual(attributes[.posixPermissions] as? Int, 0o600)
         try? FileManager.default.removeItem(at: folder)
     }
 

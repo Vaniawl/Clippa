@@ -55,7 +55,7 @@ You can also download `outputs/Clippa.app.zip`, unzip it, move `Clippa.app` to `
 
 ## Privacy
 
-Clippa does not upload clipboard contents, does not use analytics, and does not require an account. Clipboard history is stored only on your Mac and encrypted locally with an AES-GCM key. Clippa uses Keychain when it can do so without interrupting you, and falls back to a local per-user key file when macOS would otherwise show a Keychain password prompt after reinstalling a locally signed build.
+Clippa does not upload clipboard contents, does not use analytics, and does not require an account. Clipboard history is stored only on your Mac and encrypted locally with a per-user AES-GCM key file in Application Support. Clippa does not read or write Keychain items at startup, so locally signed reinstall builds do not trigger Keychain password prompts.
 
 Accessibility permission is only used to paste the selected clip into the frontmost app. Without that permission, Clippa still copies the selected item to the clipboard.
 

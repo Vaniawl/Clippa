@@ -3,9 +3,9 @@ import Foundation
 
 actor EncryptedBlobStore {
     private let folderURL: URL
-    private let keyStore: KeychainKeyStore
+    private let keyStore: LocalHistoryKeyStore
 
-    init(folderURL: URL, keyStore: KeychainKeyStore) {
+    init(folderURL: URL, keyStore: LocalHistoryKeyStore) {
         self.folderURL = folderURL
         self.keyStore = keyStore
     }

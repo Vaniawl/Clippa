@@ -12,10 +12,10 @@ struct StoredClipboardSnapshot: Codable, Sendable {
 
 actor EncryptedHistoryStore {
     private let fileURL: URL
-    private let keyStore: KeychainKeyStore
+    private let keyStore: LocalHistoryKeyStore
     private let blobStore: EncryptedBlobStore
 
-    init(fileURL: URL? = nil, keyStore: KeychainKeyStore = KeychainKeyStore()) {
+    init(fileURL: URL? = nil, keyStore: LocalHistoryKeyStore = LocalHistoryKeyStore()) {
         let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?
             .appendingPathComponent("Clippa", isDirectory: true)
         let root = base ?? URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("Clippa", isDirectory: true)

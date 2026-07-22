@@ -10,7 +10,7 @@
 		AA0001010000000000000001 /* ClippaApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002010000000000000001 /* ClippaApp.swift */; };
 		AA0001010000000000000002 /* ClipboardModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002010000000000000002 /* ClipboardModels.swift */; };
 		AA0001010000000000000003 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002010000000000000003 /* AppSettings.swift */; };
-		AA0001010000000000000004 /* KeychainKeyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002010000000000000004 /* KeychainKeyStore.swift */; };
+		AA0001010000000000000004 /* LocalHistoryKeyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002010000000000000004 /* LocalHistoryKeyStore.swift */; };
 		AA0001010000000000000005 /* EncryptedBlobStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002010000000000000005 /* EncryptedBlobStore.swift */; };
 		AA0001010000000000000006 /* EncryptedHistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002010000000000000006 /* EncryptedHistoryStore.swift */; };
 		AA0001010000000000000007 /* PrivacyFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002010000000000000007 /* PrivacyFilter.swift */; };
@@ -45,7 +45,7 @@
 		AA0002010000000000000001 /* ClippaApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClippaApp.swift; sourceTree = "<group>"; };
 		AA0002010000000000000002 /* ClipboardModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardModels.swift; sourceTree = "<group>"; };
 		AA0002010000000000000003 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
-		AA0002010000000000000004 /* KeychainKeyStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainKeyStore.swift; sourceTree = "<group>"; };
+		AA0002010000000000000004 /* LocalHistoryKeyStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalHistoryKeyStore.swift; sourceTree = "<group>"; };
 		AA0002010000000000000005 /* EncryptedBlobStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EncryptedBlobStore.swift; sourceTree = "<group>"; };
 		AA0002010000000000000006 /* EncryptedHistoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EncryptedHistoryStore.swift; sourceTree = "<group>"; };
 		AA0002010000000000000007 /* PrivacyFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyFilter.swift; sourceTree = "<group>"; };
