@@ -18,6 +18,7 @@
 "Encrypted history could not be loaded. A clean history is active." = "Не вдалося завантажити зашифровану історію. Активна чиста історія.";
 "Accessibility access enables automatic paste. Without it, Clippa still copies the selected item." = "Доступ Accessibility потрібен для автоматичного вставлення. Без нього Clippa все одно копіює вибраний елемент.";
 "Copied. Enable Accessibility access for automatic paste." = "Скопійовано. Увімкніть Accessibility-доступ для автоматичного вставлення.";
+"Copied. Put the cursor in a text field before pasting from Clippa." = "Скопійовано. Поставте курсор у текстове поле перед вставленням із Clippa.";
 "Place the cursor in a text field to show Clippa." = "Поставте курсор у текстове поле, щоб відкрити Clippa.";
 "Auto-paste ready" = "Автовставлення готове";
 "Copy only" = "Лише копіювання";
@@ -70,7 +71,7 @@
 "On this Mac" = "На цьому Mac";
 "Clipboard history is stored locally, not in Clippa cloud storage." = "Історія буфера зберігається локально, не в хмарі Clippa.";
 "Encrypted" = "Зашифровано";
-"History is encrypted locally with an AES-GCM key." = "Історія локально зашифрована AES-GCM ключем.";
+"History is encrypted locally with an AES-GCM key file in Application Support." = "Історія локально зашифрована AES-GCM ключем у файлі Application Support.";
 "No tracking" = "Без трекінгу";
 "No analytics, telemetry, ads, or account login are built into Clippa." = "У Clippa немає аналітики, телеметрії, реклами або входу в акаунт.";
 "Accessibility is only used to paste the selected clip into the frontmost app." = "Accessibility використовується тільки для вставлення вибраного запису в активну програму.";
@@ -82,7 +83,7 @@
 "Retention" = "Зберігання";
 "History" = "Історія";
 "100 unpinned items / 7 days" = "100 незакріплених записів / 7 днів";
-"Pinned items are kept until you delete them. Clipboard history is encrypted locally with an AES-GCM key." = "Закріплені записи зберігаються, доки ви їх не видалите. Історія локально шифрується ключем AES-GCM.";
+"Pinned items are kept until you delete them. Clipboard history is encrypted locally with an AES-GCM key file." = "Закріплені записи зберігаються, доки ви їх не видалите. Історія локально шифрується AES-GCM ключем у файлі.";
 "Clear unpinned history" = "Очистити незакріплену історію";
 "Clear unpinned clipboard history?" = "Очистити незакріплену історію буфера?";
 "Clear all history" = "Очистити всю історію";

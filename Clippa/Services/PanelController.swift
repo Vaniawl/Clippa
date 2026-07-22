@@ -119,8 +119,13 @@ final class AppState {
         panelController.close()
         try? await Task.sleep(for: .milliseconds(80))
         let outcome = await pasteService.paste(item, into: target)
-        if outcome == .copiedOnlyRequiresAccessibility {
+        switch outcome {
+        case .pasted:
+            break
+        case .copiedOnlyRequiresAccessibility:
             notice = String(localized: "Copied. Enable Accessibility access for automatic paste.")
+        case .copiedOnlyPasteUnavailable:
+            notice = String(localized: "Copied. Put the cursor in a text field before pasting from Clippa.")
         }
     }
 

@@ -42,71 +42,21 @@ final class PasteService {
         guard AccessibilityService.isTrusted else {
             return .copiedOnlyRequiresAccessibility
         }
+        guard let application = target?.application, !application.isTerminated else {
+            return .copiedOnlyPasteUnavailable
+        }
 
-        await activatePasteTarget(target?.application)
-        let focusedElement = AccessibilityService.focusedEditableTextElement(in: target?.application) ?? target?.focusedElement
+        await activatePasteTarget(application)
+        let focusedElement = AccessibilityService.focusedEditableTextElement(in: application) ?? target?.focusedElement
         focus(focusedElement)
-        if let text = directInsertText(for: item), insert(text, into: focusedElement) {
-            return .pasted
+        if !(await sendCommandV()) {
+            _ = await pressPasteMenuItem(in: application)
         }
-
-        if await pressPasteMenuItem(in: target?.application) {
-            return .pasted
-        }
-
-        await sendCommandV()
         return .pasted
     }
 
     func paste(_ item: ClipboardItem, into application: NSRunningApplication?) async -> PasteOutcome {
         await paste(item, into: PasteTarget(application: application, focusedElement: nil))
-    }
-
-    private func directInsertText(for item: ClipboardItem) -> String? {
-        switch item.payload {
-        case .text(let value):
-            value
-        case .url(let url):
-            url.absoluteString
-        case .image, .files:
-            nil
-        }
-    }
-
-    private func insert(_ text: String, into element: AXUIElement?) -> Bool {
-        guard let element else {
-            return false
-        }
-        if AXUIElementSetAttributeValue(
-            element,
-            kAXSelectedTextAttribute as CFString,
-            text as CFTypeRef
-        ) == .success {
-            return true
-        }
-
-        guard let range = selectedTextRange(in: element),
-              let currentValue = stringValue(in: element),
-              let replacementRange = stringRange(for: range, in: currentValue)
-        else {
-            return false
-        }
-
-        let updatedValue = currentValue.replacingCharacters(in: replacementRange, with: text)
-        guard AXUIElementSetAttributeValue(
-            element,
-            kAXValueAttribute as CFString,
-            updatedValue as CFTypeRef
-        ) == .success else {
-            return false
-        }
-
-        var caretRange = CFRange(location: range.location + text.utf16.count, length: 0)
-        guard let caretValue = AXValueCreate(.cfRange, &caretRange) else {
-            return true
-        }
-        _ = AXUIElementSetAttributeValue(element, kAXSelectedTextRangeAttribute as CFString, caretValue)
-        return true
     }
 
     private func focus(_ element: AXUIElement?) {
@@ -118,63 +68,6 @@ final class PasteService {
             kAXFocusedAttribute as CFString,
             kCFBooleanTrue
         )
-    }
-
-    private func selectedTextRange(in element: AXUIElement) -> CFRange? {
-        var value: CFTypeRef?
-        guard AXUIElementCopyAttributeValue(
-            element,
-            kAXSelectedTextRangeAttribute as CFString,
-            &value
-        ) == .success, let value, CFGetTypeID(value) == AXValueGetTypeID() else {
-            return nil
-        }
-
-        let axValue = value as! AXValue
-        guard AXValueGetType(axValue) == .cfRange else {
-            return nil
-        }
-
-        var range = CFRange()
-        guard AXValueGetValue(axValue, .cfRange, &range) else {
-            return nil
-        }
-        return range
-    }
-
-    private func stringValue(in element: AXUIElement) -> String? {
-        var value: CFTypeRef?
-        guard AXUIElementCopyAttributeValue(
-            element,
-            kAXValueAttribute as CFString,
-            &value
-        ) == .success else {
-            return nil
-        }
-        return value as? String
-    }
-
-    private func stringRange(for range: CFRange, in value: String) -> Range<String.Index>? {
-        guard range.location >= 0, range.length >= 0 else {
-            return nil
-        }
-        let utf16 = value.utf16
-        guard let lowerUTF16 = utf16.index(
-            utf16.startIndex,
-            offsetBy: range.location,
-            limitedBy: utf16.endIndex
-        ),
-            let upperUTF16 = utf16.index(
-                lowerUTF16,
-                offsetBy: range.length,
-                limitedBy: utf16.endIndex
-            ),
-            let lower = String.Index(lowerUTF16, within: value),
-            let upper = String.Index(upperUTF16, within: value)
-        else {
-            return nil
-        }
-        return lower..<upper
     }
 
     private func activatePasteTarget(_ application: NSRunningApplication?) async {
@@ -311,7 +204,7 @@ final class PasteService {
         try? await Task.sleep(for: .milliseconds(45))
     }
 
-    private func sendCommandV() async {
+    private func sendCommandV() async -> Bool {
         let source = CGEventSource(stateID: .hidSystemState)
         source?.localEventsSuppressionInterval = 0
         guard
@@ -320,7 +213,7 @@ final class PasteService {
             let vUp = CGEvent(keyboardEventSource: source, virtualKey: CGKeyCode(kVK_ANSI_V), keyDown: false),
             let commandUp = CGEvent(keyboardEventSource: source, virtualKey: CGKeyCode(kVK_Command), keyDown: false)
         else {
-            return
+            return false
         }
         commandDown.flags = .maskCommand
         vDown.flags = .maskCommand
@@ -330,10 +223,12 @@ final class PasteService {
             event.post(tap: .cghidEventTap)
             try? await Task.sleep(for: .milliseconds(18))
         }
+        return true
     }
 }
 
 enum PasteOutcome {
     case pasted
     case copiedOnlyRequiresAccessibility
+    case copiedOnlyPasteUnavailable
 }
