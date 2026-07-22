@@ -21,7 +21,8 @@ struct PanelView: View {
     @Environment(\.colorSchemeContrast) private var contrast
 
     var body: some View {
-        VStack(spacing: 8) {
+        VStack(spacing: 10) {
+            headerRow
             searchRow
             filterRow
             Divider()
@@ -38,6 +39,37 @@ struct PanelView: View {
         .animation(reduceMotion ? nil : .snappy(duration: 0.16), value: store.searchQuery.isEmpty)
         .accessibilityElement(children: .contain)
         .accessibilityLabel(Text("Clippa clipboard history"))
+    }
+
+    private var headerRow: some View {
+        HStack(spacing: 10) {
+            Label("Clippa", systemImage: "paperclip")
+                .font(.headline)
+                .labelStyle(.titleAndIcon)
+
+            Text("\(store.items.count)")
+                .font(.caption)
+                .fontWeight(.semibold)
+                .foregroundStyle(.secondary)
+                .padding(.horizontal, 7)
+                .padding(.vertical, 3)
+                .background(.tertiary.opacity(0.12), in: .capsule)
+                .help(String(localized: "Items"))
+
+            Spacer(minLength: 0)
+
+            statusBadge(
+                title: isMonitoringPaused ? String(localized: "Paused") : String(localized: "Watching"),
+                symbol: isMonitoringPaused ? "pause.fill" : "checkmark.circle.fill",
+                isProminent: isMonitoringPaused
+            )
+            statusBadge(
+                title: isAutoPasteReady ? String(localized: "Auto-paste ready") : String(localized: "Copy only"),
+                symbol: isAutoPasteReady ? "checkmark.circle.fill" : "doc.on.doc",
+                isProminent: false
+            )
+        }
+        .frame(height: 24)
     }
 
     private var searchRow: some View {
@@ -184,16 +216,6 @@ struct PanelView: View {
 
     private var statusRow: some View {
         HStack(spacing: 8) {
-            statusBadge(
-                title: isMonitoringPaused ? String(localized: "Paused") : String(localized: "Watching"),
-                symbol: isMonitoringPaused ? "pause.fill" : "checkmark.circle.fill",
-                isProminent: isMonitoringPaused
-            )
-            statusBadge(
-                title: isAutoPasteReady ? String(localized: "Auto-paste ready") : String(localized: "Copy only"),
-                symbol: isAutoPasteReady ? "checkmark.circle.fill" : "doc.on.doc",
-                isProminent: false
-            )
             if let notice {
                 Text(notice)
                     .font(.caption2)
@@ -234,26 +256,14 @@ private struct ClipboardRow: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            icon
-            VStack(alignment: .leading, spacing: 2) {
+            ClipboardThumbnailView(item: item, size: DesignSystem.iconWellSize, showsPin: true)
+
+            VStack(alignment: .leading, spacing: 3) {
                 Text(item.preview.isEmpty ? String(localized: "Empty text") : item.preview)
                     .font(.callout)
                     .lineLimit(1)
                     .foregroundStyle(.primary)
-                HStack(spacing: 6) {
-                    Text(item.kind.displayName)
-                    Text(item.createdAt, style: .relative)
-                    if let source = sourceName {
-                        Text(source)
-                            .lineLimit(1)
-                            .truncationMode(.middle)
-                    }
-                    if item.kind == .files, case .files(let refs) = item.payload, refs.contains(where: { !$0.exists }) {
-                        Text("Unavailable")
-                    }
-                }
-                .font(.caption2)
-                .foregroundStyle(.secondary)
+                metadataLine
             }
             Spacer(minLength: 8)
             rowActions
@@ -297,28 +307,26 @@ private struct ClipboardRow: View {
         .accessibilityAddTraits(isSelected ? [.isSelected] : [])
     }
 
-    private var icon: some View {
-        ZStack {
-            RoundedRectangle(cornerRadius: 7)
-                .fill(iconBackground)
-            Image(systemName: item.kind.symbolName)
-                .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(.secondary)
+    private var metadataLine: some View {
+        HStack(spacing: 6) {
+            if item.kind != .image {
+                Text(item.kind.displayName)
+            }
+            Text(item.createdAt, style: .relative)
+            if case .image = item.payload {
+                ClipboardImageInfoView(item: item)
+            }
+            if let source = sourceName {
+                Text(source)
+                    .lineLimit(1)
+                    .truncationMode(.middle)
+            }
+            if item.kind == .files, case .files(let refs) = item.payload, refs.contains(where: { !$0.exists }) {
+                Text("Unavailable")
+            }
         }
-        .frame(width: DesignSystem.iconWellSize, height: DesignSystem.iconWellSize)
-    }
-
-    private var iconBackground: Color {
-        switch item.kind {
-        case .text:
-            Color.secondary.opacity(0.10)
-        case .url:
-            Color.blue.opacity(0.12)
-        case .image:
-            Color.green.opacity(0.12)
-        case .files:
-            Color.orange.opacity(0.12)
-        }
+        .font(.caption2)
+        .foregroundStyle(.secondary)
     }
 
     private var rowActions: some View {

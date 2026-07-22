@@ -28,6 +28,7 @@
 		AA0001010000000000000013 /* ClipboardCoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002010000000000000013 /* ClipboardCoreTests.swift */; };
 		AA0001010000000000000017 /* AppWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002010000000000000017 /* AppWindowController.swift */; };
 		AA0001010000000000000018 /* AppWindowView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002010000000000000018 /* AppWindowView.swift */; };
+		AA0001010000000000000019 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA0002010000000000000019 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -65,6 +66,7 @@
 		AA0002010000000000000016 /* ClippaTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ClippaTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA0002010000000000000017 /* AppWindowController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppWindowController.swift; sourceTree = "<group>"; };
 		AA0002010000000000000018 /* AppWindowView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppWindowView.swift; sourceTree = "<group>"; };
+		AA0002010000000000000019 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -133,7 +135,7 @@
 		};
 		AA0007010000000000000009 /* Resources */ = {
 			isa = PBXGroup;
-			children = (AA0003010000000000000001 /* Localizable.strings */);
+			children = (AA0002010000000000000019 /* Assets.xcassets */, AA0003010000000000000001 /* Localizable.strings */);
 			path = Resources;
 			sourceTree = "<group>";
 		};
@@ -190,7 +192,7 @@
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		AA000A010000000000000001 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (AA0001010000000000000012); runOnlyForDeploymentPostprocessing = 0; };
+		AA000A010000000000000001 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (AA0001010000000000000019, AA0001010000000000000012); runOnlyForDeploymentPostprocessing = 0; };
 		AA000A010000000000000002 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXResourcesBuildPhase section */
 

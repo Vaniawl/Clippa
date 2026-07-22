@@ -466,17 +466,19 @@ private struct DashboardClipboardRow: View {
 
     var body: some View {
         HStack(spacing: 10) {
-            Image(systemName: item.kind.symbolName)
-                .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(item.isPinned ? Color.accentColor : Color.secondary)
-                .frame(width: 24, height: 24)
+            ClipboardThumbnailView(item: item, size: 36, cornerRadius: 8, showsPin: true)
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(item.preview.isEmpty ? String(localized: "Empty text") : item.preview)
                     .lineLimit(1)
                 HStack(spacing: 6) {
-                    Text(item.kind.displayName)
+                    if item.kind != .image {
+                        Text(item.kind.displayName)
+                    }
                     Text(item.createdAt, style: .relative)
+                    if case .image = item.payload {
+                        ClipboardImageInfoView(item: item)
+                    }
                     if item.isPinned {
                         Label("Pinned", systemImage: "pin.fill")
                             .labelStyle(.titleAndIcon)
@@ -606,10 +608,23 @@ private struct SelectedItemDetail: View {
             }
         case .image(let data, _):
             if let image = NSImage(data: data) {
-                Image(nsImage: image)
-                    .resizable()
-                    .scaledToFit()
+                VStack(alignment: .leading, spacing: 10) {
+                    ZStack {
+                        Color.secondary.opacity(0.08)
+                        Image(nsImage: image)
+                            .resizable()
+                            .scaledToFit()
+                            .padding(10)
+                    }
+                    .clipShape(.rect(cornerRadius: 10))
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 10)
+                            .strokeBorder(Color.primary.opacity(0.08))
+                    }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
+
+                    ClipboardImageInfoView(item: item)
+                }
             } else {
                 Text(item.preview)
                     .foregroundStyle(.secondary)
