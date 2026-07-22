@@ -89,11 +89,15 @@
 "Last used" = "Востаннє використано";
 "Source" = "Джерело";
 "Unpinned history cleared." = "Незакріплену історію очищено.";
+"History cleared." = "Історію очищено.";
 "Pinned items will stay in history." = "Закріплені записи залишаться в історії.";
 "Cancel" = "Скасувати";
 "Pinned." = "Закріплено.";
 "Unpinned." = "Відкріплено.";
 "Deleted." = "Видалено.";
+"Undo" = "Повернути";
+"Item restored." = "Запис відновлено.";
+"History restored." = "Історію відновлено.";
 "Resume" = "Продовжити";
 "Pause" = "Призупинити";
 "Clear Unpinned" = "Очистити незакріплені";

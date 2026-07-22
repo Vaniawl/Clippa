@@ -89,11 +89,15 @@
 "Last used" = "Last used";
 "Source" = "Source";
 "Unpinned history cleared." = "Unpinned history cleared.";
+"History cleared." = "History cleared.";
 "Pinned items will stay in history." = "Pinned items will stay in history.";
 "Cancel" = "Cancel";
 "Pinned." = "Pinned.";
 "Unpinned." = "Unpinned.";
 "Deleted." = "Deleted.";
+"Undo" = "Undo";
+"Item restored." = "Item restored.";
+"History restored." = "History restored.";
 "Resume" = "Resume";
 "Pause" = "Pause";
 "Clear Unpinned" = "Clear Unpinned";

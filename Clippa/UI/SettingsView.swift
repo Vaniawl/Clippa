@@ -7,6 +7,7 @@ struct SettingsView: View {
     @Bindable var store: ClipboardStore
     let hotKeyStatus: String
     var usesFixedFrame = true
+    var onUndoableItemsRemoved: @MainActor (_ message: String, _ restoredMessage: String, _ items: [ClipboardItem]) -> Void = { _, _, _ in }
     let onShowShortcutChange: (HotKeyShortcut) -> Void
     let onPinShortcutChange: (HotKeyShortcut) -> Void
     @State private var newExcludedIdentifier = ""
@@ -132,12 +133,22 @@ struct SettingsView: View {
         )
         .confirmationDialog("Clear unpinned clipboard history?", isPresented: $confirmClearUnpinned) {
             Button("Clear unpinned history", role: .destructive) {
-                store.clearUnpinned()
+                let removed = store.clearUnpinned()
+                onUndoableItemsRemoved(
+                    String(localized: "Unpinned history cleared."),
+                    String(localized: "History restored."),
+                    removed
+                )
             }
         }
         .confirmationDialog("Clear all clipboard history?", isPresented: $confirmClearAll) {
             Button("Clear all history", role: .destructive) {
-                store.clearAll()
+                let removed = store.clearAll()
+                onUndoableItemsRemoved(
+                    String(localized: "History cleared."),
+                    String(localized: "History restored."),
+                    removed
+                )
             }
         }
     }

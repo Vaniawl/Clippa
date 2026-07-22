@@ -37,7 +37,7 @@ struct AppWindowView: View {
     let onReveal: @MainActor (ClipboardItem) -> Void
     @State private var selectedSection: AppWindowSection?
     @State private var confirmClearUnpinned = false
-    @State private var actionMessage: String?
+    @State private var toast: ActionToast?
 
     init(
         settings: AppSettings,
@@ -75,13 +75,13 @@ struct AppWindowView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .overlay(alignment: .bottom) {
-            if let actionMessage {
-                statusToast(actionMessage)
+            if let toast {
+                statusToast(toast)
                     .padding(.bottom, 16)
                     .transition(.opacity.combined(with: .move(edge: .bottom)))
             }
         }
-        .animation(.snappy(duration: 0.18), value: actionMessage)
+        .animation(.snappy(duration: 0.18), value: toast?.id)
         .toolbar {
             ToolbarItemGroup {
                 Button {
@@ -104,8 +104,12 @@ struct AppWindowView: View {
         }
         .confirmationDialog("Clear unpinned clipboard history?", isPresented: $confirmClearUnpinned) {
             Button("Clear unpinned history", role: .destructive) {
-                store.clearUnpinned()
-                showActionMessage(String(localized: "Unpinned history cleared."))
+                let removed = store.clearUnpinned()
+                showUndoToast(
+                    message: String(localized: "Unpinned history cleared."),
+                    restoredMessage: String(localized: "History restored."),
+                    restoredItems: removed
+                )
             }
         }
     }
@@ -125,7 +129,8 @@ struct AppWindowView: View {
                 },
                 onOpen: onOpen,
                 onReveal: onReveal,
-                onActionMessage: showActionMessage
+                onActionMessage: showActionMessage,
+                onUndoableItemsRemoved: showUndoToast
             )
         case .settings:
             SettingsView(
@@ -133,6 +138,7 @@ struct AppWindowView: View {
                 store: store,
                 hotKeyStatus: hotKeyStatus,
                 usesFixedFrame: false,
+                onUndoableItemsRemoved: showUndoToast,
                 onShowShortcutChange: onShowShortcutChange,
                 onPinShortcutChange: onPinShortcutChange
             )
@@ -141,25 +147,67 @@ struct AppWindowView: View {
         }
     }
 
-    private func statusToast(_ message: String) -> some View {
-        Label(message, systemImage: "checkmark.circle.fill")
-            .font(.caption)
-            .foregroundStyle(.primary)
-            .padding(.horizontal, 12)
-            .padding(.vertical, 8)
-            .background(.regularMaterial, in: .rect(cornerRadius: 8))
-            .shadow(radius: 8, y: 4)
+    private func statusToast(_ toast: ActionToast) -> some View {
+        HStack(spacing: 10) {
+            Label(toast.message, systemImage: "checkmark.circle.fill")
+            if let actionTitle = toast.actionTitle, let action = toast.action {
+                Divider()
+                    .frame(height: 14)
+                Button(actionTitle) {
+                    action()
+                }
+                .buttonStyle(.plain)
+                .foregroundStyle(Color.accentColor)
+                .fontWeight(.medium)
+            }
+        }
+        .font(.caption)
+        .foregroundStyle(.primary)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .background(.regularMaterial, in: .rect(cornerRadius: 8))
+        .shadow(radius: 8, y: 4)
     }
 
     private func showActionMessage(_ message: String) {
-        actionMessage = message
+        let nextToast = ActionToast(message: message)
+        toast = nextToast
         Task { @MainActor in
             try? await Task.sleep(for: .seconds(2))
-            if actionMessage == message {
-                actionMessage = nil
+            if toast?.id == nextToast.id {
+                toast = nil
             }
         }
     }
+
+    private func showUndoToast(message: String, restoredMessage: String, restoredItems: [ClipboardItem]) {
+        guard !restoredItems.isEmpty else {
+            showActionMessage(message)
+            return
+        }
+        let nextToast = ActionToast(
+            message: message,
+            actionTitle: String(localized: "Undo"),
+            action: {
+                store.restore(restoredItems)
+                showActionMessage(restoredMessage)
+            }
+        )
+        toast = nextToast
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(5))
+            if toast?.id == nextToast.id {
+                toast = nil
+            }
+        }
+    }
+}
+
+private struct ActionToast: Identifiable {
+    let id = UUID()
+    let message: String
+    var actionTitle: String?
+    var action: (@MainActor () -> Void)?
 }
 
 private struct HistoryDashboardView: View {
@@ -171,6 +219,7 @@ private struct HistoryDashboardView: View {
     let onOpen: @MainActor (ClipboardItem) -> Void
     let onReveal: @MainActor (ClipboardItem) -> Void
     let onActionMessage: @MainActor (String) -> Void
+    let onUndoableItemsRemoved: @MainActor (_ message: String, _ restoredMessage: String, _ items: [ClipboardItem]) -> Void
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorSchemeContrast) private var contrast
 
@@ -330,8 +379,12 @@ private struct HistoryDashboardView: View {
                         onActionMessage(selectedItem.isPinned ? String(localized: "Unpinned.") : String(localized: "Pinned."))
                     },
                     onDelete: {
-                        store.delete(selectedItem)
-                        onActionMessage(String(localized: "Deleted."))
+                        let deleted = store.delete(selectedItem).map { [$0] } ?? []
+                        onUndoableItemsRemoved(
+                            String(localized: "Deleted."),
+                            String(localized: "Item restored."),
+                            deleted
+                        )
                     }
                 )
             } else {
@@ -389,8 +442,12 @@ private struct HistoryDashboardView: View {
         }
         Divider()
         Button("Delete", role: .destructive) {
-            store.delete(item)
-            onActionMessage(String(localized: "Deleted."))
+            let deleted = store.delete(item).map { [$0] } ?? []
+            onUndoableItemsRemoved(
+                String(localized: "Deleted."),
+                String(localized: "Item restored."),
+                deleted
+            )
         }
     }
 

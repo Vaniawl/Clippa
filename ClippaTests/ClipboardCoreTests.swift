@@ -63,6 +63,35 @@ final class ClipboardCoreTests: XCTestCase {
         XCTAssertEqual(store.selectedItemID, first.id)
     }
 
+    func testDeletedItemsCanBeRestored() {
+        let store = ClipboardStore()
+        let now = Date()
+        store.add(payload: .text("first"), sourceBundleIdentifier: nil, date: now.addingTimeInterval(-1))
+        store.add(payload: .text("second"), sourceBundleIdentifier: nil, date: now)
+        let first = store.items.first { $0.preview == "first" }!
+
+        let deleted = store.delete(first)
+        XCTAssertNil(store.items.first { $0.preview == "first" })
+
+        store.restore(deleted.map { [$0] } ?? [])
+        XCTAssertEqual(store.items.count, 2)
+        XCTAssertNotNil(store.items.first { $0.preview == "first" })
+    }
+
+    func testClearedUnpinnedItemsCanBeRestored() {
+        let store = ClipboardStore()
+        let now = Date()
+        store.add(payload: .text("pinned"), sourceBundleIdentifier: nil, date: now.addingTimeInterval(-1))
+        store.add(payload: .text("unpinned"), sourceBundleIdentifier: nil, date: now)
+        store.togglePin(store.items.first { $0.preview == "pinned" }!)
+
+        let removed = store.clearUnpinned()
+        XCTAssertEqual(store.items.map(\.preview), ["pinned"])
+
+        store.restore(removed)
+        XCTAssertEqual(Set(store.items.map(\.preview)), Set(["pinned", "unpinned"]))
+    }
+
     func testLimitsUnpinnedHistoryTo100() {
         let store = ClipboardStore()
         for index in 0..<120 {
@@ -82,6 +111,19 @@ final class ClipboardCoreTests: XCTestCase {
         store.togglePinSelected()
         store.applyOrderingAndRetention(now: now)
         XCTAssertEqual(store.items.map(\.preview), ["pinned old"])
+    }
+
+    func testRetentionKeepsRecentlyUsedOldUnpinned() {
+        let store = ClipboardStore()
+        let old = Date(timeIntervalSince1970: 0)
+        let recent = Date(timeIntervalSince1970: 8 * 24 * 60 * 60)
+        store.add(payload: .text("old but used"), sourceBundleIdentifier: nil, date: old)
+
+        let item = store.items.first!
+        store.use(item, date: recent)
+
+        XCTAssertEqual(store.items.first?.preview, "old but used")
+        XCTAssertEqual(store.items.first?.lastUsedAt, recent)
     }
 
     func testSearchAndFilters() {

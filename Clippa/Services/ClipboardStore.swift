@@ -74,27 +74,52 @@ final class ClipboardStore {
         togglePinSelected()
     }
 
-    func deleteSelected() {
+    @discardableResult
+    func deleteSelected() -> ClipboardItem? {
         guard let selectedItemID else {
-            return
+            return nil
         }
+        let deleted = items.first { $0.id == selectedItemID }
         items.removeAll { $0.id == selectedItemID }
         applyOrderingAndRetention(now: Date())
+        return deleted
     }
 
-    func delete(_ item: ClipboardItem) {
+    @discardableResult
+    func delete(_ item: ClipboardItem) -> ClipboardItem? {
         selectedItemID = item.id
-        deleteSelected()
+        return deleteSelected()
     }
 
-    func clearUnpinned() {
+    @discardableResult
+    func clearUnpinned() -> [ClipboardItem] {
+        let removed = items.filter { !$0.isPinned }
         items.removeAll { !$0.isPinned }
         applyOrderingAndRetention(now: Date())
+        return removed
     }
 
-    func clearAll() {
+    @discardableResult
+    func clearAll() -> [ClipboardItem] {
+        let removed = items
         items.removeAll()
         applyOrderingAndRetention(now: Date())
+        return removed
+    }
+
+    func restore(_ restoredItems: [ClipboardItem]) {
+        let existingIDs = Set(items.map(\.id))
+        let now = Date()
+        let missingItems = restoredItems.filter { !existingIDs.contains($0.id) }.map { item in
+            var restoredItem = item
+            restoredItem.lastUsedAt = now
+            return restoredItem
+        }
+        guard !missingItems.isEmpty else {
+            return
+        }
+        items.append(contentsOf: missingItems)
+        applyOrderingAndRetention(now: now)
     }
 
     func selectNext() {
@@ -163,7 +188,7 @@ final class ClipboardStore {
 
     private func enforceRetention(now: Date) {
         items.removeAll { item in
-            !item.isPinned && now.timeIntervalSince(item.createdAt) > retention
+            !item.isPinned && now.timeIntervalSince(activityDate(item)) > retention
         }
 
         let unpinned = items.filter { !$0.isPinned }
