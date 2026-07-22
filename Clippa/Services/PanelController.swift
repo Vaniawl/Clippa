@@ -12,7 +12,6 @@ final class AppState {
     let monitor: PasteboardMonitor
     let pasteService: PasteService
     let panelController = PanelController()
-    let appWindowController = AppWindowController()
 
     var notice: String?
     var isAutoPasteReady: Bool {
@@ -60,10 +59,6 @@ final class AppState {
 
     func togglePanel() {
         panelController.toggle(appState: self)
-    }
-
-    func openAppWindow(selection: AppWindowSection = .history) {
-        appWindowController.show(appState: self, selection: selection)
     }
 
     func pasteSelectedItem() {
@@ -168,10 +163,6 @@ final class AppState {
         panelController.close()
     }
 
-    func openSettings() {
-        openAppWindow(selection: .settings)
-    }
-
     func confirmClearUnpinned() {
         let alert = NSAlert()
         alert.messageText = String(localized: "Clear unpinned clipboard history?")
@@ -217,7 +208,6 @@ final class PanelController {
         let content = PanelView(
             store: appState.store,
             notice: appState.notice,
-            isMonitoringPaused: appState.settings.isMonitoringPaused,
             isAutoPasteReady: appState.isAutoPasteReady,
             showShortcutText: appState.settings.showPanelShortcut.displayString,
             pinShortcutText: appState.settings.pinShortcut.displayString,

@@ -87,7 +87,6 @@
 "Clear all history" = "Очистити всю історію";
 "Clear all clipboard history?" = "Очистити всю історію буфера?";
 "Show History" = "Показати історію";
-"Open Clippa" = "Відкрити Clippa";
 "Clippa" = "Clippa";
 "Privacy" = "Приватність";
 "Items" = "Записи";
@@ -114,4 +113,3 @@
 "Quit" = "Вийти";
 "About" = "Про програму";
 "Version" = "Версія";
-"Bundle" = "Bundle";

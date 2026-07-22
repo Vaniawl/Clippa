@@ -4,12 +4,10 @@ import SwiftUI
 @main
 struct ClippaApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
+    @Environment(\.openSettings) private var openSettings
 
     var body: some Scene {
         MenuBarExtra("Clippa", systemImage: "paperclip") {
-            Button("Open Clippa") {
-                appDelegate.appState.openAppWindow()
-            }
             Button("Show History") {
                 appDelegate.appState.togglePanel()
             }
@@ -21,7 +19,7 @@ struct ClippaApp: App {
             }
             Divider()
             Button("Settings") {
-                appDelegate.appState.openSettings()
+                openSettings()
             }
             Button("Quit") {
                 appDelegate.appState.quit()

@@ -87,7 +87,6 @@
 "Clear all history" = "Clear all history";
 "Clear all clipboard history?" = "Clear all clipboard history?";
 "Show History" = "Show History";
-"Open Clippa" = "Open Clippa";
 "Clippa" = "Clippa";
 "Privacy" = "Privacy";
 "Items" = "Items";
@@ -114,4 +113,3 @@
 "Quit" = "Quit";
 "About" = "About";
 "Version" = "Version";
-"Bundle" = "Bundle";

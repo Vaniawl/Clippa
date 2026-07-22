@@ -5,7 +5,7 @@
 <h1 align="center">Clippa</h1>
 
 <p align="center">
-  A fast, private macOS clipboard history app for text, links, images, and files.
+  A fast, private macOS menu-bar clipboard history app for text, links, images, and files.
 </p>
 
 <p align="center">
@@ -38,7 +38,8 @@ You can also download `outputs/Clippa.app.zip`, unzip it, move `Clippa.app` to `
 
 ## Highlights
 
-- Search clipboard history from a menu-bar panel.
+- Runs quietly in the background as a menu-bar app.
+- Search clipboard history from a compact panel.
 - Keep text, links, images, and file references.
 - Pin important clips so cleanup never removes them.
 - Choose your own global shortcuts.

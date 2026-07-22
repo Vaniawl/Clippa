@@ -4,7 +4,6 @@ import SwiftUI
 struct PanelView: View {
     @Bindable var store: ClipboardStore
     var notice: String?
-    var isMonitoringPaused: Bool
     var isAutoPasteReady: Bool
     var showShortcutText: String
     var pinShortcutText: String
@@ -21,15 +20,18 @@ struct PanelView: View {
     @Environment(\.colorSchemeContrast) private var contrast
 
     var body: some View {
-        VStack(spacing: 10) {
+        VStack(spacing: 12) {
             headerRow
             searchRow
             filterRow
             Divider()
             results
-            statusRow
+            if notice != nil {
+                statusRow
+                    .transition(.opacity.combined(with: .move(edge: .bottom)))
+            }
         }
-        .padding(12)
+        .padding(14)
         .frame(width: DesignSystem.panelWidth, height: DesignSystem.panelHeight)
         .background(panelBackground)
         .clipShape(.rect(cornerRadius: DesignSystem.panelCornerRadius))
@@ -43,28 +45,29 @@ struct PanelView: View {
 
     private var headerRow: some View {
         HStack(spacing: 10) {
-            Label("Clippa", systemImage: "paperclip")
-                .font(.headline)
-                .labelStyle(.titleAndIcon)
+            Image(systemName: "paperclip.circle.fill")
+                .font(.system(size: 24, weight: .semibold))
+                .foregroundStyle(Color.accentColor)
 
-            Text("\(store.items.count)")
-                .font(.caption)
-                .fontWeight(.semibold)
-                .foregroundStyle(.secondary)
-                .padding(.horizontal, 7)
-                .padding(.vertical, 3)
-                .background(.tertiary.opacity(0.12), in: .capsule)
-                .help(String(localized: "Items"))
+            VStack(alignment: .leading, spacing: 1) {
+                Text("Clippa")
+                    .font(.headline)
+                Text("\(store.items.count) \(String(localized: "Items"))")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
 
             Spacer(minLength: 0)
 
-            statusBadge(
-                title: isAutoPasteReady ? String(localized: "Auto-paste ready") : String(localized: "Copy only"),
-                symbol: isAutoPasteReady ? "checkmark.circle.fill" : "doc.on.doc",
-                isProminent: false
-            )
+            if !isAutoPasteReady {
+                statusBadge(
+                    title: String(localized: "Copy only"),
+                    symbol: "doc.on.doc",
+                    isProminent: false
+                )
+            }
         }
-        .frame(height: 24)
+        .frame(height: 34)
     }
 
     private var searchRow: some View {
@@ -96,6 +99,12 @@ struct PanelView: View {
                 .background(.tertiary.opacity(0.14), in: .rect(cornerRadius: 5))
         }
         .frame(height: DesignSystem.controlHeight)
+        .padding(.horizontal, 12)
+        .background(Color.secondary.opacity(0.10), in: .rect(cornerRadius: 10))
+        .overlay {
+            RoundedRectangle(cornerRadius: 10)
+                .strokeBorder(.separator.opacity(0.45))
+        }
     }
 
     private var filterRow: some View {
@@ -104,11 +113,15 @@ struct PanelView: View {
                 Button {
                     animate { store.selectedFilter = filter }
                 } label: {
-                    Image(systemName: filter.symbolName)
-                        .font(.system(size: 13, weight: .medium))
-                        .frame(maxWidth: .infinity)
-                        .frame(height: 26)
-                        .contentShape(.rect)
+                    ViewThatFits(in: .horizontal) {
+                        Label(filter.displayName, systemImage: filter.symbolName)
+                            .labelStyle(.titleAndIcon)
+                        Image(systemName: filter.symbolName)
+                    }
+                    .font(.system(size: 12, weight: .medium))
+                    .frame(maxWidth: .infinity)
+                    .frame(height: 28)
+                    .contentShape(.rect)
                 }
                 .buttonStyle(.plain)
                 .foregroundStyle(store.selectedFilter == filter ? Color.accentColor : Color.secondary)
@@ -120,7 +133,7 @@ struct PanelView: View {
             }
         }
         .padding(2)
-        .background(.tertiary.opacity(0.10), in: .rect(cornerRadius: 9))
+        .background(.tertiary.opacity(0.10), in: .rect(cornerRadius: 10))
         .accessibilityLabel(Text("Filter"))
         .animation(reduceMotion ? nil : .snappy(duration: 0.16), value: store.selectedFilter)
     }
@@ -147,7 +160,7 @@ struct PanelView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
             ScrollView {
-                LazyVStack(spacing: 0) {
+                LazyVStack(spacing: 4) {
                     ForEach(store.visibleItems.prefix(100)) { item in
                         ClipboardRow(
                             item: item,
@@ -183,6 +196,7 @@ struct PanelView: View {
                         .transition(.opacity.combined(with: .move(edge: .top)))
                     }
                 }
+                .padding(.vertical, 2)
             }
             .scrollIndicators(.automatic)
             .animation(reduceMotion ? nil : .snappy(duration: 0.16), value: store.visibleItems.map(\.id))
@@ -267,8 +281,12 @@ private struct ClipboardRow: View {
         }
         .onHover { isHovering = $0 }
         .frame(height: DesignSystem.rowHeight)
-        .padding(.horizontal, 8)
+        .padding(.horizontal, 10)
         .background(selectionBackground)
+        .overlay {
+            RoundedRectangle(cornerRadius: DesignSystem.rowCornerRadius)
+                .strokeBorder(isSelected ? Color.accentColor.opacity(0.26) : Color.clear)
+        }
         .clipShape(.rect(cornerRadius: DesignSystem.rowCornerRadius))
         .animation(reduceMotion ? nil : .snappy(duration: 0.14), value: isHovering)
         .animation(reduceMotion ? nil : .snappy(duration: 0.14), value: isSelected)

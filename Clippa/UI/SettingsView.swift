@@ -39,12 +39,14 @@ struct SettingsView: View {
                     } label: {
                         Label("Show history", systemImage: "keyboard")
                     }
-                    statusRow(
-                        title: String(localized: "Shortcut status"),
-                        value: hotKeyStatus,
-                        symbol: hotKeyStatus == String(localized: "Registered") ? "checkmark.circle.fill" : "exclamationmark.triangle.fill",
-                        color: hotKeyStatus == String(localized: "Registered") ? .green : .orange
-                    )
+                    if hotKeyStatus != String(localized: "Registered") {
+                        statusRow(
+                            title: String(localized: "Shortcut status"),
+                            value: hotKeyStatus,
+                            symbol: "exclamationmark.triangle.fill",
+                            color: .orange
+                        )
+                    }
                     LabeledContent {
                         HStack(spacing: 8) {
                             HotKeyRecorder(shortcut: pinShortcutBinding, onCommit: onPinShortcutChange)
@@ -99,7 +101,6 @@ struct SettingsView: View {
 
                 SettingsPanel(title: String(localized: "About")) {
                     LabeledContent("Version", value: appVersion)
-                    LabeledContent("Bundle", value: Bundle.main.bundleIdentifier ?? String(localized: "Unknown"))
                 }
             }
             .padding(24)

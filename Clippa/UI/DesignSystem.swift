@@ -2,13 +2,13 @@ import AppKit
 import SwiftUI
 
 enum DesignSystem {
-    static let panelWidth: CGFloat = 560
-    static let panelHeight: CGFloat = 360
+    static let panelWidth: CGFloat = 640
+    static let panelHeight: CGFloat = 430
     static let panelCornerRadius: CGFloat = 20
-    static let rowHeight: CGFloat = 52
-    static let controlHeight: CGFloat = 32
+    static let rowHeight: CGFloat = 58
+    static let controlHeight: CGFloat = 36
     static let rowCornerRadius: CGFloat = 8
-    static let iconWellSize: CGFloat = 36
+    static let iconWellSize: CGFloat = 40
     static let symbolButtonSize: CGFloat = 24
 }
 
