@@ -1,0 +1,407 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 60;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		AA0001010000000000000001 /* ClippaApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002010000000000000001 /* ClippaApp.swift */; };
+		AA0001010000000000000002 /* ClipboardModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002010000000000000002 /* ClipboardModels.swift */; };
+		AA0001010000000000000003 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002010000000000000003 /* AppSettings.swift */; };
+		AA0001010000000000000004 /* KeychainKeyStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002010000000000000004 /* KeychainKeyStore.swift */; };
+		AA0001010000000000000005 /* EncryptedBlobStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002010000000000000005 /* EncryptedBlobStore.swift */; };
+		AA0001010000000000000006 /* EncryptedHistoryStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002010000000000000006 /* EncryptedHistoryStore.swift */; };
+		AA0001010000000000000007 /* PrivacyFilter.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002010000000000000007 /* PrivacyFilter.swift */; };
+		AA0001010000000000000008 /* ClipboardStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002010000000000000008 /* ClipboardStore.swift */; };
+		AA0001010000000000000009 /* PasteboardMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002010000000000000009 /* PasteboardMonitor.swift */; };
+		AA000101000000000000000A /* GlobalHotKeyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000201000000000000000A /* GlobalHotKeyService.swift */; };
+		AA000101000000000000000B /* PasteService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000201000000000000000B /* PasteService.swift */; };
+		AA000101000000000000000C /* PanelController.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000201000000000000000C /* PanelController.swift */; };
+		AA000101000000000000000D /* AccessibilityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000201000000000000000D /* AccessibilityService.swift */; };
+		AA000101000000000000000E /* LoginItemService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000201000000000000000E /* LoginItemService.swift */; };
+		AA000101000000000000000F /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000201000000000000000F /* DesignSystem.swift */; };
+		AA0001010000000000000010 /* PanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002010000000000000010 /* PanelView.swift */; };
+		AA0001010000000000000011 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002010000000000000011 /* SettingsView.swift */; };
+		AA0001010000000000000012 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = AA0003010000000000000001 /* Localizable.strings */; };
+		AA0001010000000000000013 /* ClipboardCoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002010000000000000013 /* ClipboardCoreTests.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		AA0004010000000000000001 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AA0000010000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AA0005010000000000000001;
+			remoteInfo = Clippa;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		AA0002010000000000000001 /* ClippaApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClippaApp.swift; sourceTree = "<group>"; };
+		AA0002010000000000000002 /* ClipboardModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardModels.swift; sourceTree = "<group>"; };
+		AA0002010000000000000003 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
+		AA0002010000000000000004 /* KeychainKeyStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainKeyStore.swift; sourceTree = "<group>"; };
+		AA0002010000000000000005 /* EncryptedBlobStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EncryptedBlobStore.swift; sourceTree = "<group>"; };
+		AA0002010000000000000006 /* EncryptedHistoryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EncryptedHistoryStore.swift; sourceTree = "<group>"; };
+		AA0002010000000000000007 /* PrivacyFilter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivacyFilter.swift; sourceTree = "<group>"; };
+		AA0002010000000000000008 /* ClipboardStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardStore.swift; sourceTree = "<group>"; };
+		AA0002010000000000000009 /* PasteboardMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteboardMonitor.swift; sourceTree = "<group>"; };
+		AA000201000000000000000A /* GlobalHotKeyService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalHotKeyService.swift; sourceTree = "<group>"; };
+		AA000201000000000000000B /* PasteService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PasteService.swift; sourceTree = "<group>"; };
+		AA000201000000000000000C /* PanelController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelController.swift; sourceTree = "<group>"; };
+		AA000201000000000000000D /* AccessibilityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityService.swift; sourceTree = "<group>"; };
+		AA000201000000000000000E /* LoginItemService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginItemService.swift; sourceTree = "<group>"; };
+		AA000201000000000000000F /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
+		AA0002010000000000000010 /* PanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelView.swift; sourceTree = "<group>"; };
+		AA0002010000000000000011 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		AA0002010000000000000012 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		AA0002010000000000000014 /* uk */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = uk; path = uk.lproj/Localizable.strings; sourceTree = "<group>"; };
+		AA0002010000000000000013 /* ClipboardCoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardCoreTests.swift; sourceTree = "<group>"; };
+		AA0002010000000000000015 /* Clippa.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Clippa.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA0002010000000000000016 /* ClippaTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ClippaTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		AA0006010000000000000001 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		AA0006010000000000000002 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		AA0007010000000000000001 = {
+			isa = PBXGroup;
+			children = (
+				AA0007010000000000000002 /* Clippa */,
+				AA0007010000000000000007 /* ClippaTests */,
+				AA0007010000000000000008 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		AA0007010000000000000002 /* Clippa */ = {
+			isa = PBXGroup;
+			children = (
+				AA0002010000000000000001 /* ClippaApp.swift */,
+				AA0007010000000000000003 /* Models */,
+				AA0007010000000000000004 /* Storage */,
+				AA0007010000000000000005 /* Services */,
+				AA0007010000000000000006 /* UI */,
+				AA0007010000000000000009 /* Resources */,
+			);
+			path = Clippa;
+			sourceTree = "<group>";
+		};
+		AA0007010000000000000003 /* Models */ = {
+			isa = PBXGroup;
+			children = (AA0002010000000000000002, AA0002010000000000000003);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		AA0007010000000000000004 /* Storage */ = {
+			isa = PBXGroup;
+			children = (AA0002010000000000000004, AA0002010000000000000005, AA0002010000000000000006);
+			path = Storage;
+			sourceTree = "<group>";
+		};
+		AA0007010000000000000005 /* Services */ = {
+			isa = PBXGroup;
+			children = (AA0002010000000000000007, AA0002010000000000000008, AA0002010000000000000009, AA000201000000000000000A, AA000201000000000000000B, AA000201000000000000000C, AA000201000000000000000D, AA000201000000000000000E);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		AA0007010000000000000006 /* UI */ = {
+			isa = PBXGroup;
+			children = (AA000201000000000000000F, AA0002010000000000000010, AA0002010000000000000011);
+			path = UI;
+			sourceTree = "<group>";
+		};
+		AA0007010000000000000007 /* ClippaTests */ = {
+			isa = PBXGroup;
+			children = (AA0002010000000000000013);
+			path = ClippaTests;
+			sourceTree = "<group>";
+		};
+		AA0007010000000000000008 /* Products */ = {
+			isa = PBXGroup;
+			children = (AA0002010000000000000015, AA0002010000000000000016);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		AA0007010000000000000009 /* Resources */ = {
+			isa = PBXGroup;
+			children = (AA0003010000000000000001 /* Localizable.strings */);
+			path = Resources;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		AA0005010000000000000001 /* Clippa */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AA0008010000000000000002 /* Build configuration list for PBXNativeTarget "Clippa" */;
+			buildPhases = (AA0009010000000000000001, AA0006010000000000000001, AA000A010000000000000001);
+			buildRules = ();
+			dependencies = ();
+			name = Clippa;
+			productName = Clippa;
+			productReference = AA0002010000000000000015 /* Clippa.app */;
+			productType = "com.apple.product-type.application";
+		};
+		AA0005010000000000000002 /* ClippaTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AA0008010000000000000003 /* Build configuration list for PBXNativeTarget "ClippaTests" */;
+			buildPhases = (AA0009010000000000000002, AA0006010000000000000002, AA000A010000000000000002);
+			buildRules = ();
+			dependencies = (AA000B010000000000000001);
+			name = ClippaTests;
+			productName = ClippaTests;
+			productReference = AA0002010000000000000016 /* ClippaTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		AA0000010000000000000001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2660;
+				LastUpgradeCheck = 2660;
+				TargetAttributes = {
+					AA0005010000000000000001 = {CreatedOnToolsVersion = 26.6;};
+					AA0005010000000000000002 = {CreatedOnToolsVersion = 26.6; TestTargetID = AA0005010000000000000001;};
+				};
+			};
+			buildConfigurationList = AA0008010000000000000001 /* Build configuration list for PBXProject "Clippa" */;
+			compatibilityVersion = "Xcode 15.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (en, uk, Base);
+			mainGroup = AA0007010000000000000001;
+			productRefGroup = AA0007010000000000000008 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (AA0005010000000000000001, AA0005010000000000000002);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		AA000A010000000000000001 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (AA0001010000000000000012); runOnlyForDeploymentPostprocessing = 0; };
+		AA000A010000000000000002 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		AA0009010000000000000001 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (AA0001010000000000000001, AA0001010000000000000002, AA0001010000000000000003, AA0001010000000000000004, AA0001010000000000000005, AA0001010000000000000006, AA0001010000000000000007, AA0001010000000000000008, AA0001010000000000000009, AA000101000000000000000A, AA000101000000000000000B, AA000101000000000000000C, AA000101000000000000000D, AA000101000000000000000E, AA000101000000000000000F, AA0001010000000000000010, AA0001010000000000000011);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA0009010000000000000002 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (AA0001010000000000000013); runOnlyForDeploymentPostprocessing = 0; };
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		AA000B010000000000000001 /* PBXTargetDependency */ = {isa = PBXTargetDependency; target = AA0005010000000000000001 /* Clippa */; targetProxy = AA0004010000000000000001 /* PBXContainerItemProxy */; };
+/* End PBXTargetDependency section */
+
+/* Begin PBXVariantGroup section */
+		AA0003010000000000000001 /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (AA0002010000000000000012 /* en */, AA0002010000000000000014 /* uk */);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		AA000C010000000000000001 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = ("DEBUG=1", "$(inherited)");
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				SDKROOT = macosx;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		AA000C010000000000000002 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				SDKROOT = macosx;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		AA000C010000000000000003 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = NO;
+				ENABLE_PREVIEWS = YES;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Clippa;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/../Frameworks");
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.local.Clippa;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		AA000C010000000000000004 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				COMBINE_HIDPI_IMAGES = YES;
+				ENABLE_HARDENED_RUNTIME = NO;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Clippa;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/../Frameworks");
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.local.Clippa;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+			};
+			name = Release;
+		};
+		AA000C010000000000000005 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/../Frameworks", "@loader_path/../Frameworks");
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.local.ClippaTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Clippa.app/Contents/MacOS/Clippa";
+			};
+			name = Debug;
+		};
+		AA000C010000000000000006 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_IDENTITY = "-";
+				CODE_SIGN_STYLE = Manual;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/../Frameworks", "@loader_path/../Frameworks");
+				MACOSX_DEPLOYMENT_TARGET = 26.0;
+				PRODUCT_BUNDLE_IDENTIFIER = dev.local.ClippaTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_STRICT_CONCURRENCY = complete;
+				SWIFT_VERSION = 6.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Clippa.app/Contents/MacOS/Clippa";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		AA0008010000000000000001 /* Build configuration list for PBXProject "Clippa" */ = {isa = XCConfigurationList; buildConfigurations = (AA000C010000000000000001, AA000C010000000000000002); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		AA0008010000000000000002 /* Build configuration list for PBXNativeTarget "Clippa" */ = {isa = XCConfigurationList; buildConfigurations = (AA000C010000000000000003, AA000C010000000000000004); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		AA0008010000000000000003 /* Build configuration list for PBXNativeTarget "ClippaTests" */ = {isa = XCConfigurationList; buildConfigurations = (AA000C010000000000000005, AA000C010000000000000006); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+/* End XCConfigurationList section */
+	};
+	rootObject = AA0000010000000000000001 /* Project object */;
+}
