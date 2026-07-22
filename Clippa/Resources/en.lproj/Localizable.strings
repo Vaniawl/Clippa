@@ -38,6 +38,13 @@
 "Open File" = "Open File";
 "Reveal in Finder" = "Reveal in Finder";
 "Copied to clipboard." = "Copied to clipboard.";
+"Keyboard" = "Keyboard";
+"Show history" = "Show history";
+"Pin selected item" = "Pin selected item";
+"Reset shortcut" = "Reset shortcut";
+"Press shortcut" = "Press shortcut";
+"Click to record shortcut" = "Click to record shortcut";
+"Use Command, Control, or Option with another key." = "Use Command, Control, or Option with another key.";
 "Paused" = "Paused";
 "Watching" = "Watching";
 "Permissions" = "Permissions";

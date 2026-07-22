@@ -28,7 +28,13 @@ struct ClippaApp: App {
             SettingsView(
                 settings: appDelegate.appState.settings,
                 store: appDelegate.appState.store,
-                hotKeyStatus: appDelegate.appState.hotKeyService.registrationStatus
+                hotKeyStatus: appDelegate.appState.hotKeyService.registrationStatus,
+                onShowShortcutChange: { shortcut in
+                    appDelegate.appState.updateShowPanelShortcut(shortcut)
+                },
+                onPinShortcutChange: { shortcut in
+                    appDelegate.appState.updatePinShortcut(shortcut)
+                }
             )
         }
     }

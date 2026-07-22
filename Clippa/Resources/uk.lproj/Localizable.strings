@@ -38,6 +38,13 @@
 "Open File" = "Відкрити файл";
 "Reveal in Finder" = "Показати у Finder";
 "Copied to clipboard." = "Скопійовано в буфер.";
+"Keyboard" = "Клавіатура";
+"Show history" = "Показати історію";
+"Pin selected item" = "Закріпити вибраний елемент";
+"Reset shortcut" = "Скинути комбінацію";
+"Press shortcut" = "Натисніть комбінацію";
+"Click to record shortcut" = "Клікніть, щоб записати комбінацію";
+"Use Command, Control, or Option with another key." = "Використайте Command, Control або Option разом з іншою клавішею.";
 "Paused" = "Призупинено";
 "Watching" = "Відстежує";
 "Permissions" = "Дозволи";

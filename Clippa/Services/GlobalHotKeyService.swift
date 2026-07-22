@@ -9,7 +9,8 @@ final class GlobalHotKeyService: @unchecked Sendable {
     private var onHotKey: (@MainActor () -> Void)?
     private(set) var registrationStatus: String = String(localized: "Not registered")
 
-    func register(onHotKey: @escaping @MainActor () -> Void) {
+    @discardableResult
+    func register(shortcut: HotKeyShortcut, onHotKey: @escaping @MainActor () -> Void) -> Bool {
         self.onHotKey = onHotKey
         unregister()
 
@@ -24,14 +25,13 @@ final class GlobalHotKeyService: @unchecked Sendable {
         )
         guard handlerStatus == noErr else {
             registrationStatus = String(localized: "Hotkey handler failed: \(handlerStatus)")
-            return
+            return false
         }
 
         let identifier = EventHotKeyID(signature: Self.signature, id: 1)
-        let modifiers = UInt32(cmdKey | shiftKey)
         let status = RegisterEventHotKey(
-            UInt32(kVK_ANSI_V),
-            modifiers,
+            shortcut.keyCode,
+            shortcut.modifiers,
             identifier,
             GetApplicationEventTarget(),
             0,
@@ -39,9 +39,11 @@ final class GlobalHotKeyService: @unchecked Sendable {
         )
         if status == noErr {
             registrationStatus = String(localized: "Registered")
+            return true
         } else {
             registrationStatus = String(localized: "Shortcut is unavailable: \(status)")
             unregister()
+            return false
         }
     }
 

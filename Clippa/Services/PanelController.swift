@@ -34,14 +34,27 @@ final class AppState {
             await store.load()
         }
         monitor.start()
-        hotKeyService.register { [weak self] in
-            self?.togglePanel()
-        }
+        registerShowPanelShortcut()
         if !settings.hasShownAccessibilityOnboarding && !AccessibilityService.isTrusted {
             settings.hasShownAccessibilityOnboarding = true
             notice = String(localized: "Accessibility access enables automatic paste. Without it, Clippa still copies the selected item.")
             AccessibilityService.requestPrompt()
         }
+    }
+
+    func registerShowPanelShortcut() {
+        hotKeyService.register(shortcut: settings.showPanelShortcut) { [weak self] in
+            self?.togglePanel()
+        }
+    }
+
+    func updateShowPanelShortcut(_ shortcut: HotKeyShortcut) {
+        settings.showPanelShortcut = shortcut
+        registerShowPanelShortcut()
+    }
+
+    func updatePinShortcut(_ shortcut: HotKeyShortcut) {
+        settings.pinShortcut = shortcut
     }
 
     func togglePanel() {
@@ -186,6 +199,8 @@ final class PanelController {
             notice: appState.notice,
             isMonitoringPaused: appState.settings.isMonitoringPaused,
             isAutoPasteReady: appState.isAutoPasteReady,
+            showShortcutText: appState.settings.showPanelShortcut.displayString,
+            pinShortcutText: appState.settings.pinShortcut.displayString,
             onPasteSelected: { [weak appState] in appState?.pasteSelectedItem() },
             onCopy: { [weak appState] item in appState?.copy(item) },
             onOpen: { [weak appState] item in appState?.open(item) },
@@ -226,11 +241,11 @@ final class PanelController {
 
     private func installMonitors(appState: AppState) {
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak appState] event in
-            guard let action = Self.action(for: event) else {
+            guard let appState, let action = Self.action(for: event, settings: appState.settings) else {
                 return event
             }
             Task { @MainActor in
-                appState?.performPanelAction(action)
+                appState.performPanelAction(action)
             }
             return nil
         }
@@ -241,8 +256,11 @@ final class PanelController {
         }
     }
 
-    private static func action(for event: NSEvent) -> PanelKeyAction? {
+    private static func action(for event: NSEvent, settings: AppSettings) -> PanelKeyAction? {
         let command = event.modifierFlags.contains(.command)
+        if settings.pinShortcut.matches(event) {
+            return .togglePin
+        }
         switch (event.keyCode, command) {
         case (UInt16(kVK_DownArrow), _):
             return .selectNext
@@ -258,8 +276,6 @@ final class PanelController {
             return .reveal
         case (UInt16(kVK_Escape), _):
             return .closeOrClearSearch
-        case (UInt16(kVK_ANSI_P), true):
-            return .togglePin
         case (UInt16(kVK_Delete), true), (UInt16(kVK_ForwardDelete), true):
             return .delete
         default:

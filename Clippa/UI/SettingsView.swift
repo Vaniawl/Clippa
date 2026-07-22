@@ -1,9 +1,13 @@
+import AppKit
+import Carbon.HIToolbox
 import SwiftUI
 
 struct SettingsView: View {
     @Bindable var settings: AppSettings
     @Bindable var store: ClipboardStore
     let hotKeyStatus: String
+    let onShowShortcutChange: (HotKeyShortcut) -> Void
+    let onPinShortcutChange: (HotKeyShortcut) -> Void
     @State private var newExcludedIdentifier = ""
     @State private var confirmClearUnpinned = false
     @State private var confirmClearAll = false
@@ -36,24 +40,43 @@ struct SettingsView: View {
                     color: settings.launchAtLogin ? .green : .secondary
                 )
                 statusRow(
-                    title: String(localized: "Shortcut"),
-                    value: "⌘⇧V",
-                    symbol: "keyboard",
-                    color: .secondary
+                    title: String(localized: "Capture status"),
+                    value: settings.isMonitoringPaused ? String(localized: "Paused") : String(localized: "Watching"),
+                    symbol: settings.isMonitoringPaused ? "pause.circle.fill" : "record.circle",
+                    color: settings.isMonitoringPaused ? .orange : .green
                 )
+                Toggle("Pause clipboard monitoring", isOn: $settings.isMonitoringPaused)
+            }
+
+            Section("Keyboard") {
+                LabeledContent {
+                    HStack(spacing: 8) {
+                        HotKeyRecorder(shortcut: showShortcutBinding, onCommit: onShowShortcutChange)
+                            .frame(width: 116, height: 30)
+                        resetShortcutButton {
+                            onShowShortcutChange(.defaultShowPanel)
+                        }
+                    }
+                } label: {
+                    Label("Show history", systemImage: "keyboard")
+                }
                 statusRow(
                     title: String(localized: "Shortcut status"),
                     value: hotKeyStatus,
                     symbol: hotKeyStatus == String(localized: "Registered") ? "checkmark.circle.fill" : "exclamationmark.triangle.fill",
                     color: hotKeyStatus == String(localized: "Registered") ? .green : .orange
                 )
-                Toggle("Pause clipboard monitoring", isOn: $settings.isMonitoringPaused)
-                statusRow(
-                    title: String(localized: "Capture status"),
-                    value: settings.isMonitoringPaused ? String(localized: "Paused") : String(localized: "Watching"),
-                    symbol: settings.isMonitoringPaused ? "pause.circle.fill" : "record.circle",
-                    color: settings.isMonitoringPaused ? .orange : .green
-                )
+                LabeledContent {
+                    HStack(spacing: 8) {
+                        HotKeyRecorder(shortcut: pinShortcutBinding, onCommit: onPinShortcutChange)
+                            .frame(width: 116, height: 30)
+                        resetShortcutButton {
+                            onPinShortcutChange(.defaultPinSelected)
+                        }
+                    }
+                } label: {
+                    Label("Pin selected item", systemImage: "pin")
+                }
             }
 
             Section("Retention") {
@@ -102,7 +125,7 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 540, height: 660)
+        .frame(width: 560, height: 720)
         .confirmationDialog("Clear unpinned clipboard history?", isPresented: $confirmClearUnpinned) {
             Button("Clear unpinned history", role: .destructive) {
                 store.clearUnpinned()
@@ -129,6 +152,20 @@ struct SettingsView: View {
         )
     }
 
+    private var showShortcutBinding: Binding<HotKeyShortcut> {
+        Binding(
+            get: { settings.showPanelShortcut },
+            set: { onShowShortcutChange($0) }
+        )
+    }
+
+    private var pinShortcutBinding: Binding<HotKeyShortcut> {
+        Binding(
+            get: { settings.pinShortcut },
+            set: { onPinShortcutChange($0) }
+        )
+    }
+
     private func statusRow(title: String, value: String, symbol: String, color: Color) -> some View {
         LabeledContent {
             Text(value)
@@ -141,5 +178,97 @@ struct SettingsView: View {
                     .foregroundStyle(color)
             }
         }
+    }
+
+    private func resetShortcutButton(action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: "arrow.counterclockwise")
+        }
+        .buttonStyle(.borderless)
+        .help(String(localized: "Reset shortcut"))
+        .accessibilityLabel(Text("Reset shortcut"))
+    }
+}
+
+private struct HotKeyRecorder: NSViewRepresentable {
+    @Binding var shortcut: HotKeyShortcut
+    let onCommit: (HotKeyShortcut) -> Void
+
+    func makeNSView(context: Context) -> HotKeyRecorderButton {
+        let button = HotKeyRecorderButton(shortcut: shortcut)
+        let shortcutBinding = $shortcut
+        button.onShortcut = { newShortcut in
+            shortcutBinding.wrappedValue = newShortcut
+            onCommit(newShortcut)
+        }
+        return button
+    }
+
+    func updateNSView(_ nsView: HotKeyRecorderButton, context: Context) {
+        nsView.shortcut = shortcut
+        let shortcutBinding = $shortcut
+        nsView.onShortcut = { newShortcut in
+            shortcutBinding.wrappedValue = newShortcut
+            onCommit(newShortcut)
+        }
+    }
+}
+
+private final class HotKeyRecorderButton: NSButton {
+    var shortcut: HotKeyShortcut {
+        didSet { updateTitle() }
+    }
+    var onShortcut: ((HotKeyShortcut) -> Void)?
+    private var isRecording = false {
+        didSet { updateTitle() }
+    }
+    private var validationMessage: String?
+
+    override var acceptsFirstResponder: Bool { true }
+
+    init(shortcut: HotKeyShortcut) {
+        self.shortcut = shortcut
+        super.init(frame: .zero)
+        bezelStyle = .rounded
+        controlSize = .regular
+        font = .monospacedSystemFont(ofSize: 13, weight: .medium)
+        setButtonType(.momentaryPushIn)
+        target = self
+        action = #selector(startRecording)
+        updateTitle()
+    }
+
+    @available(*, unavailable)
+    required init?(coder: NSCoder) {
+        fatalError("init(coder:) has not been implemented")
+    }
+
+    @objc private func startRecording() {
+        validationMessage = nil
+        isRecording = true
+        window?.makeFirstResponder(self)
+    }
+
+    override func keyDown(with event: NSEvent) {
+        if event.keyCode == UInt16(kVK_Escape) {
+            validationMessage = nil
+            isRecording = false
+            return
+        }
+        guard let newShortcut = HotKeyShortcut.from(event: event) else {
+            NSSound.beep()
+            validationMessage = String(localized: "Use Command, Control, or Option with another key.")
+            updateTitle()
+            return
+        }
+        shortcut = newShortcut
+        validationMessage = nil
+        isRecording = false
+        onShortcut?(newShortcut)
+    }
+
+    private func updateTitle() {
+        title = isRecording ? String(localized: "Press shortcut") : shortcut.displayString
+        toolTip = validationMessage ?? String(localized: "Click to record shortcut")
     }
 }

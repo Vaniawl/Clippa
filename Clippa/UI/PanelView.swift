@@ -6,6 +6,8 @@ struct PanelView: View {
     var notice: String?
     var isMonitoringPaused: Bool
     var isAutoPasteReady: Bool
+    var showShortcutText: String
+    var pinShortcutText: String
     var onPasteSelected: @MainActor () -> Void
     var onCopy: @MainActor (ClipboardItem) -> Void
     var onOpen: @MainActor (ClipboardItem) -> Void
@@ -57,7 +59,7 @@ struct PanelView: View {
                 .help(String(localized: "Clear search"))
                 .accessibilityLabel(Text("Clear search"))
             }
-            Text("⌘⇧V")
+            Text(showShortcutText)
                 .font(.caption)
                 .foregroundStyle(.tertiary)
                 .padding(.horizontal, 6)
@@ -121,6 +123,7 @@ struct PanelView: View {
                             item: item,
                             isSelected: item.id == store.selectedItemID,
                             contrast: contrast,
+                            pinShortcutText: pinShortcutText,
                             onPaste: {
                                 store.select(item)
                                 onPasteSelected()
@@ -205,6 +208,7 @@ private struct ClipboardRow: View {
     let item: ClipboardItem
     let isSelected: Bool
     let contrast: ColorSchemeContrast
+    let pinShortcutText: String
     let onPaste: @MainActor () -> Void
     let onCopy: @MainActor () -> Void
     let onOpen: @MainActor () -> Void
@@ -320,7 +324,7 @@ private struct ClipboardRow: View {
             }
             .buttonStyle(.plain)
             .foregroundStyle(item.isPinned ? Color.accentColor : Color.secondary)
-            .help(item.isPinned ? String(localized: "Unpin") : String(localized: "Pin"))
+            .help("\(item.isPinned ? String(localized: "Unpin") : String(localized: "Pin")) \(pinShortcutText)")
             .accessibilityLabel(Text(item.isPinned ? "Unpin" : "Pin"))
 
             Button(role: .destructive) {
