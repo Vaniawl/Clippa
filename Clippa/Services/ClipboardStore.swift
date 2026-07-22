@@ -7,6 +7,8 @@ import Observation
 final class ClipboardStore {
     private(set) var items: [ClipboardItem] = []
     private(set) var visibleItems: [ClipboardItem] = []
+    private(set) var visibleItemsRevision = 0
+    private(set) var pinnedItemCount = 0
     var selectedItemID: ClipboardItem.ID?
     var searchQuery: String = "" {
         didSet { rebuildVisibleItems() }
@@ -19,6 +21,7 @@ final class ClipboardStore {
     private let historyStore: EncryptedHistoryStore
     private let maxUnpinnedCount = 100
     private let retention: TimeInterval = 7 * 24 * 60 * 60
+    private var persistTask: Task<Void, Never>?
 
     init(historyStore: EncryptedHistoryStore = EncryptedHistoryStore()) {
         self.historyStore = historyStore
@@ -58,7 +61,7 @@ final class ClipboardStore {
             return
         }
         items[index].lastUsedAt = date
-        applyOrderingAndRetention(now: date)
+        applyOrderingAndRetention(now: date, persistence: .deferred)
     }
 
     func togglePinSelected() {
@@ -135,10 +138,14 @@ final class ClipboardStore {
     }
 
     func applyOrderingAndRetention(now: Date) {
+        applyOrderingAndRetention(now: now, persistence: .immediate)
+    }
+
+    private func applyOrderingAndRetention(now: Date, persistence: PersistenceMode) {
         enforceRetention(now: now)
         items = ordered(items)
         rebuildVisibleItems()
-        persist()
+        persist(persistence)
     }
 
     func filteredItems(query: String, filter: ClipboardFilter) -> [ClipboardItem] {
@@ -166,7 +173,14 @@ final class ClipboardStore {
     }
 
     private func rebuildVisibleItems() {
-        visibleItems = filteredItems(query: searchQuery, filter: selectedFilter)
+        let nextVisibleItems = filteredItems(query: searchQuery, filter: selectedFilter)
+        if nextVisibleItems.map(\.id) != visibleItems.map(\.id) {
+            visibleItemsRevision += 1
+        }
+        visibleItems = nextVisibleItems
+        pinnedItemCount = items.reduce(0) { count, item in
+            count + (item.isPinned ? 1 : 0)
+        }
         if let selectedItemID, visibleItems.contains(where: { $0.id == selectedItemID }) {
             return
         }
@@ -211,10 +225,30 @@ final class ClipboardStore {
         max(item.createdAt, item.lastUsedAt)
     }
 
-    private func persist() {
+    private func persist(_ mode: PersistenceMode) {
         let snapshot = StoredClipboardSnapshot(items: items)
-        Task {
+        persistTask?.cancel()
+        persistTask = Task { [historyStore] in
+            if mode == .deferred {
+                do {
+                    try await Task.sleep(for: .milliseconds(350))
+                } catch {
+                    return
+                }
+            }
             try? await historyStore.save(snapshot)
         }
     }
+
+    func flushPendingSave() async {
+        persistTask?.cancel()
+        persistTask = nil
+        let snapshot = StoredClipboardSnapshot(items: items)
+        try? await historyStore.save(snapshot)
+    }
+}
+
+private enum PersistenceMode: Sendable {
+    case immediate
+    case deferred
 }

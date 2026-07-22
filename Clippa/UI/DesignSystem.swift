@@ -44,7 +44,7 @@ struct ClipboardThumbnailView: View {
     private var thumbnail: some View {
         switch item.payload {
         case .image(let data, _):
-            if let image = NSImage(data: data) {
+            if let image = ClipboardImageCache.image(for: item.payloadHash, data: data) {
                 Image(nsImage: image)
                     .resizable()
                     .scaledToFill()
@@ -75,9 +75,9 @@ struct ClipboardImageInfoView: View {
     let item: ClipboardItem
 
     var body: some View {
-        if case .image(let data, let uti) = item.payload {
+        if let metadata = item.imageMetadata {
             HStack(spacing: 6) {
-                Label(imageDescription(data: data, uti: uti), systemImage: "info.circle")
+                Label(imageDescription(metadata: metadata), systemImage: "info.circle")
                     .labelStyle(.titleAndIcon)
             }
             .font(.caption)
@@ -86,11 +86,73 @@ struct ClipboardImageInfoView: View {
         }
     }
 
-    private func imageDescription(data: Data, uti: String?) -> String {
-        let byteCount = ByteCountFormatter.string(fromByteCount: Int64(data.count), countStyle: .file)
-        let dimensions = NSImage(data: data).map { image in
-            "\(Int(image.size.width)) x \(Int(image.size.height))"
+    private func imageDescription(metadata: ClipboardImageMetadata) -> String {
+        let byteCount = ClipboardFormatters.byteCount.string(fromByteCount: Int64(metadata.byteCount))
+        return [
+            String(localized: "Clipboard image"),
+            metadata.dimensionsText,
+            byteCount,
+            metadata.uti
+        ].compactMap { $0 }.joined(separator: " / ")
+    }
+}
+
+@MainActor
+enum ClipboardImageCache {
+    private static let cache: NSCache<NSString, NSImage> = {
+        let cache = NSCache<NSString, NSImage>()
+        cache.countLimit = 120
+        cache.totalCostLimit = 64 * 1024 * 1024
+        return cache
+    }()
+
+    static func image(for key: String, data: Data) -> NSImage? {
+        let cacheKey = key as NSString
+        if let image = cache.object(forKey: cacheKey) {
+            return image
         }
-        return [String(localized: "Clipboard image"), dimensions, byteCount, uti].compactMap { $0 }.joined(separator: " / ")
+        guard let image = NSImage(data: data) else {
+            return nil
+        }
+        cache.setObject(image, forKey: cacheKey, cost: data.count)
+        return image
+    }
+}
+
+@MainActor
+enum ApplicationDisplayNameCache {
+    private static var namesByBundleIdentifier: [String: String] = [:]
+
+    static func displayName(for bundleIdentifier: String) -> String {
+        if let cached = namesByBundleIdentifier[bundleIdentifier] {
+            return cached
+        }
+        let name: String
+        if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleIdentifier) {
+            name = FileManager.default.displayName(atPath: url.path)
+        } else {
+            name = bundleIdentifier
+        }
+        namesByBundleIdentifier[bundleIdentifier] = name
+        return name
+    }
+}
+
+@MainActor
+enum ClipboardFormatters {
+    static let byteCount: ByteCountFormatter = {
+        let formatter = ByteCountFormatter()
+        formatter.countStyle = .file
+        return formatter
+    }()
+}
+
+@MainActor
+extension ClipboardItem {
+    var cachedSourceName: String? {
+        guard let sourceBundleIdentifier else {
+            return nil
+        }
+        return ApplicationDisplayNameCache.displayName(for: sourceBundleIdentifier)
     }
 }

@@ -1,5 +1,6 @@
 import Foundation
 import CryptoKit
+import ImageIO
 
 enum ClipboardItemKind: String, Codable, CaseIterable, Sendable {
     case text
@@ -73,6 +74,34 @@ struct FileReference: Codable, Hashable, Sendable {
     var displayName: String { url.lastPathComponent.isEmpty ? path : url.lastPathComponent }
 }
 
+struct ClipboardImageMetadata: Codable, Equatable, Sendable {
+    var widthPixels: Int?
+    var heightPixels: Int?
+    var byteCount: Int
+    var uti: String?
+
+    init(data: Data, uti: String?) {
+        self.byteCount = data.count
+        self.uti = uti
+
+        guard let source = CGImageSourceCreateWithData(data as CFData, nil),
+              let properties = CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any]
+        else {
+            return
+        }
+
+        widthPixels = properties[kCGImagePropertyPixelWidth] as? Int
+        heightPixels = properties[kCGImagePropertyPixelHeight] as? Int
+    }
+
+    var dimensionsText: String? {
+        guard let widthPixels, let heightPixels else {
+            return nil
+        }
+        return "\(widthPixels) x \(heightPixels)"
+    }
+}
+
 enum ClipboardPayload: Codable, Equatable, Sendable {
     case text(String)
     case url(URL)
@@ -132,6 +161,13 @@ enum ClipboardPayload: Codable, Equatable, Sendable {
         }
         return hasher.finalize().map { String(format: "%02x", $0) }.joined()
     }
+
+    var imageMetadata: ClipboardImageMetadata? {
+        guard case .image(let data, let uti) = self else {
+            return nil
+        }
+        return ClipboardImageMetadata(data: data, uti: uti)
+    }
 }
 
 struct ClipboardItem: Identifiable, Codable, Equatable, Sendable {
@@ -144,6 +180,7 @@ struct ClipboardItem: Identifiable, Codable, Equatable, Sendable {
     var payloadHash: String
     var isPinned: Bool
     var sourceBundleIdentifier: String?
+    var imageMetadata: ClipboardImageMetadata?
 
     init(
         id: UUID,
@@ -154,7 +191,8 @@ struct ClipboardItem: Identifiable, Codable, Equatable, Sendable {
         payload: ClipboardPayload,
         payloadHash: String,
         isPinned: Bool,
-        sourceBundleIdentifier: String?
+        sourceBundleIdentifier: String?,
+        imageMetadata: ClipboardImageMetadata? = nil
     ) {
         self.id = id
         self.kind = kind
@@ -165,6 +203,7 @@ struct ClipboardItem: Identifiable, Codable, Equatable, Sendable {
         self.payloadHash = payloadHash
         self.isPinned = isPinned
         self.sourceBundleIdentifier = sourceBundleIdentifier
+        self.imageMetadata = imageMetadata ?? payload.imageMetadata
     }
 
     init(
@@ -184,6 +223,7 @@ struct ClipboardItem: Identifiable, Codable, Equatable, Sendable {
         self.payloadHash = payload.stableHash
         self.isPinned = isPinned
         self.sourceBundleIdentifier = sourceBundleIdentifier
+        self.imageMetadata = payload.imageMetadata
     }
 }
 

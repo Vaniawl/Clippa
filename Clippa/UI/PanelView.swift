@@ -199,7 +199,7 @@ struct PanelView: View {
                 .padding(.vertical, 2)
             }
             .scrollIndicators(.automatic)
-            .animation(reduceMotion ? nil : .snappy(duration: 0.16), value: store.visibleItems.map(\.id))
+            .animation(reduceMotion ? nil : .snappy(duration: 0.16), value: store.visibleItemsRevision)
         }
     }
 
@@ -379,13 +379,7 @@ private struct ClipboardRow: View {
     }
 
     private var sourceName: String? {
-        guard let identifier = item.sourceBundleIdentifier else {
-            return nil
-        }
-        guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: identifier) else {
-            return identifier
-        }
-        return FileManager.default.displayName(atPath: url.path)
+        item.cachedSourceName
     }
 
     private var canOpen: Bool {

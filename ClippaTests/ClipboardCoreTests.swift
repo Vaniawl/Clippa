@@ -1,6 +1,7 @@
 import AppKit
 import Carbon.HIToolbox
 import CryptoKit
+import ImageIO
 import XCTest
 @testable import Clippa
 
@@ -141,6 +142,38 @@ final class ClipboardCoreTests: XCTestCase {
         XCTAssertEqual(store.filteredItems(query: "alpha", filter: .text).first?.preview, "alpha note")
     }
 
+    func testDerivedVisibleStateUpdatesOnlyWhenVisibleItemsChange() {
+        let store = ClipboardStore()
+        let initialRevision = store.visibleItemsRevision
+
+        store.add(payload: .text("alpha"), sourceBundleIdentifier: nil)
+        XCTAssertEqual(store.pinnedItemCount, 0)
+        XCTAssertGreaterThan(store.visibleItemsRevision, initialRevision)
+
+        let revisionAfterAdd = store.visibleItemsRevision
+        store.searchQuery = "missing"
+        XCTAssertTrue(store.visibleItems.isEmpty)
+        XCTAssertGreaterThan(store.visibleItemsRevision, revisionAfterAdd)
+
+        let revisionAfterEmptySearch = store.visibleItemsRevision
+        store.searchQuery = "still missing"
+        XCTAssertEqual(store.visibleItemsRevision, revisionAfterEmptySearch)
+
+        store.searchQuery = ""
+        store.togglePin(store.items.first!)
+        XCTAssertEqual(store.pinnedItemCount, 1)
+    }
+
+    func testImageMetadataUsesImagePropertiesWithoutViewDecode() throws {
+        let data = try makePNGData(width: 2, height: 3)
+        let item = ClipboardItem(payload: .image(data: data, uti: "public.png"))
+
+        XCTAssertEqual(item.imageMetadata?.widthPixels, 2)
+        XCTAssertEqual(item.imageMetadata?.heightPixels, 3)
+        XCTAssertEqual(item.imageMetadata?.byteCount, data.count)
+        XCTAssertEqual(item.imageMetadata?.uti, "public.png")
+    }
+
     func testPrivacyMarkersAndExcludedBundleIDs() {
         let filter = PrivacyFilter(excludedBundleIdentifiers: ["secret.app"])
         XCTAssertFalse(filter.shouldCapture(types: [.init("org.nspasteboard.ConcealedType")], sourceBundleIdentifier: nil))
@@ -211,6 +244,36 @@ final class ClipboardCoreTests: XCTestCase {
         let frame = PanelController.panelFrame(near: NSPoint(x: -700, y: 400), size: NSSize(width: 300, height: 200), screens: [left, right])
         XCTAssertLessThan(frame.maxX, 0)
     }
+}
+
+private func makePNGData(width: Int, height: Int) throws -> Data {
+    let colorSpace = CGColorSpaceCreateDeviceRGB()
+    guard let context = CGContext(
+        data: nil,
+        width: width,
+        height: height,
+        bitsPerComponent: 8,
+        bytesPerRow: width * 4,
+        space: colorSpace,
+        bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+    ) else {
+        throw XCTSkip("Could not create test bitmap context.")
+    }
+    context.setFillColor(NSColor.systemBlue.cgColor)
+    context.fill(CGRect(x: 0, y: 0, width: width, height: height))
+    guard let image = context.makeImage() else {
+        throw XCTSkip("Could not create test image.")
+    }
+
+    let data = NSMutableData()
+    guard let destination = CGImageDestinationCreateWithData(data, "public.png" as CFString, 1, nil) else {
+        throw XCTSkip("Could not create PNG destination.")
+    }
+    CGImageDestinationAddImage(destination, image, nil)
+    guard CGImageDestinationFinalize(destination) else {
+        throw XCTSkip("Could not finalize PNG data.")
+    }
+    return data as Data
 }
 
 private final class TestScreen: NSScreen {

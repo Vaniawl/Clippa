@@ -186,7 +186,10 @@ final class AppState {
     }
 
     func quit() {
-        NSApp.terminate(nil)
+        Task {
+            await store.flushPendingSave()
+            NSApp.terminate(nil)
+        }
     }
 }
 

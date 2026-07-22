@@ -316,7 +316,7 @@ private struct HistoryDashboardView: View {
     private var stats: some View {
         HStack(spacing: 12) {
             stat(title: String(localized: "Items"), value: "\(store.items.count)")
-            stat(title: String(localized: "Pinned"), value: "\(store.items.filter(\.isPinned).count)")
+            stat(title: String(localized: "Pinned"), value: "\(store.pinnedItemCount)")
         }
     }
 
@@ -597,7 +597,7 @@ private struct SelectedItemDetail: View {
                 }
             }
         case .image(let data, _):
-            if let image = NSImage(data: data) {
+            if let image = ClipboardImageCache.image(for: item.payloadHash, data: data) {
                 VStack(alignment: .leading, spacing: 10) {
                     ZStack {
                         Color.secondary.opacity(0.08)
@@ -640,13 +640,7 @@ private struct SelectedItemDetail: View {
     }
 
     private var sourceName: String? {
-        guard let identifier = item.sourceBundleIdentifier else {
-            return nil
-        }
-        guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: identifier) else {
-            return identifier
-        }
-        return FileManager.default.displayName(atPath: url.path)
+        item.cachedSourceName
     }
 }
 
