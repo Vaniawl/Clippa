@@ -45,7 +45,12 @@ final class PasteService {
 
         await activatePasteTarget(target?.application)
         let focusedElement = AccessibilityService.focusedEditableTextElement(in: target?.application) ?? target?.focusedElement
+        focus(focusedElement)
         if let text = directInsertText(for: item), insert(text, into: focusedElement) {
+            return .pasted
+        }
+
+        if await pressPasteMenuItem(in: target?.application) {
             return .pasted
         }
 
@@ -102,6 +107,17 @@ final class PasteService {
         }
         _ = AXUIElementSetAttributeValue(element, kAXSelectedTextRangeAttribute as CFString, caretValue)
         return true
+    }
+
+    private func focus(_ element: AXUIElement?) {
+        guard let element else {
+            return
+        }
+        _ = AXUIElementSetAttributeValue(
+            element,
+            kAXFocusedAttribute as CFString,
+            kCFBooleanTrue
+        )
     }
 
     private func selectedTextRange(in element: AXUIElement) -> CFRange? {
@@ -178,6 +194,121 @@ final class PasteService {
         }
 
         try? await Task.sleep(for: .milliseconds(180))
+    }
+
+    private func pressPasteMenuItem(in application: NSRunningApplication?) async -> Bool {
+        guard let application, !application.isTerminated else {
+            return false
+        }
+
+        let appElement = AXUIElementCreateApplication(application.processIdentifier)
+        guard let menuBar = elementAttribute(kAXMenuBarAttribute, from: appElement),
+              let menuBarItems = elementArrayAttribute(kAXChildrenAttribute, from: menuBar)
+        else {
+            return false
+        }
+
+        for menuBarItem in menuBarItems {
+            _ = AXUIElementPerformAction(menuBarItem, kAXPressAction as CFString)
+            try? await Task.sleep(for: .milliseconds(45))
+            if let pasteItem = findPasteMenuItem(in: menuBarItem),
+               AXUIElementPerformAction(pasteItem, kAXPressAction as CFString) == .success {
+                return true
+            }
+        }
+
+        await sendEscape()
+        return false
+    }
+
+    private func findPasteMenuItem(in element: AXUIElement, depth: Int = 0) -> AXUIElement? {
+        guard depth < 5 else {
+            return nil
+        }
+
+        if isPasteMenuItem(element) {
+            return element
+        }
+
+        for child in elementArrayAttribute(kAXChildrenAttribute, from: element) ?? [] {
+            if let match = findPasteMenuItem(in: child, depth: depth + 1) {
+                return match
+            }
+        }
+        return nil
+    }
+
+    private func isPasteMenuItem(_ element: AXUIElement) -> Bool {
+        let cmdChar = stringAttribute(kAXMenuItemCmdCharAttribute, from: element)?.lowercased()
+        let cmdModifiers = intAttribute(kAXMenuItemCmdModifiersAttribute, from: element)
+        let title = stringAttribute(kAXTitleAttribute, from: element)?.lowercased()
+        let isPasteCommand = title == "paste"
+            || title == String(localized: "Paste").lowercased()
+            || (cmdChar == "v" && (cmdModifiers == nil || cmdModifiers == 0))
+        guard isPasteCommand else {
+            return false
+        }
+
+        var enabled: CFTypeRef?
+        if AXUIElementCopyAttributeValue(element, kAXEnabledAttribute as CFString, &enabled) == .success,
+           let enabled = enabled as? Bool,
+           !enabled {
+            return false
+        }
+
+        return true
+    }
+
+    private func elementAttribute(_ attribute: String, from element: AXUIElement) -> AXUIElement? {
+        var value: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(element, attribute as CFString, &value) == .success,
+              let value,
+              CFGetTypeID(value) == AXUIElementGetTypeID()
+        else {
+            return nil
+        }
+        return (value as! AXUIElement)
+    }
+
+    private func elementArrayAttribute(_ attribute: String, from element: AXUIElement) -> [AXUIElement]? {
+        var value: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(element, attribute as CFString, &value) == .success,
+              let value,
+              CFGetTypeID(value) == CFArrayGetTypeID()
+        else {
+            return nil
+        }
+        return (value as? [AXUIElement])
+    }
+
+    private func stringAttribute(_ attribute: String, from element: AXUIElement) -> String? {
+        var value: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(element, attribute as CFString, &value) == .success else {
+            return nil
+        }
+        return value as? String
+    }
+
+    private func intAttribute(_ attribute: String, from element: AXUIElement) -> Int? {
+        var value: CFTypeRef?
+        guard AXUIElementCopyAttributeValue(element, attribute as CFString, &value) == .success else {
+            return nil
+        }
+        return value as? Int
+    }
+
+    private func sendEscape() async {
+        let source = CGEventSource(stateID: .hidSystemState)
+        guard
+            let down = CGEvent(keyboardEventSource: source, virtualKey: CGKeyCode(kVK_Escape), keyDown: true),
+            let up = CGEvent(keyboardEventSource: source, virtualKey: CGKeyCode(kVK_Escape), keyDown: false)
+        else {
+            return
+        }
+        down.post(tap: .cghidEventTap)
+        try? await Task.sleep(for: .milliseconds(18))
+        up.post(tap: .cghidEventTap)
+        try? await Task.sleep(for: .milliseconds(45))
     }
 
     private func sendCommandV() async {

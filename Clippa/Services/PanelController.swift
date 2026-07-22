@@ -109,12 +109,15 @@ final class AppState {
     }
 
     func paste(_ item: ClipboardItem) async {
-        await paste(item, into: panelController.pasteTarget)
+        let target = panelController.pasteTarget
+        await paste(item, into: target)
     }
 
     func paste(_ item: ClipboardItem, into target: PasteTarget?) async {
+        let target = target
         store.use(item)
         panelController.close()
+        try? await Task.sleep(for: .milliseconds(80))
         let outcome = await pasteService.paste(item, into: target)
         if outcome == .copiedOnlyRequiresAccessibility {
             notice = String(localized: "Copied. Enable Accessibility access for automatic paste.")
