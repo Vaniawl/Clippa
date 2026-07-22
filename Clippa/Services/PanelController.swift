@@ -198,7 +198,10 @@ final class PanelController {
     }
 
     func show(appState: AppState) {
-        previousApplication = NSWorkspace.shared.frontmostApplication
+        let frontmostApplication = NSWorkspace.shared.frontmostApplication
+        if frontmostApplication?.bundleIdentifier != Bundle.main.bundleIdentifier {
+            previousApplication = frontmostApplication
+        }
         appState.store.searchQuery = ""
         appState.store.selectedFilter = .all
         if let first = appState.store.visibleItems.first ?? appState.store.items.first {
@@ -232,8 +235,8 @@ final class PanelController {
         self.panel = panel
 
         installMonitors(appState: appState)
-        NSApp.activate()
-        panel.makeKeyAndOrderFront(nil)
+        panel.orderFrontRegardless()
+        panel.makeKey()
     }
 
     func close() {
@@ -334,5 +337,5 @@ enum PanelKeyAction: Sendable {
 
 final class ClippaPanel: NSPanel {
     override var canBecomeKey: Bool { true }
-    override var canBecomeMain: Bool { true }
+    override var canBecomeMain: Bool { false }
 }

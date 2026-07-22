@@ -37,10 +37,28 @@ final class PasteService {
             return .copiedOnlyRequiresAccessibility
         }
 
-        application?.activate()
-        try? await Task.sleep(for: .milliseconds(140))
+        await activatePasteTarget(application)
         sendCommandV()
         return .pasted
+    }
+
+    private func activatePasteTarget(_ application: NSRunningApplication?) async {
+        guard let application, !application.isTerminated else {
+            try? await Task.sleep(for: .milliseconds(120))
+            return
+        }
+
+        _ = application.activate()
+
+        for _ in 0..<10 {
+            if NSWorkspace.shared.frontmostApplication?.processIdentifier == application.processIdentifier {
+                try? await Task.sleep(for: .milliseconds(90))
+                return
+            }
+            try? await Task.sleep(for: .milliseconds(50))
+        }
+
+        try? await Task.sleep(for: .milliseconds(120))
     }
 
     private func sendCommandV() {
