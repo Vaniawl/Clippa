@@ -26,8 +26,10 @@
 "Search clipboard" = "Search clipboard";
 "Clear search" = "Clear search";
 "Filter" = "Filter";
-"No matching clipboard items" = "No matching clipboard items";
-"Copied text, links, images, and files will appear here." = "Copied text, links, images, and files will appear here.";
+"Clipboard is empty" = "Clipboard is empty";
+"Copy something and it will appear here." = "Copy something and it will appear here.";
+"No matching items" = "No matching items";
+"Try another search or filter." = "Try another search or filter.";
 "Empty text" = "Empty text";
 "Pinned" = "Pinned";
 "Unpin" = "Unpin";
@@ -47,8 +49,6 @@
 "Press shortcut" = "Press shortcut";
 "Click to record shortcut" = "Click to record shortcut";
 "Use Command, Control, or Option with another key." = "Use Command, Control, or Option with another key.";
-"Paused" = "Paused";
-"Watching" = "Watching";
 "Permissions" = "Permissions";
 "Accessibility" = "Accessibility";
 "Granted" = "Granted";
@@ -94,7 +94,6 @@
 "Clippa" = "Clippa";
 "Privacy" = "Privacy";
 "Items" = "Items";
-"No clipboard items" = "No clipboard items";
 "No item selected" = "No item selected";
 "Select an item to preview it and choose an action." = "Select an item to preview it and choose an action.";
 "Created" = "Created";

@@ -83,13 +83,15 @@ struct AppWindowView: View {
         }
         .animation(.snappy(duration: 0.18), value: toast?.id)
         .toolbar {
-            ToolbarItem {
-                Button {
-                    confirmClearUnpinned = true
-                } label: {
-                    Label("Clear unpinned history", systemImage: "trash")
+            if (selectedSection ?? .history) == .history {
+                ToolbarItem {
+                    Button {
+                        confirmClearUnpinned = true
+                    } label: {
+                        Label("Clear unpinned history", systemImage: "trash")
+                    }
+                    .help(String(localized: "Clear unpinned history"))
                 }
-                .help(String(localized: "Clear unpinned history"))
             }
         }
         .confirmationDialog("Clear unpinned clipboard history?", isPresented: $confirmClearUnpinned) {
@@ -324,9 +326,9 @@ private struct HistoryDashboardView: View {
         Group {
             if store.visibleItems.isEmpty {
                 ContentUnavailableView(
-                    "No clipboard items",
+                    emptyStateTitle,
                     systemImage: "tray",
-                    description: Text("Copied text, links, images, and files will appear here.")
+                    description: Text(emptyStateDescription)
                 )
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
@@ -346,6 +348,16 @@ private struct HistoryDashboardView: View {
                 .listStyle(.inset)
             }
         }
+    }
+
+    private var emptyStateTitle: String {
+        store.items.isEmpty ? String(localized: "Clipboard is empty") : String(localized: "No matching items")
+    }
+
+    private var emptyStateDescription: String {
+        store.items.isEmpty
+            ? String(localized: "Copy something and it will appear here.")
+            : String(localized: "Try another search or filter.")
     }
 
     private var detailPane: some View {

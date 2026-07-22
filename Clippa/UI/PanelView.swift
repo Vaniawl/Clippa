@@ -150,10 +150,10 @@ struct PanelView: View {
     private var results: some View {
         if store.visibleItems.isEmpty {
             VStack(spacing: 6) {
-                Text("No matching clipboard items")
+                Text(emptyStateTitle)
                     .font(.callout)
                     .foregroundStyle(.secondary)
-                Text("Copied text, links, images, and files will appear here.")
+                Text(emptyStateDescription)
                     .font(.caption)
                     .foregroundStyle(.tertiary)
             }
@@ -201,6 +201,16 @@ struct PanelView: View {
             .scrollIndicators(.automatic)
             .animation(reduceMotion ? nil : .snappy(duration: 0.16), value: store.visibleItemsRevision)
         }
+    }
+
+    private var emptyStateTitle: String {
+        store.items.isEmpty ? String(localized: "Clipboard is empty") : String(localized: "No matching items")
+    }
+
+    private var emptyStateDescription: String {
+        store.items.isEmpty
+            ? String(localized: "Copy something and it will appear here.")
+            : String(localized: "Try another search or filter.")
     }
 
     private func animate(_ changes: @escaping () -> Void) {

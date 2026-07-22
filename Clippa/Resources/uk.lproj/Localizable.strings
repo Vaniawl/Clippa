@@ -26,8 +26,10 @@
 "Search clipboard" = "Пошук у буфері";
 "Clear search" = "Очистити пошук";
 "Filter" = "Фільтр";
-"No matching clipboard items" = "Немає відповідних елементів";
-"Copied text, links, images, and files will appear here." = "Скопійований текст, посилання, зображення й файли з’являться тут.";
+"Clipboard is empty" = "Буфер порожній";
+"Copy something and it will appear here." = "Скопіюйте щось, і воно з’явиться тут.";
+"No matching items" = "Немає відповідних записів";
+"Try another search or filter." = "Спробуйте інший пошук або фільтр.";
 "Empty text" = "Порожній текст";
 "Pinned" = "Закріплено";
 "Unpin" = "Відкріпити";
@@ -47,8 +49,6 @@
 "Press shortcut" = "Натисніть комбінацію";
 "Click to record shortcut" = "Клікніть, щоб записати комбінацію";
 "Use Command, Control, or Option with another key." = "Використайте Command, Control або Option разом з іншою клавішею.";
-"Paused" = "Призупинено";
-"Watching" = "Відстежує";
 "Permissions" = "Дозволи";
 "Accessibility" = "Accessibility";
 "Granted" = "Надано";
@@ -94,7 +94,6 @@
 "Clippa" = "Clippa";
 "Privacy" = "Приватність";
 "Items" = "Записи";
-"No clipboard items" = "Немає записів буфера";
 "No item selected" = "Запис не вибрано";
 "Select an item to preview it and choose an action." = "Виберіть запис, щоб переглянути його й виконати дію.";
 "Created" = "Створено";
