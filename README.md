@@ -28,10 +28,11 @@ Install the current GitHub build:
 npx github:Vaniawl/Clippa
 ```
 
-After the npm package is published, the public install command will be:
+Useful installer options:
 
 ```bash
-npx install-clippa
+npx github:Vaniawl/Clippa -- --no-open
+npx github:Vaniawl/Clippa -- --install-dir ~/Applications
 ```
 
 You can also download `outputs/Clippa.app.zip`, unzip it, move `Clippa.app` to `/Applications`, and open it.
@@ -40,6 +41,7 @@ You can also download `outputs/Clippa.app.zip`, unzip it, move `Clippa.app` to `
 
 - Runs quietly in the background as a menu-bar app.
 - Search clipboard history from a compact panel.
+- Open the full History, Settings, and Privacy window from the menu-bar icon.
 - Keep text, links, images, and file references.
 - Pin important clips so cleanup never removes them.
 - Choose your own global shortcuts.

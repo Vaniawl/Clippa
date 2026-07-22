@@ -7,8 +7,10 @@ const path = require("node:path");
 const https = require("node:https");
 
 const appName = "Clippa";
+const bundleIdentifier = "com.ivandovhosheia.Clippa";
 const localZipPath = path.resolve(__dirname, "../outputs/Clippa.app.zip");
-const defaultZipUrl = "https://raw.githubusercontent.com/Vaniawl/Clippa/main/outputs/Clippa.app.zip";
+const packageJson = require("../package.json");
+const defaultZipUrl = "https://github.com/Vaniawl/Clippa/releases/download/v1.0.0/Clippa.app.zip";
 const zipUrl = process.env.CLIPPA_ZIP_URL || defaultZipUrl;
 
 function usage() {
@@ -16,10 +18,12 @@ function usage() {
 
 Usage:
   npx github:Vaniawl/Clippa
-  npx install-clippa
 
 Options:
-  --help       Show this help.
+  --install-dir <path>  Copy Clippa.app into a custom applications folder.
+  --no-open             Install without opening Clippa afterwards.
+  --version             Show installer version.
+  --help                Show this help.
 
 The installer copies Clippa.app to /Applications when possible, otherwise to ~/Applications.
 `);
@@ -27,6 +31,53 @@ The installer copies Clippa.app to /Applications when possible, otherwise to ~/A
 
 function run(command, args, options = {}) {
   execFileSync(command, args, { stdio: "inherit", ...options });
+}
+
+function parseArgs(argv) {
+  const options = {
+    help: false,
+    version: false,
+    noOpen: false,
+    installDir: null
+  };
+
+  for (let index = 0; index < argv.length; index += 1) {
+    const arg = argv[index];
+    switch (arg) {
+      case "--help":
+      case "-h":
+        options.help = true;
+        break;
+      case "--version":
+      case "-v":
+        options.version = true;
+        break;
+      case "--no-open":
+        options.noOpen = true;
+        break;
+      case "--install-dir":
+        index += 1;
+        if (!argv[index]) {
+          throw new Error("--install-dir requires a path.");
+        }
+        options.installDir = expandHome(argv[index]);
+        break;
+      default:
+        throw new Error(`Unknown option: ${arg}`);
+    }
+  }
+
+  return options;
+}
+
+function expandHome(value) {
+  if (value === "~") {
+    return os.homedir();
+  }
+  if (value.startsWith("~/")) {
+    return path.join(os.homedir(), value.slice(2));
+  }
+  return path.resolve(value);
 }
 
 function download(url, destination) {
@@ -61,9 +112,29 @@ function copyApp(source, destination) {
   run("/usr/bin/ditto", [source, destination]);
 }
 
+function quitRunningApp() {
+  try {
+    run("/usr/bin/osascript", ["-e", `tell application id "${bundleIdentifier}" to quit`], {
+      stdio: "ignore",
+      timeout: 3000
+    });
+  } catch {
+    try {
+      run("/usr/bin/killall", [appName], { stdio: "ignore", timeout: 3000 });
+    } catch {
+      // The app may not be running yet.
+    }
+  }
+}
+
 async function main() {
-  if (process.argv.includes("--help") || process.argv.includes("-h")) {
+  const options = parseArgs(process.argv.slice(2));
+  if (options.help) {
     usage();
+    return;
+  }
+  if (options.version) {
+    console.log(packageJson.version);
     return;
   }
 
@@ -93,27 +164,30 @@ async function main() {
       throw new Error(`Archive did not contain ${appName}.app`);
     }
 
-    try {
-      run("/usr/bin/osascript", ["-e", `tell application id "com.ivandovhosheia.Clippa" to quit`], { stdio: "ignore" });
-    } catch {
-      // The app may not be running or may not be installed yet.
-    }
+    quitRunningApp();
 
-    let installDir = "/Applications";
+    let installDir = options.installDir || "/Applications";
     let installPath = path.join(installDir, `${appName}.app`);
-    try {
-      copyApp(appPath, installPath);
-    } catch (error) {
-      installDir = path.join(os.homedir(), "Applications");
+    if (options.installDir) {
       fs.mkdirSync(installDir, { recursive: true });
-      installPath = path.join(installDir, `${appName}.app`);
       copyApp(appPath, installPath);
+    } else {
+      try {
+        copyApp(appPath, installPath);
+      } catch (error) {
+        installDir = path.join(os.homedir(), "Applications");
+        fs.mkdirSync(installDir, { recursive: true });
+        installPath = path.join(installDir, `${appName}.app`);
+        copyApp(appPath, installPath);
+      }
     }
 
     console.log(`Installed ${appName} to ${installPath}`);
-    console.log("Opening Clippa...");
-    run("/usr/bin/open", [installPath]);
-    console.log("If automatic paste is unavailable, grant Accessibility access in System Settings.");
+    if (!options.noOpen) {
+      console.log("Opening Clippa...");
+      run("/usr/bin/open", [installPath]);
+      console.log("If automatic paste is unavailable, grant Accessibility access in System Settings.");
+    }
   } finally {
     fs.rmSync(tempDir, { recursive: true, force: true });
   }

@@ -4,13 +4,16 @@ import SwiftUI
 @main
 struct ClippaApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var appDelegate
-    @Environment(\.openSettings) private var openSettings
 
     var body: some Scene {
         MenuBarExtra("Clippa", systemImage: "paperclip") {
-            Button("Show History") {
+            Button("Open Clippa") {
+                appDelegate.appWindowController.show(appState: appDelegate.appState, selection: .history)
+            }
+            Button("Show Quick Panel") {
                 appDelegate.appState.togglePanel()
             }
+            Divider()
             Button(appDelegate.appState.settings.isMonitoringPaused ? "Save new copies" : "Stop saving new copies") {
                 appDelegate.appState.settings.isMonitoringPaused.toggle()
             }
@@ -19,7 +22,10 @@ struct ClippaApp: App {
             }
             Divider()
             Button("Settings") {
-                openSettings()
+                appDelegate.appWindowController.show(appState: appDelegate.appState, selection: .settings)
+            }
+            Button("Privacy") {
+                appDelegate.appWindowController.show(appState: appDelegate.appState, selection: .privacy)
             }
             Button("Quit") {
                 appDelegate.appState.quit()
@@ -44,6 +50,7 @@ struct ClippaApp: App {
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let appState = AppState()
+    let appWindowController = AppWindowController()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
