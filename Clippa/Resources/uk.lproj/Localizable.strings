@@ -78,6 +78,16 @@
 "Clear all history" = "Очистити всю історію";
 "Clear all clipboard history?" = "Очистити всю історію буфера?";
 "Show History" = "Показати історію";
+"Open Clippa" = "Відкрити Clippa";
+"Clippa" = "Clippa";
+"Privacy" = "Приватність";
+"Items" = "Записи";
+"No clipboard items" = "Немає записів буфера";
+"No item selected" = "Запис не вибрано";
+"Select an item to preview it and choose an action." = "Виберіть запис, щоб переглянути його й виконати дію.";
+"Created" = "Створено";
+"Last used" = "Востаннє використано";
+"Source" = "Джерело";
 "Resume" = "Продовжити";
 "Pause" = "Призупинити";
 "Clear Unpinned" = "Очистити незакріплені";

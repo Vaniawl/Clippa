@@ -1,0 +1,621 @@
+import AppKit
+import SwiftUI
+
+enum AppWindowSection: String, CaseIterable, Identifiable {
+    case history
+    case settings
+    case privacy
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .history: String(localized: "History")
+        case .settings: String(localized: "Settings")
+        case .privacy: String(localized: "Privacy")
+        }
+    }
+
+    var symbolName: String {
+        switch self {
+        case .history: "clock.arrow.circlepath"
+        case .settings: "gearshape"
+        case .privacy: "hand.raised"
+        }
+    }
+}
+
+struct AppWindowView: View {
+    @Bindable var settings: AppSettings
+    @Bindable var store: ClipboardStore
+    let hotKeyStatus: String
+    let onShowShortcutChange: (HotKeyShortcut) -> Void
+    let onPinShortcutChange: (HotKeyShortcut) -> Void
+    let onPaste: @MainActor (ClipboardItem) -> Void
+    let onCopy: @MainActor (ClipboardItem) -> Void
+    let onOpen: @MainActor (ClipboardItem) -> Void
+    let onReveal: @MainActor (ClipboardItem) -> Void
+    @State private var selectedSection: AppWindowSection?
+    @State private var confirmClearUnpinned = false
+
+    init(
+        settings: AppSettings,
+        store: ClipboardStore,
+        hotKeyStatus: String,
+        initialSelection: AppWindowSection,
+        onShowShortcutChange: @escaping (HotKeyShortcut) -> Void,
+        onPinShortcutChange: @escaping (HotKeyShortcut) -> Void,
+        onPaste: @escaping @MainActor (ClipboardItem) -> Void,
+        onCopy: @escaping @MainActor (ClipboardItem) -> Void,
+        onOpen: @escaping @MainActor (ClipboardItem) -> Void,
+        onReveal: @escaping @MainActor (ClipboardItem) -> Void
+    ) {
+        self.settings = settings
+        self.store = store
+        self.hotKeyStatus = hotKeyStatus
+        self.onShowShortcutChange = onShowShortcutChange
+        self.onPinShortcutChange = onPinShortcutChange
+        self.onPaste = onPaste
+        self.onCopy = onCopy
+        self.onOpen = onOpen
+        self.onReveal = onReveal
+        _selectedSection = State(initialValue: initialSelection)
+    }
+
+    var body: some View {
+        NavigationSplitView {
+            List(AppWindowSection.allCases, selection: $selectedSection) { section in
+                Label(section.title, systemImage: section.symbolName)
+                    .tag(section)
+            }
+            .navigationSplitViewColumnWidth(min: 180, ideal: 200, max: 240)
+        } detail: {
+            detail
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .toolbar {
+            ToolbarItemGroup {
+                Button {
+                    settings.isMonitoringPaused.toggle()
+                } label: {
+                    Label(
+                        settings.isMonitoringPaused ? String(localized: "Resume monitoring") : String(localized: "Pause monitoring"),
+                        systemImage: settings.isMonitoringPaused ? "play.fill" : "pause.fill"
+                    )
+                }
+                .help(settings.isMonitoringPaused ? String(localized: "Resume monitoring") : String(localized: "Pause monitoring"))
+
+                Button {
+                    confirmClearUnpinned = true
+                } label: {
+                    Label("Clear unpinned history", systemImage: "trash")
+                }
+                .help(String(localized: "Clear unpinned history"))
+            }
+        }
+        .confirmationDialog("Clear unpinned clipboard history?", isPresented: $confirmClearUnpinned) {
+            Button("Clear unpinned history", role: .destructive) {
+                store.clearUnpinned()
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var detail: some View {
+        switch selectedSection ?? .history {
+        case .history:
+            HistoryDashboardView(
+                store: store,
+                isMonitoringPaused: settings.isMonitoringPaused,
+                isAutoPasteReady: AccessibilityService.isTrusted,
+                onPaste: onPaste,
+                onCopy: onCopy,
+                onOpen: onOpen,
+                onReveal: onReveal
+            )
+        case .settings:
+            SettingsView(
+                settings: settings,
+                store: store,
+                hotKeyStatus: hotKeyStatus,
+                usesFixedFrame: false,
+                onShowShortcutChange: onShowShortcutChange,
+                onPinShortcutChange: onPinShortcutChange
+            )
+        case .privacy:
+            PrivacyDashboardView(settings: settings)
+        }
+    }
+}
+
+private struct HistoryDashboardView: View {
+    @Bindable var store: ClipboardStore
+    var isMonitoringPaused: Bool
+    var isAutoPasteReady: Bool
+    let onPaste: @MainActor (ClipboardItem) -> Void
+    let onCopy: @MainActor (ClipboardItem) -> Void
+    let onOpen: @MainActor (ClipboardItem) -> Void
+    let onReveal: @MainActor (ClipboardItem) -> Void
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.colorSchemeContrast) private var contrast
+
+    private var selectedItem: ClipboardItem? {
+        guard let id = store.selectedItemID else { return nil }
+        return store.visibleItems.first { $0.id == id } ?? store.items.first { $0.id == id }
+    }
+
+    var body: some View {
+        VStack(spacing: 0) {
+            header
+            Divider()
+            HSplitView {
+                listPane
+                    .frame(minWidth: 420, idealWidth: 560)
+                detailPane
+                    .frame(minWidth: 260, idealWidth: 320)
+            }
+        }
+        .navigationTitle("History")
+        .animation(reduceMotion ? nil : .snappy(duration: 0.18), value: store.selectedFilter)
+        .animation(reduceMotion ? nil : .snappy(duration: 0.18), value: store.searchQuery)
+        .animation(reduceMotion ? nil : .snappy(duration: 0.18), value: store.selectedItemID)
+    }
+
+    private var header: some View {
+        VStack(spacing: 12) {
+            HStack(spacing: 12) {
+                HStack(spacing: 8) {
+                    Image(systemName: "magnifyingglass")
+                        .foregroundStyle(.secondary)
+                    TextField("Search clipboard", text: $store.searchQuery)
+                        .textFieldStyle(.plain)
+                    if !store.searchQuery.isEmpty {
+                        Button {
+                            animate { store.searchQuery = "" }
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(.tertiary)
+                        .help(String(localized: "Clear search"))
+                        .transition(.opacity.combined(with: .scale(scale: 0.9)))
+                    }
+                }
+                .padding(.horizontal, 10)
+                .frame(height: 34)
+                .background(.tertiary.opacity(0.10), in: .rect(cornerRadius: 8))
+
+                statusBadge(
+                    title: isMonitoringPaused ? String(localized: "Paused") : String(localized: "Watching"),
+                    symbol: isMonitoringPaused ? "pause.fill" : "checkmark.circle.fill",
+                    color: isMonitoringPaused ? .orange : .green
+                )
+                statusBadge(
+                    title: isAutoPasteReady ? String(localized: "Auto-paste ready") : String(localized: "Copy only"),
+                    symbol: isAutoPasteReady ? "checkmark.circle.fill" : "doc.on.doc",
+                    color: isAutoPasteReady ? .green : .secondary
+                )
+            }
+
+            filterRow
+        }
+        .padding(.horizontal, 18)
+        .padding(.vertical, 14)
+    }
+
+    private var filterRow: some View {
+        ViewThatFits(in: .horizontal) {
+            HStack(spacing: 6) {
+                filterButtons(showTitles: true)
+                Spacer()
+                stats
+            }
+
+            HStack(spacing: 6) {
+                filterButtons(showTitles: false)
+                Spacer()
+                stats
+            }
+        }
+    }
+
+    private func filterButtons(showTitles: Bool) -> some View {
+        ForEach(ClipboardFilter.allCases) { filter in
+            Button {
+                animate { store.selectedFilter = filter }
+            } label: {
+                if showTitles {
+                    Label(filter.displayName, systemImage: filter.symbolName)
+                        .labelStyle(.titleAndIcon)
+                        .font(.callout)
+                        .lineLimit(1)
+                        .frame(minWidth: 68)
+                        .padding(.horizontal, 8)
+                        .frame(height: 30)
+                } else {
+                    Image(systemName: filter.symbolName)
+                        .font(.system(size: 13, weight: .medium))
+                        .frame(width: 34, height: 30)
+                }
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(store.selectedFilter == filter ? Color.accentColor : Color.secondary)
+            .background(filterBackground(filter))
+            .clipShape(.rect(cornerRadius: 7))
+            .help(filter.displayName)
+        }
+    }
+
+    private var stats: some View {
+        HStack(spacing: 12) {
+            stat(title: String(localized: "Items"), value: "\(store.items.count)")
+            stat(title: String(localized: "Pinned"), value: "\(store.items.filter(\.isPinned).count)")
+        }
+    }
+
+    private var listPane: some View {
+        Group {
+            if store.visibleItems.isEmpty {
+                ContentUnavailableView(
+                    "No clipboard items",
+                    systemImage: "tray",
+                    description: Text("Copied text, links, images, and files will appear here.")
+                )
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                List(store.visibleItems, selection: $store.selectedItemID) { item in
+                    DashboardClipboardRow(item: item)
+                        .tag(item.id)
+                        .contextMenu {
+                            itemMenu(for: item)
+                        }
+                }
+                .listStyle(.inset)
+            }
+        }
+    }
+
+    private var detailPane: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            if let selectedItem {
+                SelectedItemDetail(
+                    item: selectedItem,
+                    onPaste: { onPaste(selectedItem) },
+                    onCopy: { onCopy(selectedItem) },
+                    onOpen: { onOpen(selectedItem) },
+                    onReveal: { onReveal(selectedItem) },
+                    onTogglePin: { store.togglePin(selectedItem) },
+                    onDelete: { store.delete(selectedItem) }
+                )
+            } else {
+                ContentUnavailableView(
+                    "No item selected",
+                    systemImage: "sidebar.right",
+                    description: Text("Select an item to preview it and choose an action.")
+                )
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(.quaternary.opacity(0.08))
+    }
+
+    @ViewBuilder
+    private func filterBackground(_ filter: ClipboardFilter) -> some View {
+        if store.selectedFilter == filter {
+            RoundedRectangle(cornerRadius: 7)
+                .fill(contrast == .increased ? Color.accentColor.opacity(0.24) : Color.accentColor.opacity(0.12))
+        }
+    }
+
+    private func statusBadge(title: String, symbol: String, color: Color) -> some View {
+        Label(title, systemImage: symbol)
+            .font(.caption)
+            .foregroundStyle(color)
+            .lineLimit(1)
+    }
+
+    private func stat(title: String, value: String) -> some View {
+        HStack(spacing: 4) {
+            Text(title)
+                .foregroundStyle(.secondary)
+            Text(value)
+                .fontWeight(.semibold)
+        }
+        .font(.caption)
+    }
+
+    @ViewBuilder
+    private func itemMenu(for item: ClipboardItem) -> some View {
+        Button("Paste") { onPaste(item) }
+        Button("Copy") { onCopy(item) }
+        Divider()
+        if item.canOpen {
+            Button(item.openTitle) { onOpen(item) }
+        }
+        if item.canReveal {
+            Button("Reveal in Finder") { onReveal(item) }
+        }
+        Button(item.isPinned ? "Unpin" : "Pin") {
+            store.togglePin(item)
+        }
+        Divider()
+        Button("Delete", role: .destructive) {
+            store.delete(item)
+        }
+    }
+
+    private func animate(_ changes: @escaping () -> Void) {
+        if reduceMotion {
+            changes()
+        } else {
+            withAnimation(.snappy(duration: 0.18), changes)
+        }
+    }
+}
+
+private struct DashboardClipboardRow: View {
+    let item: ClipboardItem
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: item.kind.symbolName)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(item.isPinned ? Color.accentColor : Color.secondary)
+                .frame(width: 24, height: 24)
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(item.preview.isEmpty ? String(localized: "Empty text") : item.preview)
+                    .lineLimit(1)
+                HStack(spacing: 6) {
+                    Text(item.kind.displayName)
+                    Text(item.createdAt, style: .relative)
+                    if item.isPinned {
+                        Label("Pinned", systemImage: "pin.fill")
+                            .labelStyle(.titleAndIcon)
+                    }
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            }
+        }
+        .padding(.vertical, 3)
+    }
+}
+
+private struct SelectedItemDetail: View {
+    let item: ClipboardItem
+    let onPaste: @MainActor () -> Void
+    let onCopy: @MainActor () -> Void
+    let onOpen: @MainActor () -> Void
+    let onReveal: @MainActor () -> Void
+    let onTogglePin: @MainActor () -> Void
+    let onDelete: @MainActor () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            HStack {
+                Label(item.kind.displayName, systemImage: item.kind.symbolName)
+                    .font(.headline)
+                Spacer()
+                if item.isPinned {
+                    Image(systemName: "pin.fill")
+                        .foregroundStyle(Color.accentColor)
+                        .help(String(localized: "Pinned"))
+                }
+            }
+
+            preview
+                .frame(maxWidth: .infinity, minHeight: 140, maxHeight: .infinity, alignment: .topLeading)
+
+            Divider()
+
+            VStack(alignment: .leading, spacing: 8) {
+                LabeledContent("Created", value: item.createdAt.formatted(date: .abbreviated, time: .shortened))
+                LabeledContent("Last used", value: item.lastUsedAt.formatted(date: .abbreviated, time: .shortened))
+                if let source = sourceName {
+                    LabeledContent("Source", value: source)
+                }
+            }
+            .font(.caption)
+
+            Divider()
+
+            HStack(spacing: 8) {
+                Button {
+                    onPaste()
+                } label: {
+                    Label("Paste", systemImage: "arrow.down.doc")
+                }
+                .keyboardShortcut(.return, modifiers: [])
+
+                Button {
+                    onCopy()
+                } label: {
+                    Label("Copy", systemImage: "doc.on.doc")
+                }
+
+                if item.canOpen {
+                    Button {
+                        onOpen()
+                    } label: {
+                        Label("Open", systemImage: "arrow.up.forward.app")
+                    }
+                }
+
+                if item.canReveal {
+                    Button {
+                        onReveal()
+                    } label: {
+                        Label("Reveal in Finder", systemImage: "finder")
+                    }
+                }
+            }
+
+            HStack(spacing: 8) {
+                Button {
+                    onTogglePin()
+                } label: {
+                    Label(item.isPinned ? "Unpin" : "Pin", systemImage: item.isPinned ? "pin.slash" : "pin")
+                }
+
+                Button(role: .destructive) {
+                    onDelete()
+                } label: {
+                    Label("Delete", systemImage: "trash")
+                }
+            }
+        }
+        .padding(18)
+    }
+
+    @ViewBuilder
+    private var preview: some View {
+        switch item.payload {
+        case .text(let text):
+            ScrollView {
+                Text(text.isEmpty ? String(localized: "Empty text") : text)
+                    .font(.body)
+                    .textSelection(.enabled)
+                    .frame(maxWidth: .infinity, alignment: .topLeading)
+                    .padding(.vertical, 4)
+            }
+        case .url(let url):
+            VStack(alignment: .leading, spacing: 8) {
+                Text(url.absoluteString)
+                    .textSelection(.enabled)
+                    .font(.body)
+                Button {
+                    NSWorkspace.shared.open(url)
+                } label: {
+                    Label("Open URL", systemImage: "safari")
+                }
+            }
+        case .image(let data, _):
+            if let image = NSImage(data: data) {
+                Image(nsImage: image)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                Text(item.preview)
+                    .foregroundStyle(.secondary)
+            }
+        case .files(let refs):
+            ScrollView {
+                VStack(alignment: .leading, spacing: 8) {
+                    ForEach(refs, id: \.self) { ref in
+                        Label(ref.displayName, systemImage: ref.exists ? "doc" : "exclamationmark.triangle")
+                            .foregroundStyle(ref.exists ? Color.primary : Color.secondary)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .topLeading)
+            }
+        }
+    }
+
+    private var sourceName: String? {
+        guard let identifier = item.sourceBundleIdentifier else {
+            return nil
+        }
+        guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: identifier) else {
+            return identifier
+        }
+        return FileManager.default.displayName(atPath: url.path)
+    }
+}
+
+private struct PrivacyDashboardView: View {
+    @Bindable var settings: AppSettings
+    @State private var newExcludedIdentifier = ""
+
+    var body: some View {
+        Form {
+            Section("Permissions") {
+                LabeledContent {
+                    Text(AccessibilityService.isTrusted ? String(localized: "Granted") : String(localized: "Required for automatic paste"))
+                        .foregroundStyle(.secondary)
+                } label: {
+                    Label(
+                        "Accessibility",
+                        systemImage: AccessibilityService.isTrusted ? "checkmark.circle.fill" : "exclamationmark.triangle.fill"
+                    )
+                    .foregroundStyle(AccessibilityService.isTrusted ? Color.green : Color.orange)
+                }
+                HStack {
+                    Button("Request Access") {
+                        AccessibilityService.requestPrompt()
+                    }
+                    Button("Open Privacy & Security") {
+                        AccessibilityService.openSystemSettings()
+                    }
+                }
+            }
+
+            Section("Excluded Apps") {
+                Text("Source app detection is best-effort. Apps listed here are not saved to history.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                HStack {
+                    TextField("Bundle identifier", text: $newExcludedIdentifier)
+                    Button {
+                        settings.addExcludedBundleIdentifier(newExcludedIdentifier)
+                        newExcludedIdentifier = ""
+                    } label: {
+                        Image(systemName: "plus")
+                    }
+                    .accessibilityLabel(Text("Add excluded app"))
+                }
+                ForEach(settings.excludedBundleIdentifiers, id: \.self) { identifier in
+                    HStack {
+                        Text(identifier)
+                            .textSelection(.enabled)
+                        Spacer()
+                        Button {
+                            settings.removeExcludedBundleIdentifier(identifier)
+                        } label: {
+                            Image(systemName: "trash")
+                        }
+                        .buttonStyle(.borderless)
+                        .accessibilityLabel(Text("Remove \(identifier)"))
+                    }
+                }
+            }
+        }
+        .formStyle(.grouped)
+        .navigationTitle("Privacy")
+    }
+}
+
+private extension ClipboardItem {
+    var canOpen: Bool {
+        switch payload {
+        case .url:
+            true
+        case .files(let refs):
+            refs.contains(where: \.exists)
+        case .text, .image:
+            false
+        }
+    }
+
+    var canReveal: Bool {
+        if case .files(let refs) = payload {
+            refs.contains(where: \.exists)
+        } else {
+            false
+        }
+    }
+
+    var openTitle: String {
+        switch payload {
+        case .url:
+            String(localized: "Open URL")
+        case .files:
+            String(localized: "Open File")
+        case .text, .image:
+            String(localized: "Open")
+        }
+    }
+}

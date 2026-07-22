@@ -12,6 +12,7 @@ final class AppState {
     let monitor: PasteboardMonitor
     let pasteService: PasteService
     let panelController = PanelController()
+    let appWindowController = AppWindowController()
 
     var notice: String?
     var isAutoPasteReady: Bool {
@@ -61,6 +62,10 @@ final class AppState {
         panelController.toggle(appState: self)
     }
 
+    func openAppWindow(selection: AppWindowSection = .history) {
+        appWindowController.show(appState: self, selection: selection)
+    }
+
     func pasteSelectedItem() {
         guard let id = store.selectedItemID, let item = store.visibleItems.first(where: { $0.id == id }) else {
             return
@@ -105,7 +110,10 @@ final class AppState {
     }
 
     func paste(_ item: ClipboardItem) async {
-        let target = panelController.previousApplication
+        await paste(item, into: panelController.previousApplication)
+    }
+
+    func paste(_ item: ClipboardItem, into target: NSRunningApplication?) async {
         store.use(item)
         panelController.close()
         let outcome = await pasteService.paste(item, into: target)
@@ -161,9 +169,7 @@ final class AppState {
     }
 
     func openSettings() {
-        NSApp.setActivationPolicy(.regular)
-        NSApp.activate()
-        NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+        openAppWindow(selection: .settings)
     }
 
     func quit() {

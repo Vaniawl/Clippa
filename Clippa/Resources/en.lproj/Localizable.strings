@@ -78,6 +78,16 @@
 "Clear all history" = "Clear all history";
 "Clear all clipboard history?" = "Clear all clipboard history?";
 "Show History" = "Show History";
+"Open Clippa" = "Open Clippa";
+"Clippa" = "Clippa";
+"Privacy" = "Privacy";
+"Items" = "Items";
+"No clipboard items" = "No clipboard items";
+"No item selected" = "No item selected";
+"Select an item to preview it and choose an action." = "Select an item to preview it and choose an action.";
+"Created" = "Created";
+"Last used" = "Last used";
+"Source" = "Source";
 "Resume" = "Resume";
 "Pause" = "Pause";
 "Clear Unpinned" = "Clear Unpinned";

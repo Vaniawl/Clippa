@@ -6,6 +6,7 @@ struct SettingsView: View {
     @Bindable var settings: AppSettings
     @Bindable var store: ClipboardStore
     let hotKeyStatus: String
+    var usesFixedFrame = true
     let onShowShortcutChange: (HotKeyShortcut) -> Void
     let onPinShortcutChange: (HotKeyShortcut) -> Void
     @State private var newExcludedIdentifier = ""
@@ -125,7 +126,10 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 560, height: 720)
+        .frame(
+            width: usesFixedFrame ? 560 : nil,
+            height: usesFixedFrame ? 720 : nil
+        )
         .confirmationDialog("Clear unpinned clipboard history?", isPresented: $confirmClearUnpinned) {
             Button("Clear unpinned history", role: .destructive) {
                 store.clearUnpinned()

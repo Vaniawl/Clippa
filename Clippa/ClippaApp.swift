@@ -7,6 +7,9 @@ struct ClippaApp: App {
 
     var body: some Scene {
         MenuBarExtra("Clippa", systemImage: "paperclip") {
+            Button("Open Clippa") {
+                appDelegate.appState.openAppWindow()
+            }
             Button("Show History") {
                 appDelegate.appState.togglePanel()
             }

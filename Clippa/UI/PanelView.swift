@@ -35,6 +35,7 @@ struct PanelView: View {
         .task {
             searchFocused = true
         }
+        .animation(reduceMotion ? nil : .snappy(duration: 0.16), value: store.searchQuery.isEmpty)
         .accessibilityElement(children: .contain)
         .accessibilityLabel(Text("Clippa clipboard history"))
     }
@@ -50,7 +51,7 @@ struct PanelView: View {
                 .accessibilityLabel(Text("Search clipboard"))
             if !store.searchQuery.isEmpty {
                 Button {
-                    store.searchQuery = ""
+                    animate { store.searchQuery = "" }
                 } label: {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundStyle(.tertiary)
@@ -58,6 +59,7 @@ struct PanelView: View {
                 .buttonStyle(.plain)
                 .help(String(localized: "Clear search"))
                 .accessibilityLabel(Text("Clear search"))
+                .transition(.opacity.combined(with: .scale(scale: 0.9)))
             }
             Text(showShortcutText)
                 .font(.caption)
@@ -73,7 +75,7 @@ struct PanelView: View {
         HStack(spacing: 4) {
             ForEach(ClipboardFilter.allCases) { filter in
                 Button {
-                    store.selectedFilter = filter
+                    animate { store.selectedFilter = filter }
                 } label: {
                     Image(systemName: filter.symbolName)
                         .font(.system(size: 13, weight: .medium))
@@ -93,6 +95,7 @@ struct PanelView: View {
         .padding(2)
         .background(.tertiary.opacity(0.10), in: .rect(cornerRadius: 9))
         .accessibilityLabel(Text("Filter"))
+        .animation(reduceMotion ? nil : .snappy(duration: 0.16), value: store.selectedFilter)
     }
 
     @ViewBuilder
@@ -123,9 +126,10 @@ struct PanelView: View {
                             item: item,
                             isSelected: item.id == store.selectedItemID,
                             contrast: contrast,
+                            reduceMotion: reduceMotion,
                             pinShortcutText: pinShortcutText,
                             onPaste: {
-                                store.select(item)
+                                animate { store.select(item) }
                                 onPasteSelected()
                             },
                             onCopy: {
@@ -146,13 +150,23 @@ struct PanelView: View {
                         )
                         .contentShape(.rect)
                         .onTapGesture {
-                            store.select(item)
+                            animate { store.select(item) }
                             onPasteSelected()
                         }
+                        .transition(.opacity.combined(with: .move(edge: .top)))
                     }
                 }
             }
             .scrollIndicators(.automatic)
+            .animation(reduceMotion ? nil : .snappy(duration: 0.16), value: store.visibleItems.map(\.id))
+        }
+    }
+
+    private func animate(_ changes: @escaping () -> Void) {
+        if reduceMotion {
+            changes()
+        } else {
+            withAnimation(.snappy(duration: 0.16), changes)
         }
     }
 
@@ -208,6 +222,7 @@ private struct ClipboardRow: View {
     let item: ClipboardItem
     let isSelected: Bool
     let contrast: ColorSchemeContrast
+    let reduceMotion: Bool
     let pinShortcutText: String
     let onPaste: @MainActor () -> Void
     let onCopy: @MainActor () -> Void
@@ -243,12 +258,15 @@ private struct ClipboardRow: View {
             Spacer(minLength: 8)
             rowActions
                 .opacity(isSelected || isHovering ? 1 : (item.isPinned ? 0.75 : 0))
+                .scaleEffect(isSelected || isHovering ? 1 : 0.96)
         }
         .onHover { isHovering = $0 }
         .frame(height: DesignSystem.rowHeight)
         .padding(.horizontal, 8)
         .background(selectionBackground)
         .clipShape(.rect(cornerRadius: DesignSystem.rowCornerRadius))
+        .animation(reduceMotion ? nil : .snappy(duration: 0.14), value: isHovering)
+        .animation(reduceMotion ? nil : .snappy(duration: 0.14), value: isSelected)
         .contextMenu {
             Button("Paste") {
                 onPaste()
@@ -385,6 +403,9 @@ private struct ClipboardRow: View {
         if isSelected {
             RoundedRectangle(cornerRadius: DesignSystem.rowCornerRadius)
                 .fill(contrast == .increased ? Color.accentColor.opacity(0.28) : Color.accentColor.opacity(0.16))
+        } else if isHovering {
+            RoundedRectangle(cornerRadius: DesignSystem.rowCornerRadius)
+                .fill(Color.secondary.opacity(0.08))
         }
     }
 }
