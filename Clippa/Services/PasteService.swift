@@ -1,6 +1,12 @@
 import AppKit
+import ApplicationServices
 import Carbon.HIToolbox
 import Foundation
+
+struct PasteTarget {
+    let application: NSRunningApplication?
+    let focusedElement: AXUIElement?
+}
 
 @MainActor
 final class PasteService {
@@ -31,15 +37,46 @@ final class PasteService {
         monitor.noteInternalWrite(changeCount: pasteboard.changeCount)
     }
 
-    func paste(_ item: ClipboardItem, into application: NSRunningApplication?) async -> PasteOutcome {
+    func paste(_ item: ClipboardItem, into target: PasteTarget?) async -> PasteOutcome {
         copyPayload(item.payload)
         guard AccessibilityService.isTrusted else {
             return .copiedOnlyRequiresAccessibility
         }
 
-        await activatePasteTarget(application)
-        sendCommandV()
+        if let text = directInsertText(for: item), insert(text, into: target?.focusedElement) {
+            return .pasted
+        }
+
+        await activatePasteTarget(target?.application)
+        await sendCommandV(to: target?.application)
         return .pasted
+    }
+
+    func paste(_ item: ClipboardItem, into application: NSRunningApplication?) async -> PasteOutcome {
+        await paste(item, into: PasteTarget(application: application, focusedElement: nil))
+    }
+
+    private func directInsertText(for item: ClipboardItem) -> String? {
+        switch item.payload {
+        case .text(let value):
+            value
+        case .url(let url):
+            url.absoluteString
+        case .image, .files:
+            nil
+        }
+    }
+
+    private func insert(_ text: String, into element: AXUIElement?) -> Bool {
+        guard let element else {
+            return false
+        }
+        let status = AXUIElementSetAttributeValue(
+            element,
+            kAXSelectedTextAttribute as CFString,
+            text as CFTypeRef
+        )
+        return status == .success
     }
 
     private func activatePasteTarget(_ application: NSRunningApplication?) async {
@@ -61,7 +98,7 @@ final class PasteService {
         try? await Task.sleep(for: .milliseconds(120))
     }
 
-    private func sendCommandV() {
+    private func sendCommandV(to application: NSRunningApplication?) async {
         let source = CGEventSource(stateID: .hidSystemState)
         guard
             let down = CGEvent(keyboardEventSource: source, virtualKey: CGKeyCode(kVK_ANSI_V), keyDown: true),
@@ -71,8 +108,16 @@ final class PasteService {
         }
         down.flags = CGEventFlags.maskCommand
         up.flags = CGEventFlags.maskCommand
-        down.post(tap: CGEventTapLocation.cghidEventTap)
-        up.post(tap: CGEventTapLocation.cghidEventTap)
+
+        if let application, !application.isTerminated {
+            down.postToPid(application.processIdentifier)
+            try? await Task.sleep(for: .milliseconds(35))
+            up.postToPid(application.processIdentifier)
+        } else {
+            down.post(tap: CGEventTapLocation.cghidEventTap)
+            try? await Task.sleep(for: .milliseconds(35))
+            up.post(tap: CGEventTapLocation.cghidEventTap)
+        }
     }
 }
 

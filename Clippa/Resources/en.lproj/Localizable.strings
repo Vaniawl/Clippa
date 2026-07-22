@@ -18,6 +18,7 @@
 "Encrypted history could not be loaded. A clean history is active." = "Encrypted history could not be loaded. A clean history is active.";
 "Accessibility access enables automatic paste. Without it, Clippa still copies the selected item." = "Accessibility access enables automatic paste. Without it, Clippa still copies the selected item.";
 "Copied. Enable Accessibility access for automatic paste." = "Copied. Enable Accessibility access for automatic paste.";
+"Place the cursor in a text field to show Clippa." = "Place the cursor in a text field to show Clippa.";
 "Auto-paste ready" = "Auto-paste ready";
 "Copy only" = "Copy only";
 "Clippa clipboard history" = "Clippa clipboard history";

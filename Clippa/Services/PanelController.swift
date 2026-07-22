@@ -44,7 +44,7 @@ final class AppState {
 
     func registerShowPanelShortcut() {
         hotKeyService.register(shortcut: settings.showPanelShortcut) { [weak self] in
-            self?.togglePanel()
+            self?.togglePanelFromShortcut()
         }
     }
 
@@ -58,7 +58,11 @@ final class AppState {
     }
 
     func togglePanel() {
-        panelController.toggle(appState: self)
+        panelController.toggle(appState: self, requiresEditableTarget: false)
+    }
+
+    func togglePanelFromShortcut() {
+        panelController.toggle(appState: self, requiresEditableTarget: true)
     }
 
     func pasteSelectedItem() {
@@ -105,16 +109,20 @@ final class AppState {
     }
 
     func paste(_ item: ClipboardItem) async {
-        await paste(item, into: panelController.previousApplication)
+        await paste(item, into: panelController.pasteTarget)
     }
 
-    func paste(_ item: ClipboardItem, into target: NSRunningApplication?) async {
+    func paste(_ item: ClipboardItem, into target: PasteTarget?) async {
         store.use(item)
         panelController.close()
         let outcome = await pasteService.paste(item, into: target)
         if outcome == .copiedOnlyRequiresAccessibility {
             notice = String(localized: "Copied. Enable Accessibility access for automatic paste.")
         }
+    }
+
+    func paste(_ item: ClipboardItem, into application: NSRunningApplication?) async {
+        await paste(item, into: PasteTarget(application: application, focusedElement: nil))
     }
 
     func copy(_ item: ClipboardItem) {
@@ -187,20 +195,33 @@ final class PanelController {
     private var panel: ClippaPanel?
     private var keyMonitor: Any?
     private var clickMonitor: Any?
-    private(set) var previousApplication: NSRunningApplication?
+    private(set) var pasteTarget: PasteTarget?
 
     var isVisible: Bool {
         panel?.isVisible == true
     }
 
-    func toggle(appState: AppState) {
-        isVisible ? close() : show(appState: appState)
+    func toggle(appState: AppState, requiresEditableTarget: Bool) {
+        isVisible ? close() : show(appState: appState, requiresEditableTarget: requiresEditableTarget)
     }
 
-    func show(appState: AppState) {
+    func show(appState: AppState, requiresEditableTarget: Bool = false) {
         let frontmostApplication = NSWorkspace.shared.frontmostApplication
+        let targetApplication = frontmostApplication?.bundleIdentifier == Bundle.main.bundleIdentifier ? nil : frontmostApplication
+        let focusedElement = AccessibilityService.focusedEditableTextElement(in: targetApplication)
+        if requiresEditableTarget, focusedElement == nil {
+            if AccessibilityService.isTrusted {
+                appState.notice = String(localized: "Place the cursor in a text field to show Clippa.")
+            } else {
+                appState.notice = String(localized: "Accessibility access enables automatic paste. Without it, Clippa still copies the selected item.")
+                AccessibilityService.requestPrompt()
+            }
+            NSSound.beep()
+            return
+        }
+
         if frontmostApplication?.bundleIdentifier != Bundle.main.bundleIdentifier {
-            previousApplication = frontmostApplication
+            pasteTarget = PasteTarget(application: frontmostApplication, focusedElement: focusedElement)
         }
         appState.store.searchQuery = ""
         appState.store.selectedFilter = .all
@@ -250,6 +271,7 @@ final class PanelController {
         }
         panel?.orderOut(nil)
         panel = nil
+        pasteTarget = nil
     }
 
     private func installMonitors(appState: AppState) {

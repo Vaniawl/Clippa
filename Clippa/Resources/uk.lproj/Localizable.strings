@@ -18,6 +18,7 @@
 "Encrypted history could not be loaded. A clean history is active." = "Не вдалося завантажити зашифровану історію. Активна чиста історія.";
 "Accessibility access enables automatic paste. Without it, Clippa still copies the selected item." = "Доступ Accessibility потрібен для автоматичного вставлення. Без нього Clippa все одно копіює вибраний елемент.";
 "Copied. Enable Accessibility access for automatic paste." = "Скопійовано. Увімкніть Accessibility-доступ для автоматичного вставлення.";
+"Place the cursor in a text field to show Clippa." = "Поставте курсор у текстове поле, щоб відкрити Clippa.";
 "Auto-paste ready" = "Автовставлення готове";
 "Copy only" = "Лише копіювання";
 "Clippa clipboard history" = "Історія буфера Clippa";
