@@ -43,12 +43,13 @@ final class PasteService {
             return .copiedOnlyRequiresAccessibility
         }
 
-        if let text = directInsertText(for: item), insert(text, into: target?.focusedElement) {
+        await activatePasteTarget(target?.application)
+        let focusedElement = AccessibilityService.focusedEditableTextElement(in: target?.application) ?? target?.focusedElement
+        if let text = directInsertText(for: item), insert(text, into: focusedElement) {
             return .pasted
         }
 
-        await activatePasteTarget(target?.application)
-        await sendCommandV(to: target?.application)
+        await sendCommandV()
         return .pasted
     }
 
@@ -170,34 +171,33 @@ final class PasteService {
 
         for _ in 0..<10 {
             if NSWorkspace.shared.frontmostApplication?.processIdentifier == application.processIdentifier {
-                try? await Task.sleep(for: .milliseconds(90))
+                try? await Task.sleep(for: .milliseconds(140))
                 return
             }
             try? await Task.sleep(for: .milliseconds(50))
         }
 
-        try? await Task.sleep(for: .milliseconds(120))
+        try? await Task.sleep(for: .milliseconds(180))
     }
 
-    private func sendCommandV(to application: NSRunningApplication?) async {
+    private func sendCommandV() async {
         let source = CGEventSource(stateID: .hidSystemState)
+        source?.localEventsSuppressionInterval = 0
         guard
-            let down = CGEvent(keyboardEventSource: source, virtualKey: CGKeyCode(kVK_ANSI_V), keyDown: true),
-            let up = CGEvent(keyboardEventSource: source, virtualKey: CGKeyCode(kVK_ANSI_V), keyDown: false)
+            let commandDown = CGEvent(keyboardEventSource: source, virtualKey: CGKeyCode(kVK_Command), keyDown: true),
+            let vDown = CGEvent(keyboardEventSource: source, virtualKey: CGKeyCode(kVK_ANSI_V), keyDown: true),
+            let vUp = CGEvent(keyboardEventSource: source, virtualKey: CGKeyCode(kVK_ANSI_V), keyDown: false),
+            let commandUp = CGEvent(keyboardEventSource: source, virtualKey: CGKeyCode(kVK_Command), keyDown: false)
         else {
             return
         }
-        down.flags = CGEventFlags.maskCommand
-        up.flags = CGEventFlags.maskCommand
+        commandDown.flags = .maskCommand
+        vDown.flags = .maskCommand
+        vUp.flags = .maskCommand
 
-        if let application, !application.isTerminated {
-            down.postToPid(application.processIdentifier)
-            try? await Task.sleep(for: .milliseconds(35))
-            up.postToPid(application.processIdentifier)
-        } else {
-            down.post(tap: CGEventTapLocation.cghidEventTap)
-            try? await Task.sleep(for: .milliseconds(35))
-            up.post(tap: CGEventTapLocation.cghidEventTap)
+        for event in [commandDown, vDown, vUp, commandUp] {
+            event.post(tap: .cghidEventTap)
+            try? await Task.sleep(for: .milliseconds(18))
         }
     }
 }

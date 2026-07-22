@@ -9,6 +9,7 @@ DESTINATION="${DESTINATION:-platform=macOS}"
 OUTPUT_DIR="${OUTPUT_DIR:-outputs}"
 APP_NAME="${APP_NAME:-Clippa}"
 SMOKE_LAUNCH="${SMOKE_LAUNCH:-0}"
+SKIP_TEST="${SKIP_TEST:-0}"
 
 DERIVED_DATA_DIR="$(mktemp -d /tmp/clippa-release-derived-data.XXXXXX)"
 CHECK_DIR="$(mktemp -d /tmp/clippa-release-check.XXXXXX)"
@@ -24,12 +25,16 @@ trap cleanup EXIT
 cd "$ROOT_DIR"
 mkdir -p "$OUTPUT_DIR"
 
-echo "==> Test"
-xcodebuild \
-    -project "$PROJECT" \
-    -scheme "$SCHEME" \
-    -destination "$DESTINATION" \
-    test
+if [[ "$SKIP_TEST" != "1" ]]; then
+    echo "==> Test"
+    xcodebuild \
+        -project "$PROJECT" \
+        -scheme "$SCHEME" \
+        -destination "$DESTINATION" \
+        test
+else
+    echo "==> Test skipped"
+fi
 
 echo "==> Build $CONFIGURATION"
 xcodebuild \
