@@ -1,0 +1,34 @@
+{
+  "name": "clippa-macos",
+  "version": "1.0.0",
+  "description": "Installer for Clippa, a private-by-default macOS clipboard history app.",
+  "bin": {
+    "clippa-macos": "bin/install-clippa.js",
+    "install-clippa": "bin/install-clippa.js"
+  },
+  "scripts": {
+    "release": "./scripts/release.sh",
+    "test": "xcodebuild -project Clippa.xcodeproj -scheme Clippa -destination 'platform=macOS' test"
+  },
+  "files": [
+    "bin",
+    "outputs/Clippa.app.zip",
+    "README.md",
+    "LICENSE"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Vaniawl/Clippa.git"
+  },
+  "homepage": "https://vaniawl.github.io/Clippa/",
+  "bugs": {
+    "url": "https://github.com/Vaniawl/Clippa/issues"
+  },
+  "keywords": [
+    "macos",
+    "clipboard",
+    "swiftui",
+    "productivity"
+  ],
+  "license": "MIT"
+}

@@ -91,6 +91,6 @@ struct ClipboardImageInfoView: View {
         let dimensions = NSImage(data: data).map { image in
             "\(Int(image.size.width)) x \(Int(image.size.height))"
         }
-        return [String(localized: "Image"), dimensions, byteCount, uti].compactMap { $0 }.joined(separator: " / ")
+        return [String(localized: "Clipboard image"), dimensions, byteCount, uti].compactMap { $0 }.joined(separator: " / ")
     }
 }

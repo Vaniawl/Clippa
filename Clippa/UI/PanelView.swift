@@ -59,7 +59,7 @@ struct PanelView: View {
             Spacer(minLength: 0)
 
             statusBadge(
-                title: isMonitoringPaused ? String(localized: "Paused") : String(localized: "Watching"),
+                title: isMonitoringPaused ? String(localized: "Paused") : String(localized: "Capturing"),
                 symbol: isMonitoringPaused ? "pause.fill" : "checkmark.circle.fill",
                 isProminent: isMonitoringPaused
             )
@@ -259,7 +259,7 @@ private struct ClipboardRow: View {
             ClipboardThumbnailView(item: item, size: DesignSystem.iconWellSize, showsPin: true)
 
             VStack(alignment: .leading, spacing: 3) {
-                Text(item.preview.isEmpty ? String(localized: "Empty text") : item.preview)
+                Text(rowTitle)
                     .font(.callout)
                     .lineLimit(1)
                     .foregroundStyle(.primary)
@@ -404,6 +404,13 @@ private struct ClipboardRow: View {
         case .text, .image:
             String(localized: "Open")
         }
+    }
+
+    private var rowTitle: String {
+        if item.kind == .image {
+            return String(localized: "Clipboard image")
+        }
+        return item.preview.isEmpty ? String(localized: "Empty text") : item.preview
     }
 
     @ViewBuilder

@@ -13,7 +13,7 @@ struct ClippaApp: App {
             Button("Show History") {
                 appDelegate.appState.togglePanel()
             }
-            Button(appDelegate.appState.settings.isMonitoringPaused ? "Resume" : "Pause") {
+            Button(appDelegate.appState.settings.isMonitoringPaused ? "Resume capture" : "Pause capture") {
                 appDelegate.appState.settings.isMonitoringPaused.toggle()
             }
             Button("Clear Unpinned") {

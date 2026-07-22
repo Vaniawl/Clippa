@@ -2,10 +2,28 @@
 
 Clippa is a macOS menu-bar clipboard history app built with SwiftUI. It keeps text, links, images, and file references locally, encrypts stored history with AES-GCM using a Keychain-backed key, and supports quick paste from a global shortcut.
 
+Website: https://vaniawl.github.io/Clippa/
+
 ## Requirements
 
 - macOS 26.0 or newer
 - Xcode 26.6 or newer
+
+## Install
+
+Fast install from GitHub:
+
+```bash
+npx github:Vaniawl/Clippa
+```
+
+After the npm package is published:
+
+```bash
+npx clippa-macos
+```
+
+Or download `outputs/Clippa.app.zip`, unzip it, move `Clippa.app` to `/Applications`, then open it. macOS may require Accessibility permission for automatic paste. Without Accessibility permission, Clippa still copies the selected item to the clipboard.
 
 ## Build
 
@@ -34,9 +52,14 @@ To also launch the built app once as a smoke test:
 SMOKE_LAUNCH=1 ./scripts/release.sh
 ```
 
-## Install
+## npm Publish
 
-Unzip `outputs/Clippa.app.zip`, move `Clippa.app` to `/Applications`, then open it. macOS may require Accessibility permission for automatic paste. Without Accessibility permission, Clippa still copies the selected item to the clipboard.
+The npm package is prepared as `clippa-macos`. Publishing requires an authenticated npm session:
+
+```bash
+npm adduser
+npm publish --access public
+```
 
 ## Update From Git
 

@@ -1,0 +1,474 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Clippa for macOS</title>
+    <meta name="description" content="Clippa is a fast, private macOS clipboard history app for text, links, images, and files.">
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #f7f8f5;
+        --surface: #ffffff;
+        --ink: #151a1d;
+        --muted: #647076;
+        --line: #dce2dd;
+        --accent: #0b7c75;
+        --accent-2: #d99a16;
+        --code: #101416;
+        --code-text: #ecf4ef;
+        --shadow: 0 18px 50px rgba(22, 30, 34, 0.14);
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #111414;
+          --surface: #1a1f1f;
+          --ink: #eef3ef;
+          --muted: #a0aaa5;
+          --line: #303837;
+          --accent: #44c2b5;
+          --accent-2: #efbd58;
+          --code: #090b0b;
+          --code-text: #f1f7f4;
+          --shadow: 0 18px 50px rgba(0, 0, 0, 0.34);
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
+        letter-spacing: 0;
+        color: var(--ink);
+        background: var(--bg);
+      }
+
+      a {
+        color: inherit;
+      }
+
+      .page {
+        min-height: 100vh;
+      }
+
+      .nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      .brand {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 700;
+      }
+
+      .brand img {
+        width: 32px;
+        height: 32px;
+        border-radius: 7px;
+      }
+
+      .nav-links {
+        display: flex;
+        gap: 18px;
+        font-size: 14px;
+        color: var(--muted);
+      }
+
+      .hero {
+        display: grid;
+        grid-template-columns: minmax(0, 0.95fr) minmax(420px, 1.05fr);
+        gap: 40px;
+        align-items: center;
+        max-width: 1120px;
+        min-height: calc(100vh - 86px);
+        margin: 0 auto;
+        padding: 24px 20px 80px;
+      }
+
+      .eyebrow {
+        color: var(--accent);
+        font-size: 14px;
+        font-weight: 700;
+        margin: 0 0 14px;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(54px, 8vw, 96px);
+        line-height: 0.9;
+        letter-spacing: 0;
+      }
+
+      .lede {
+        max-width: 580px;
+        margin: 22px 0 0;
+        color: var(--muted);
+        font-size: 20px;
+        line-height: 1.5;
+      }
+
+      .actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-top: 30px;
+      }
+
+      .button {
+        display: inline-flex;
+        align-items: center;
+        min-height: 44px;
+        padding: 0 16px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        text-decoration: none;
+        font-weight: 650;
+        background: var(--surface);
+      }
+
+      .button.primary {
+        color: white;
+        border-color: var(--accent);
+        background: var(--accent);
+      }
+
+      .install {
+        margin-top: 24px;
+        max-width: 560px;
+        overflow: auto;
+        border-radius: 8px;
+        background: var(--code);
+        box-shadow: var(--shadow);
+      }
+
+      pre {
+        margin: 0;
+        padding: 16px 18px;
+        color: var(--code-text);
+        font: 14px/1.55 ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+
+      .mock {
+        background: color-mix(in srgb, var(--surface) 92%, var(--accent) 8%);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+
+      .mock-titlebar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .dot {
+        width: 11px;
+        height: 11px;
+        border-radius: 999px;
+      }
+
+      .dot.red { background: #ff5f57; }
+      .dot.yellow { background: #febc2e; }
+      .dot.green { background: #28c840; }
+
+      .mock-body {
+        display: grid;
+        grid-template-columns: 1fr 0.76fr;
+        min-height: 430px;
+      }
+
+      .list {
+        padding: 16px;
+        border-right: 1px solid var(--line);
+      }
+
+      .search {
+        height: 34px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+        color: var(--muted);
+        padding: 8px 10px;
+        font-size: 14px;
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: 42px 1fr;
+        gap: 10px;
+        align-items: center;
+        margin-top: 12px;
+        padding: 8px;
+        border-radius: 8px;
+      }
+
+      .row.active {
+        background: color-mix(in srgb, var(--accent) 14%, transparent);
+      }
+
+      .thumb {
+        width: 42px;
+        height: 42px;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #e4ede8, #bfd7d2);
+        border: 1px solid var(--line);
+      }
+
+      .thumb.photo {
+        background:
+          linear-gradient(135deg, rgba(11, 124, 117, 0.30), rgba(217, 154, 22, 0.34)),
+          url("assets/app-icon.png") center / cover;
+      }
+
+      .row strong {
+        display: block;
+        font-size: 14px;
+      }
+
+      .row span {
+        display: block;
+        margin-top: 3px;
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .detail {
+        padding: 18px;
+      }
+
+      .detail-top {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 14px;
+      }
+
+      .detail-top img {
+        width: 40px;
+        height: 40px;
+        border-radius: 8px;
+      }
+
+      .photo-preview {
+        aspect-ratio: 4 / 3;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        background:
+          linear-gradient(135deg, rgba(11, 124, 117, 0.20), rgba(217, 154, 22, 0.28)),
+          var(--surface);
+        display: grid;
+        place-items: center;
+      }
+
+      .photo-preview img {
+        width: 42%;
+        max-width: 140px;
+        border-radius: 18px;
+      }
+
+      .meta {
+        display: grid;
+        gap: 8px;
+        margin-top: 14px;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .sections {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 0 20px 80px;
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 14px;
+      }
+
+      .feature {
+        padding: 20px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+      }
+
+      .feature h2 {
+        margin: 0 0 8px;
+        font-size: 18px;
+      }
+
+      .feature p {
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.5;
+      }
+
+      .download {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        margin-top: 56px;
+        padding-top: 44px;
+        border-top: 1px solid var(--line);
+      }
+
+      .download h2 {
+        margin: 0 0 12px;
+        font-size: 30px;
+      }
+
+      .download p {
+        color: var(--muted);
+        line-height: 1.55;
+      }
+
+      footer {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 22px 20px 34px;
+        border-top: 1px solid var(--line);
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      @media (max-width: 860px) {
+        .nav-links {
+          display: none;
+        }
+
+        .hero {
+          grid-template-columns: 1fr;
+          min-height: auto;
+          padding-top: 34px;
+        }
+
+        .mock-body,
+        .download,
+        .grid {
+          grid-template-columns: 1fr;
+        }
+
+        .list {
+          border-right: 0;
+          border-bottom: 1px solid var(--line);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="page">
+      <nav class="nav" aria-label="Primary">
+        <div class="brand">
+          <img src="assets/app-icon.png" alt="">
+          <span>Clippa</span>
+        </div>
+        <div class="nav-links">
+          <a href="#install">Install</a>
+          <a href="#privacy">Privacy</a>
+          <a href="https://github.com/Vaniawl/Clippa">GitHub</a>
+        </div>
+      </nav>
+
+      <section class="hero">
+        <div>
+          <p class="eyebrow">macOS clipboard history</p>
+          <h1>Clippa</h1>
+          <p class="lede">A fast menu-bar clipboard manager for text, links, images, and file references. History stays local, encrypted, searchable, and ready from a global shortcut.</p>
+          <div class="actions">
+            <a class="button primary" href="https://raw.githubusercontent.com/Vaniawl/Clippa/main/outputs/Clippa.app.zip">Download app</a>
+            <a class="button" href="https://github.com/Vaniawl/Clippa">View source</a>
+          </div>
+          <div class="install" id="install">
+            <pre>npx github:Vaniawl/Clippa
+
+# after npm publish
+npx clippa-macos</pre>
+          </div>
+        </div>
+
+        <div class="mock" aria-label="Clippa app preview">
+          <div class="mock-titlebar">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+          </div>
+          <div class="mock-body">
+            <div class="list">
+              <div class="search">Search clipboard</div>
+              <div class="row active">
+                <div class="thumb photo"></div>
+                <div><strong>Clipboard image</strong><span>1280 x 720 / 482 KB / Preview</span></div>
+              </div>
+              <div class="row">
+                <div class="thumb"></div>
+                <div><strong>https://example.com/research</strong><span>Link / 4 minutes ago</span></div>
+              </div>
+              <div class="row">
+                <div class="thumb"></div>
+                <div><strong>Release checklist</strong><span>Text / pinned</span></div>
+              </div>
+            </div>
+            <div class="detail">
+              <div class="detail-top">
+                <img src="assets/app-icon.png" alt="">
+                <div><strong>Clipboard image</strong><br><span>Image details</span></div>
+              </div>
+              <div class="photo-preview">
+                <img src="assets/app-icon.png" alt="">
+              </div>
+              <div class="meta">
+                <span>Created: today, 19:20</span>
+                <span>Source: Preview</span>
+                <span>Stored locally with encrypted history</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="sections">
+        <div class="grid">
+          <article class="feature">
+            <h2>Fast capture</h2>
+            <p>Text, links, images, and file references appear in one searchable history without opening a full app window.</p>
+          </article>
+          <article class="feature">
+            <h2>Keyboard first</h2>
+            <p>Choose your global shortcuts, paste the selected item, and pin important clips for later.</p>
+          </article>
+          <article class="feature" id="privacy">
+            <h2>Private by default</h2>
+            <p>History is stored on your Mac and encrypted with a Keychain-backed AES-GCM key.</p>
+          </article>
+        </div>
+
+        <section class="download">
+          <div>
+            <h2>Install</h2>
+            <p>Run the npx command on macOS. The installer opens Clippa after copying the app. Grant Accessibility only if you want automatic paste.</p>
+          </div>
+          <div class="install">
+            <pre>npx github:Vaniawl/Clippa
+npm install -g clippa-macos
+clippa-macos</pre>
+          </div>
+        </section>
+      </section>
+    </main>
+    <footer>Clippa 1.0.0. Built for macOS 26 and newer.</footer>
+  </body>
+</html>

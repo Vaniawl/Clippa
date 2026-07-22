@@ -88,11 +88,11 @@ struct AppWindowView: View {
                     settings.isMonitoringPaused.toggle()
                 } label: {
                     Label(
-                        settings.isMonitoringPaused ? String(localized: "Resume monitoring") : String(localized: "Pause monitoring"),
+                        settings.isMonitoringPaused ? String(localized: "Resume capture") : String(localized: "Pause capture"),
                         systemImage: settings.isMonitoringPaused ? "play.fill" : "pause.fill"
                     )
                 }
-                .help(settings.isMonitoringPaused ? String(localized: "Resume monitoring") : String(localized: "Pause monitoring"))
+                .help(settings.isMonitoringPaused ? String(localized: "Resume capture") : String(localized: "Pause capture"))
 
                 Button {
                     confirmClearUnpinned = true
@@ -270,7 +270,7 @@ private struct HistoryDashboardView: View {
                 .background(.tertiary.opacity(0.10), in: .rect(cornerRadius: 8))
 
                 statusBadge(
-                    title: isMonitoringPaused ? String(localized: "Paused") : String(localized: "Watching"),
+                    title: isMonitoringPaused ? String(localized: "Paused") : String(localized: "Capturing"),
                     symbol: isMonitoringPaused ? "pause.fill" : "checkmark.circle.fill",
                     color: isMonitoringPaused ? .orange : .green
                 )
@@ -469,7 +469,7 @@ private struct DashboardClipboardRow: View {
             ClipboardThumbnailView(item: item, size: 36, cornerRadius: 8, showsPin: true)
 
             VStack(alignment: .leading, spacing: 3) {
-                Text(item.preview.isEmpty ? String(localized: "Empty text") : item.preview)
+                Text(item.rowTitle)
                     .lineLimit(1)
                 HStack(spacing: 6) {
                     if item.kind != .image {
@@ -508,8 +508,15 @@ private struct SelectedItemDetail: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
-                Label(item.kind.displayName, systemImage: item.kind.symbolName)
-                    .font(.headline)
+                VStack(alignment: .leading, spacing: 3) {
+                    Label(item.kind.displayName, systemImage: item.kind.symbolName)
+                        .font(.headline)
+                    if item.kind == .image {
+                        Text("Clipboard image")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                    }
+                }
                 Spacer()
                 if item.isPinned {
                     Image(systemName: "pin.fill")
@@ -623,7 +630,12 @@ private struct SelectedItemDetail: View {
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
 
-                    ClipboardImageInfoView(item: item)
+                    VStack(alignment: .leading, spacing: 6) {
+                        Label("Image details", systemImage: "photo")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                        ClipboardImageInfoView(item: item)
+                    }
                 }
             } else {
                 Text(item.preview)
@@ -718,6 +730,13 @@ private struct PrivacyDashboardView: View {
 }
 
 private extension ClipboardItem {
+    var rowTitle: String {
+        if kind == .image {
+            return String(localized: "Clipboard image")
+        }
+        return preview.isEmpty ? String(localized: "Empty text") : preview
+    }
+
     var canOpen: Bool {
         switch payload {
         case .url:

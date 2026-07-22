@@ -47,6 +47,7 @@
 "Use Command, Control, or Option with another key." = "Use Command, Control, or Option with another key.";
 "Paused" = "Paused";
 "Watching" = "Watching";
+"Capturing" = "Capturing";
 "Permissions" = "Permissions";
 "Accessibility" = "Accessibility";
 "Granted" = "Granted";
@@ -64,6 +65,12 @@
 "Pause monitoring" = "Pause monitoring";
 "Pause clipboard monitoring" = "Pause clipboard monitoring";
 "Capture status" = "Capture status";
+"Resume capture" = "Resume capture";
+"Pause capture" = "Pause capture";
+"Capture new copies" = "Capture new copies";
+"Clipboard capture" = "Clipboard capture";
+"Clipboard image" = "Clipboard image";
+"Image details" = "Image details";
 "Retention" = "Retention";
 "History" = "History";
 "100 unpinned items / 7 days" = "100 unpinned items / 7 days";

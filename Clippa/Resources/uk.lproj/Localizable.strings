@@ -47,6 +47,7 @@
 "Use Command, Control, or Option with another key." = "Використайте Command, Control або Option разом з іншою клавішею.";
 "Paused" = "Призупинено";
 "Watching" = "Відстежує";
+"Capturing" = "Зберігає";
 "Permissions" = "Дозволи";
 "Accessibility" = "Accessibility";
 "Granted" = "Надано";
@@ -64,6 +65,12 @@
 "Pause monitoring" = "Призупинити моніторинг";
 "Pause clipboard monitoring" = "Призупинити відстеження буфера";
 "Capture status" = "Стан відстеження";
+"Resume capture" = "Продовжити збереження";
+"Pause capture" = "Призупинити збереження";
+"Capture new copies" = "Зберігати нові копії";
+"Clipboard capture" = "Збереження буфера";
+"Clipboard image" = "Зображення з буфера";
+"Image details" = "Деталі зображення";
 "Retention" = "Зберігання";
 "History" = "Історія";
 "100 unpinned items / 7 days" = "100 незакріплених записів / 7 днів";

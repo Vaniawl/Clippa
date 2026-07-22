@@ -42,12 +42,12 @@ struct SettingsView: View {
                     color: settings.launchAtLogin ? .green : .secondary
                 )
                 statusRow(
-                    title: String(localized: "Capture status"),
-                    value: settings.isMonitoringPaused ? String(localized: "Paused") : String(localized: "Watching"),
+                    title: String(localized: "Clipboard capture"),
+                    value: settings.isMonitoringPaused ? String(localized: "Paused") : String(localized: "Capturing"),
                     symbol: settings.isMonitoringPaused ? "pause.circle.fill" : "record.circle",
                     color: settings.isMonitoringPaused ? .orange : .green
                 )
-                Toggle("Pause clipboard monitoring", isOn: $settings.isMonitoringPaused)
+                Toggle("Capture new copies", isOn: captureEnabledBinding)
             }
 
             Section("Keyboard") {
@@ -169,6 +169,13 @@ struct SettingsView: View {
                     settings.launchAtLogin = false
                 }
             }
+        )
+    }
+
+    private var captureEnabledBinding: Binding<Bool> {
+        Binding(
+            get: { !settings.isMonitoringPaused },
+            set: { settings.isMonitoringPaused = !$0 }
         )
     }
 
