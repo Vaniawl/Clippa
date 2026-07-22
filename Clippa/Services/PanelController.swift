@@ -14,6 +14,9 @@ final class AppState {
     let panelController = PanelController()
 
     var notice: String?
+    var isAutoPasteReady: Bool {
+        AccessibilityService.isTrusted
+    }
 
     init() {
         let settings = AppSettings()
@@ -118,9 +121,11 @@ final class PanelController {
         let content = PanelView(
             store: appState.store,
             notice: appState.notice,
+            isMonitoringPaused: appState.settings.isMonitoringPaused,
+            isAutoPasteReady: appState.isAutoPasteReady,
             onPasteSelected: { [weak appState] in appState?.pasteSelectedItem() },
-            onTogglePin: { [weak appState] in appState?.store.togglePinSelected() },
-            onDelete: { [weak appState] in appState?.store.deleteSelected() },
+            onTogglePin: { [weak appState] item in appState?.store.togglePin(item) },
+            onDelete: { [weak appState] item in appState?.store.delete(item) },
             onClose: { [weak self] in self?.close() }
         )
         let hostingView = NSHostingView(rootView: content)

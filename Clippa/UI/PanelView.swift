@@ -4,9 +4,11 @@ import SwiftUI
 struct PanelView: View {
     @Bindable var store: ClipboardStore
     var notice: String?
+    var isMonitoringPaused: Bool
+    var isAutoPasteReady: Bool
     var onPasteSelected: @MainActor () -> Void
-    var onTogglePin: @MainActor () -> Void
-    var onDelete: @MainActor () -> Void
+    var onTogglePin: @MainActor (ClipboardItem) -> Void
+    var onDelete: @MainActor (ClipboardItem) -> Void
     var onClose: @MainActor () -> Void
     @FocusState private var searchFocused: Bool
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
@@ -19,13 +21,7 @@ struct PanelView: View {
             filterRow
             Divider()
             results
-            if let notice {
-                Text(notice)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-            }
+            statusRow
         }
         .padding(12)
         .frame(width: DesignSystem.panelWidth, height: DesignSystem.panelHeight)
@@ -50,6 +46,9 @@ struct PanelView: View {
             Text("⌘⇧V")
                 .font(.caption)
                 .foregroundStyle(.tertiary)
+                .padding(.horizontal, 6)
+                .padding(.vertical, 3)
+                .background(.tertiary.opacity(0.14), in: .rect(cornerRadius: 5))
         }
         .frame(height: DesignSystem.controlHeight)
     }
@@ -84,7 +83,13 @@ struct PanelView: View {
                         ClipboardRow(
                             item: item,
                             isSelected: item.id == store.selectedItemID,
-                            contrast: contrast
+                            contrast: contrast,
+                            onTogglePin: {
+                                onTogglePin(item)
+                            },
+                            onDelete: {
+                                onDelete(item)
+                            }
                         )
                         .contentShape(.rect)
                         .onTapGesture {
@@ -109,19 +114,54 @@ struct PanelView: View {
                 .fill(.regularMaterial)
         }
     }
+
+    private var statusRow: some View {
+        HStack(spacing: 8) {
+            statusBadge(
+                title: isMonitoringPaused ? String(localized: "Paused") : String(localized: "Watching"),
+                symbol: isMonitoringPaused ? "pause.fill" : "checkmark.circle.fill",
+                isProminent: isMonitoringPaused
+            )
+            statusBadge(
+                title: isAutoPasteReady ? String(localized: "Auto-paste ready") : String(localized: "Copy only"),
+                symbol: isAutoPasteReady ? "checkmark.circle.fill" : "doc.on.doc",
+                isProminent: false
+            )
+            if let notice {
+                Text(notice)
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+            }
+            Spacer(minLength: 0)
+        }
+        .frame(height: 18)
+    }
+
+    private func statusBadge(title: String, symbol: String, isProminent: Bool) -> some View {
+        HStack(spacing: 4) {
+            Image(systemName: symbol)
+                .font(.system(size: 10, weight: .medium))
+            Text(title)
+                .font(.caption2)
+        }
+        .foregroundStyle(isProminent ? Color.orange : Color.secondary)
+        .lineLimit(1)
+    }
 }
 
 private struct ClipboardRow: View {
     let item: ClipboardItem
     let isSelected: Bool
     let contrast: ColorSchemeContrast
+    let onTogglePin: @MainActor () -> Void
+    let onDelete: @MainActor () -> Void
+    @State private var isHovering = false
 
     var body: some View {
         HStack(spacing: 10) {
-            Image(systemName: item.kind.symbolName)
-                .font(.system(size: 14, weight: .medium))
-                .foregroundStyle(.secondary)
-                .frame(width: 22)
+            icon
             VStack(alignment: .leading, spacing: 2) {
                 Text(item.preview.isEmpty ? String(localized: "Empty text") : item.preview)
                     .font(.callout)
@@ -130,6 +170,11 @@ private struct ClipboardRow: View {
                 HStack(spacing: 6) {
                     Text(item.kind.displayName)
                     Text(item.createdAt, style: .relative)
+                    if let source = item.sourceBundleIdentifier {
+                        Text(source)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                    }
                     if item.kind == .files, case .files(let refs) = item.payload, refs.contains(where: { !$0.exists }) {
                         Text("Unavailable")
                     }
@@ -138,25 +183,72 @@ private struct ClipboardRow: View {
                 .foregroundStyle(.secondary)
             }
             Spacer(minLength: 8)
-            if item.isPinned {
-                Image(systemName: "pin.fill")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .accessibilityLabel(Text("Pinned"))
-            }
+            rowActions
+                .opacity(isSelected || isHovering ? 1 : (item.isPinned ? 0.75 : 0))
         }
+        .onHover { isHovering = $0 }
         .frame(height: DesignSystem.rowHeight)
         .padding(.horizontal, 8)
         .background(selectionBackground)
-        .clipShape(.rect(cornerRadius: 7))
+        .clipShape(.rect(cornerRadius: DesignSystem.rowCornerRadius))
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(isSelected ? [.isSelected] : [])
+    }
+
+    private var icon: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: 7)
+                .fill(iconBackground)
+            Image(systemName: item.kind.symbolName)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundStyle(.secondary)
+        }
+        .frame(width: DesignSystem.iconWellSize, height: DesignSystem.iconWellSize)
+    }
+
+    private var iconBackground: Color {
+        switch item.kind {
+        case .text:
+            Color.secondary.opacity(0.10)
+        case .url:
+            Color.blue.opacity(0.12)
+        case .image:
+            Color.green.opacity(0.12)
+        case .files:
+            Color.orange.opacity(0.12)
+        }
+    }
+
+    private var rowActions: some View {
+        HStack(spacing: 2) {
+            Button {
+                onTogglePin()
+            } label: {
+                Image(systemName: item.isPinned ? "pin.fill" : "pin")
+                    .frame(width: DesignSystem.symbolButtonSize, height: DesignSystem.symbolButtonSize)
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(item.isPinned ? Color.accentColor : Color.secondary)
+            .help(item.isPinned ? String(localized: "Unpin") : String(localized: "Pin"))
+            .accessibilityLabel(Text(item.isPinned ? "Unpin" : "Pin"))
+
+            Button(role: .destructive) {
+                onDelete()
+            } label: {
+                Image(systemName: "trash")
+                    .frame(width: DesignSystem.symbolButtonSize, height: DesignSystem.symbolButtonSize)
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(.secondary)
+            .help(String(localized: "Delete"))
+            .accessibilityLabel(Text("Delete"))
+        }
     }
 
     @ViewBuilder
     private var selectionBackground: some View {
         if isSelected {
-            RoundedRectangle(cornerRadius: 7)
+            RoundedRectangle(cornerRadius: DesignSystem.rowCornerRadius)
                 .fill(contrast == .increased ? Color.accentColor.opacity(0.28) : Color.accentColor.opacity(0.16))
         }
     }

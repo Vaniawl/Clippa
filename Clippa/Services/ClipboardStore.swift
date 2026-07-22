@@ -69,12 +69,22 @@ final class ClipboardStore {
         applyOrderingAndRetention(now: Date())
     }
 
+    func togglePin(_ item: ClipboardItem) {
+        selectedItemID = item.id
+        togglePinSelected()
+    }
+
     func deleteSelected() {
         guard let selectedItemID else {
             return
         }
         items.removeAll { $0.id == selectedItemID }
         applyOrderingAndRetention(now: Date())
+    }
+
+    func delete(_ item: ClipboardItem) {
+        selectedItemID = item.id
+        deleteSelected()
     }
 
     func clearUnpinned() {

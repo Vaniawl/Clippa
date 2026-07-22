@@ -33,6 +33,23 @@ final class ClipboardCoreTests: XCTestCase {
         XCTAssertEqual(store.items.first?.preview, "old")
     }
 
+    func testItemScopedPinAndDeleteActionsSelectTargetItem() {
+        let store = ClipboardStore()
+        store.add(payload: .text("first"), sourceBundleIdentifier: nil, date: Date(timeIntervalSince1970: 1))
+        store.add(payload: .text("second"), sourceBundleIdentifier: nil, date: Date(timeIntervalSince1970: 2))
+        let first = store.items.first { $0.preview == "first" }!
+        let second = store.items.first { $0.preview == "second" }!
+
+        store.select(second)
+        store.togglePin(first)
+        XCTAssertEqual(store.selectedItemID, first.id)
+        XCTAssertTrue(store.items.first { $0.id == first.id }?.isPinned == true)
+
+        store.delete(second)
+        XCTAssertNil(store.items.first { $0.id == second.id })
+        XCTAssertEqual(store.selectedItemID, first.id)
+    }
+
     func testLimitsUnpinnedHistoryTo100() {
         let store = ClipboardStore()
         for index in 0..<120 {
