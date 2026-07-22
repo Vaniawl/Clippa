@@ -46,12 +46,18 @@ final class PasteService {
             return .copiedOnlyPasteUnavailable
         }
 
-        await activatePasteTarget(application)
-        let focusedElement = AccessibilityService.focusedEditableTextElement(in: application) ?? target?.focusedElement
-        focus(focusedElement)
-        if !(await sendCommandV()) {
-            _ = await pressPasteMenuItem(in: application)
+        guard await activatePasteTarget(application) else {
+            return .copiedOnlyPasteUnavailable
         }
+        let focusedElement = AccessibilityService.focusedEditableTextElement(in: application) ?? target?.focusedElement
+        await restoreFocus(focusedElement, in: application)
+
+        if await pressPasteMenuItem(in: application) {
+            return .pasted
+        }
+
+        await restoreFocus(focusedElement, in: application)
+        _ = await sendCommandV(to: application)
         return .pasted
     }
 
@@ -70,23 +76,44 @@ final class PasteService {
         )
     }
 
-    private func activatePasteTarget(_ application: NSRunningApplication?) async {
-        guard let application, !application.isTerminated else {
-            try? await Task.sleep(for: .milliseconds(120))
+    private func restoreFocus(_ element: AXUIElement?, in application: NSRunningApplication) async {
+        guard !application.isTerminated else {
             return
         }
 
-        _ = application.activate()
+        if NSWorkspace.shared.frontmostApplication?.processIdentifier != application.processIdentifier {
+            _ = await activatePasteTarget(application)
+        }
 
-        for _ in 0..<10 {
+        focus(element)
+        try? await Task.sleep(for: .milliseconds(80))
+    }
+
+    private func activatePasteTarget(_ application: NSRunningApplication?) async -> Bool {
+        guard let application, !application.isTerminated else {
+            try? await Task.sleep(for: .milliseconds(120))
+            return false
+        }
+
+        let appElement = AXUIElementCreateApplication(application.processIdentifier)
+        _ = AXUIElementSetAttributeValue(
+            appElement,
+            kAXFrontmostAttribute as CFString,
+            kCFBooleanTrue
+        )
+        _ = AXUIElementPerformAction(appElement, kAXRaiseAction as CFString)
+        application.activate(options: [.activateAllWindows])
+
+        for _ in 0..<14 {
             if NSWorkspace.shared.frontmostApplication?.processIdentifier == application.processIdentifier {
                 try? await Task.sleep(for: .milliseconds(140))
-                return
+                return true
             }
             try? await Task.sleep(for: .milliseconds(50))
         }
 
         try? await Task.sleep(for: .milliseconds(180))
+        return NSWorkspace.shared.frontmostApplication?.processIdentifier == application.processIdentifier
     }
 
     private func pressPasteMenuItem(in application: NSRunningApplication?) async -> Bool {
@@ -112,6 +139,28 @@ final class PasteService {
 
         await sendEscape()
         return false
+    }
+
+    private func postCommandV(with post: (CGEvent) -> Void) async -> Bool {
+        let source = CGEventSource(stateID: .hidSystemState)
+        source?.localEventsSuppressionInterval = 0
+        guard
+            let commandDown = CGEvent(keyboardEventSource: source, virtualKey: CGKeyCode(kVK_Command), keyDown: true),
+            let vDown = CGEvent(keyboardEventSource: source, virtualKey: CGKeyCode(kVK_ANSI_V), keyDown: true),
+            let vUp = CGEvent(keyboardEventSource: source, virtualKey: CGKeyCode(kVK_ANSI_V), keyDown: false),
+            let commandUp = CGEvent(keyboardEventSource: source, virtualKey: CGKeyCode(kVK_Command), keyDown: false)
+        else {
+            return false
+        }
+        commandDown.flags = .maskCommand
+        vDown.flags = .maskCommand
+        vUp.flags = .maskCommand
+
+        for event in [commandDown, vDown, vUp, commandUp] {
+            post(event)
+            try? await Task.sleep(for: .milliseconds(22))
+        }
+        return true
     }
 
     private func findPasteMenuItem(in element: AXUIElement, depth: Int = 0) -> AXUIElement? {
@@ -204,26 +253,15 @@ final class PasteService {
         try? await Task.sleep(for: .milliseconds(45))
     }
 
-    private func sendCommandV() async -> Bool {
-        let source = CGEventSource(stateID: .hidSystemState)
-        source?.localEventsSuppressionInterval = 0
-        guard
-            let commandDown = CGEvent(keyboardEventSource: source, virtualKey: CGKeyCode(kVK_Command), keyDown: true),
-            let vDown = CGEvent(keyboardEventSource: source, virtualKey: CGKeyCode(kVK_ANSI_V), keyDown: true),
-            let vUp = CGEvent(keyboardEventSource: source, virtualKey: CGKeyCode(kVK_ANSI_V), keyDown: false),
-            let commandUp = CGEvent(keyboardEventSource: source, virtualKey: CGKeyCode(kVK_Command), keyDown: false)
-        else {
-            return false
-        }
-        commandDown.flags = .maskCommand
-        vDown.flags = .maskCommand
-        vUp.flags = .maskCommand
-
-        for event in [commandDown, vDown, vUp, commandUp] {
+    private func sendCommandV(to application: NSRunningApplication) async -> Bool {
+        if await postCommandV(with: { event in
             event.post(tap: .cghidEventTap)
-            try? await Task.sleep(for: .milliseconds(18))
+        }) {
+            return true
         }
-        return true
+        return await postCommandV(with: { event in
+            event.postToPid(application.processIdentifier)
+        })
     }
 }
 
