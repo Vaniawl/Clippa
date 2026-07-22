@@ -59,11 +59,6 @@ struct PanelView: View {
             Spacer(minLength: 0)
 
             statusBadge(
-                title: isMonitoringPaused ? String(localized: "Paused") : String(localized: "Capturing"),
-                symbol: isMonitoringPaused ? "pause.fill" : "checkmark.circle.fill",
-                isProminent: isMonitoringPaused
-            )
-            statusBadge(
                 title: isAutoPasteReady ? String(localized: "Auto-paste ready") : String(localized: "Copy only"),
                 symbol: isAutoPasteReady ? "checkmark.circle.fill" : "doc.on.doc",
                 isProminent: false
@@ -312,7 +307,6 @@ private struct ClipboardRow: View {
             if item.kind != .image {
                 Text(item.kind.displayName)
             }
-            Text(item.createdAt, style: .relative)
             if case .image = item.payload {
                 ClipboardImageInfoView(item: item)
             }

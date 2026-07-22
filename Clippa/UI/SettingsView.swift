@@ -10,128 +10,100 @@ struct SettingsView: View {
     var onUndoableItemsRemoved: @MainActor (_ message: String, _ restoredMessage: String, _ items: [ClipboardItem]) -> Void = { _, _, _ in }
     let onShowShortcutChange: (HotKeyShortcut) -> Void
     let onPinShortcutChange: (HotKeyShortcut) -> Void
-    @State private var newExcludedIdentifier = ""
     @State private var confirmClearUnpinned = false
     @State private var confirmClearAll = false
 
     var body: some View {
-        Form {
-            Section("Permissions") {
-                statusRow(
-                    title: String(localized: "Accessibility"),
-                    value: AccessibilityService.isTrusted ? String(localized: "Granted") : String(localized: "Required for automatic paste"),
-                    symbol: AccessibilityService.isTrusted ? "checkmark.circle.fill" : "exclamationmark.triangle.fill",
-                    color: AccessibilityService.isTrusted ? .green : .orange
-                )
-                HStack {
-                    Button("Request Access") {
-                        AccessibilityService.requestPrompt()
-                    }
-                    Button("Open Privacy & Security") {
-                        AccessibilityService.openSystemSettings()
-                    }
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                SettingsPanel(title: String(localized: "General")) {
+                    Toggle("Launch at login", isOn: launchAtLoginBinding)
+                    Toggle("Save new copies", isOn: captureEnabledBinding)
+                    statusRow(
+                        title: String(localized: "Login item"),
+                        value: LoginItemService.statusDescription,
+                        symbol: settings.launchAtLogin ? "checkmark.circle.fill" : "circle",
+                        color: settings.launchAtLogin ? .green : .secondary
+                    )
                 }
-            }
 
-            Section("General") {
-                Toggle("Launch at login", isOn: launchAtLoginBinding)
-                statusRow(
-                    title: String(localized: "Login item"),
-                    value: LoginItemService.statusDescription,
-                    symbol: settings.launchAtLogin ? "checkmark.circle.fill" : "circle",
-                    color: settings.launchAtLogin ? .green : .secondary
-                )
-                statusRow(
-                    title: String(localized: "Clipboard capture"),
-                    value: settings.isMonitoringPaused ? String(localized: "Paused") : String(localized: "Capturing"),
-                    symbol: settings.isMonitoringPaused ? "pause.circle.fill" : "record.circle",
-                    color: settings.isMonitoringPaused ? .orange : .green
-                )
-                Toggle("Capture new copies", isOn: captureEnabledBinding)
-            }
-
-            Section("Keyboard") {
-                LabeledContent {
-                    HStack(spacing: 8) {
-                        HotKeyRecorder(shortcut: showShortcutBinding, onCommit: onShowShortcutChange)
-                            .frame(width: 116, height: 30)
-                        resetShortcutButton {
-                            onShowShortcutChange(.defaultShowPanel)
+                SettingsPanel(title: String(localized: "Keyboard")) {
+                    LabeledContent {
+                        HStack(spacing: 8) {
+                            HotKeyRecorder(shortcut: showShortcutBinding, onCommit: onShowShortcutChange)
+                                .frame(width: 116, height: 30)
+                            resetShortcutButton {
+                                onShowShortcutChange(.defaultShowPanel)
+                            }
                         }
-                    }
-                } label: {
-                    Label("Show history", systemImage: "keyboard")
-                }
-                statusRow(
-                    title: String(localized: "Shortcut status"),
-                    value: hotKeyStatus,
-                    symbol: hotKeyStatus == String(localized: "Registered") ? "checkmark.circle.fill" : "exclamationmark.triangle.fill",
-                    color: hotKeyStatus == String(localized: "Registered") ? .green : .orange
-                )
-                LabeledContent {
-                    HStack(spacing: 8) {
-                        HotKeyRecorder(shortcut: pinShortcutBinding, onCommit: onPinShortcutChange)
-                            .frame(width: 116, height: 30)
-                        resetShortcutButton {
-                            onPinShortcutChange(.defaultPinSelected)
-                        }
-                    }
-                } label: {
-                    Label("Pin selected item", systemImage: "pin")
-                }
-            }
-
-            Section("Retention") {
-                LabeledContent("History", value: "100 unpinned items / 7 days")
-                Text("Pinned items are kept until you delete them. Clipboard history is encrypted locally with a Keychain-backed AES-GCM key.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-            }
-
-            Section("Excluded Apps") {
-                Text("Source app detection is best-effort. Apps listed here are not saved to history.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                HStack {
-                    TextField("Bundle identifier", text: $newExcludedIdentifier)
-                    Button {
-                        settings.addExcludedBundleIdentifier(newExcludedIdentifier)
-                        newExcludedIdentifier = ""
                     } label: {
-                        Image(systemName: "plus")
+                        Label("Show history", systemImage: "keyboard")
                     }
-                    .accessibilityLabel(Text("Add excluded app"))
-                }
-                ForEach(settings.excludedBundleIdentifiers, id: \.self) { identifier in
-                    HStack {
-                        Text(identifier)
-                        Spacer()
-                        Button {
-                            settings.removeExcludedBundleIdentifier(identifier)
-                        } label: {
-                            Image(systemName: "trash")
+                    statusRow(
+                        title: String(localized: "Shortcut status"),
+                        value: hotKeyStatus,
+                        symbol: hotKeyStatus == String(localized: "Registered") ? "checkmark.circle.fill" : "exclamationmark.triangle.fill",
+                        color: hotKeyStatus == String(localized: "Registered") ? .green : .orange
+                    )
+                    LabeledContent {
+                        HStack(spacing: 8) {
+                            HotKeyRecorder(shortcut: pinShortcutBinding, onCommit: onPinShortcutChange)
+                                .frame(width: 116, height: 30)
+                            resetShortcutButton {
+                                onPinShortcutChange(.defaultPinSelected)
+                            }
                         }
-                        .buttonStyle(.borderless)
-                        .accessibilityLabel(Text("Remove \(identifier)"))
+                    } label: {
+                        Label("Pin selected item", systemImage: "pin")
                     }
                 }
-            }
 
-            Section("History") {
-                Button("Clear unpinned history") {
-                    confirmClearUnpinned = true
+                SettingsPanel(title: String(localized: "Privacy")) {
+                    statusRow(
+                        title: String(localized: "Accessibility"),
+                        value: AccessibilityService.isTrusted ? String(localized: "Granted") : String(localized: "Required for automatic paste"),
+                        symbol: AccessibilityService.isTrusted ? "checkmark.circle.fill" : "exclamationmark.triangle.fill",
+                        color: AccessibilityService.isTrusted ? .green : .orange
+                    )
+                    Text("Clipboard history stays on this Mac and is encrypted locally.")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                    HStack {
+                        Button("Request Access") {
+                            AccessibilityService.requestPrompt()
+                        }
+                        Button("Open Privacy & Security") {
+                            AccessibilityService.openSystemSettings()
+                        }
+                    }
                 }
-                Button("Clear all history", role: .destructive) {
-                    confirmClearAll = true
-                }
-            }
 
-            Section("About") {
-                LabeledContent("Version", value: appVersion)
-                LabeledContent("Bundle", value: Bundle.main.bundleIdentifier ?? String(localized: "Unknown"))
+                SettingsPanel(title: String(localized: "History")) {
+                    LabeledContent("Stored items", value: "100")
+                    LabeledContent("Pinned items", value: String(localized: "Kept until deleted"))
+                    Text("Unpinned history is cleaned automatically. You can clear it any time.")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                }
+
+                SettingsPanel(title: String(localized: "Actions")) {
+                    HStack {
+                        Button("Clear unpinned history") {
+                            confirmClearUnpinned = true
+                        }
+                        Button("Clear all history", role: .destructive) {
+                            confirmClearAll = true
+                        }
+                    }
+                }
+
+                SettingsPanel(title: String(localized: "About")) {
+                    LabeledContent("Version", value: appVersion)
+                    LabeledContent("Bundle", value: Bundle.main.bundleIdentifier ?? String(localized: "Unknown"))
+                }
             }
+            .padding(24)
         }
-        .formStyle(.grouped)
         .frame(
             width: usesFixedFrame ? 560 : nil,
             height: usesFixedFrame ? 720 : nil
@@ -220,6 +192,28 @@ struct SettingsView: View {
         .buttonStyle(.borderless)
         .help(String(localized: "Reset shortcut"))
         .accessibilityLabel(Text("Reset shortcut"))
+    }
+}
+
+struct SettingsPanel<Content: View>: View {
+    let title: String
+    @ViewBuilder var content: Content
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(title)
+                .font(.headline)
+            VStack(alignment: .leading, spacing: 12) {
+                content
+            }
+            .padding(14)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color(nsColor: .controlBackgroundColor), in: .rect(cornerRadius: 8))
+            .overlay {
+                RoundedRectangle(cornerRadius: 8)
+                    .strokeBorder(.separator.opacity(0.5))
+            }
+        }
     }
 }
 

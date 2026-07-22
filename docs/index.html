@@ -299,6 +299,51 @@
         gap: 14px;
       }
 
+      .privacy-band {
+        margin-top: 56px;
+        padding: 28px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: var(--surface);
+      }
+
+      .privacy-band h2 {
+        margin: 0 0 10px;
+        font-size: 30px;
+      }
+
+      .privacy-band p {
+        max-width: 820px;
+        margin: 0;
+        color: var(--muted);
+        line-height: 1.55;
+      }
+
+      .privacy-list {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        margin-top: 20px;
+      }
+
+      .privacy-list div {
+        padding: 14px;
+        border: 1px solid var(--line);
+        border-radius: 8px;
+        background: color-mix(in srgb, var(--surface) 88%, var(--bg) 12%);
+      }
+
+      .privacy-list strong {
+        display: block;
+        margin-bottom: 5px;
+      }
+
+      .privacy-list span {
+        color: var(--muted);
+        font-size: 14px;
+        line-height: 1.45;
+      }
+
       .feature {
         padding: 20px;
         border: 1px solid var(--line);
@@ -358,7 +403,8 @@
 
         .mock-body,
         .download,
-        .grid {
+        .grid,
+        .privacy-list {
           grid-template-columns: 1fr;
         }
 
@@ -415,7 +461,7 @@ npx clippa-macos</pre>
               </div>
               <div class="row">
                 <div class="thumb"></div>
-                <div><strong>https://example.com/research</strong><span>Link / 4 minutes ago</span></div>
+                <div><strong>https://example.com/research</strong><span>Link / Browser</span></div>
               </div>
               <div class="row">
                 <div class="thumb"></div>
@@ -431,7 +477,6 @@ npx clippa-macos</pre>
                 <img src="assets/app-icon.png" alt="">
               </div>
               <div class="meta">
-                <span>Created: today, 19:20</span>
                 <span>Source: Preview</span>
                 <span>Stored locally with encrypted history</span>
               </div>
@@ -452,9 +497,19 @@ npx clippa-macos</pre>
           </article>
           <article class="feature" id="privacy">
             <h2>Private by default</h2>
-            <p>History is stored on your Mac and encrypted with a Keychain-backed AES-GCM key.</p>
+            <p>Clippa does not send clipboard contents to a server. Local history is encrypted on your Mac.</p>
           </article>
         </div>
+
+        <section class="privacy-band">
+          <h2>No cloud clipboard storage</h2>
+          <p>Clippa has no account system, no analytics, no telemetry, and no remote database for your clipboard. The app keeps history only on your Mac so search and paste can work locally.</p>
+          <div class="privacy-list">
+            <div><strong>No uploads</strong><span>Clipboard text, images, links, and files are not uploaded by Clippa.</span></div>
+            <div><strong>Local encryption</strong><span>Stored history is encrypted with a Keychain-backed AES-GCM key.</span></div>
+            <div><strong>Your control</strong><span>You can clear unpinned history or all history from the app settings.</span></div>
+          </div>
+        </section>
 
         <section class="download">
           <div>

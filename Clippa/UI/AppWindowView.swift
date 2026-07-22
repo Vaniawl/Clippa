@@ -20,7 +20,7 @@ enum AppWindowSection: String, CaseIterable, Identifiable {
         switch self {
         case .history: "clock.arrow.circlepath"
         case .settings: "gearshape"
-        case .privacy: "hand.raised"
+        case .privacy: "lock.shield"
         }
     }
 }
@@ -83,17 +83,7 @@ struct AppWindowView: View {
         }
         .animation(.snappy(duration: 0.18), value: toast?.id)
         .toolbar {
-            ToolbarItemGroup {
-                Button {
-                    settings.isMonitoringPaused.toggle()
-                } label: {
-                    Label(
-                        settings.isMonitoringPaused ? String(localized: "Resume capture") : String(localized: "Pause capture"),
-                        systemImage: settings.isMonitoringPaused ? "play.fill" : "pause.fill"
-                    )
-                }
-                .help(settings.isMonitoringPaused ? String(localized: "Resume capture") : String(localized: "Pause capture"))
-
+            ToolbarItem {
                 Button {
                     confirmClearUnpinned = true
                 } label: {
@@ -120,7 +110,6 @@ struct AppWindowView: View {
         case .history:
             HistoryDashboardView(
                 store: store,
-                isMonitoringPaused: settings.isMonitoringPaused,
                 isAutoPasteReady: AccessibilityService.isTrusted,
                 onPaste: onPaste,
                 onCopy: { item in
@@ -143,7 +132,7 @@ struct AppWindowView: View {
                 onPinShortcutChange: onPinShortcutChange
             )
         case .privacy:
-            PrivacyDashboardView(settings: settings)
+            PrivacyDashboardView()
         }
     }
 
@@ -212,7 +201,6 @@ private struct ActionToast: Identifiable {
 
 private struct HistoryDashboardView: View {
     @Bindable var store: ClipboardStore
-    var isMonitoringPaused: Bool
     var isAutoPasteReady: Bool
     let onPaste: @MainActor (ClipboardItem) -> Void
     let onCopy: @MainActor (ClipboardItem) -> Void
@@ -269,11 +257,6 @@ private struct HistoryDashboardView: View {
                 .frame(height: 34)
                 .background(.tertiary.opacity(0.10), in: .rect(cornerRadius: 8))
 
-                statusBadge(
-                    title: isMonitoringPaused ? String(localized: "Paused") : String(localized: "Capturing"),
-                    symbol: isMonitoringPaused ? "pause.fill" : "checkmark.circle.fill",
-                    color: isMonitoringPaused ? .orange : .green
-                )
                 statusBadge(
                     title: isAutoPasteReady ? String(localized: "Auto-paste ready") : String(localized: "Copy only"),
                     symbol: isAutoPasteReady ? "checkmark.circle.fill" : "doc.on.doc",
@@ -475,7 +458,6 @@ private struct DashboardClipboardRow: View {
                     if item.kind != .image {
                         Text(item.kind.displayName)
                     }
-                    Text(item.createdAt, style: .relative)
                     if case .image = item.payload {
                         ClipboardImageInfoView(item: item)
                     }
@@ -531,10 +513,11 @@ private struct SelectedItemDetail: View {
             Divider()
 
             VStack(alignment: .leading, spacing: 8) {
-                LabeledContent("Created", value: item.createdAt.formatted(date: .abbreviated, time: .shortened))
-                LabeledContent("Last used", value: item.lastUsedAt.formatted(date: .abbreviated, time: .shortened))
                 if let source = sourceName {
                     LabeledContent("Source", value: source)
+                }
+                if item.kind == .image {
+                    ClipboardImageInfoView(item: item)
                 }
             }
             .font(.caption)
@@ -668,22 +651,48 @@ private struct SelectedItemDetail: View {
 }
 
 private struct PrivacyDashboardView: View {
-    @Bindable var settings: AppSettings
-    @State private var newExcludedIdentifier = ""
-
     var body: some View {
-        Form {
-            Section("Permissions") {
-                LabeledContent {
-                    Text(AccessibilityService.isTrusted ? String(localized: "Granted") : String(localized: "Required for automatic paste"))
+        ScrollView {
+            VStack(alignment: .leading, spacing: 18) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Label("Private clipboard history", systemImage: "lock.shield")
+                        .font(.title2.weight(.semibold))
+                    Text("Clippa does not upload clipboard contents, does not use analytics, and does not require an account.")
+                        .font(.callout)
                         .foregroundStyle(.secondary)
-                } label: {
-                    Label(
-                        "Accessibility",
-                        systemImage: AccessibilityService.isTrusted ? "checkmark.circle.fill" : "exclamationmark.triangle.fill"
-                    )
-                    .foregroundStyle(AccessibilityService.isTrusted ? Color.green : Color.orange)
                 }
+                .padding(.bottom, 4)
+
+                LazyVGrid(columns: [GridItem(.adaptive(minimum: 220), spacing: 12)], spacing: 12) {
+                    privacyCard(
+                        title: String(localized: "On this Mac"),
+                        message: String(localized: "Clipboard history is stored locally, not in Clippa cloud storage."),
+                        symbol: "macbook"
+                    )
+                    privacyCard(
+                        title: String(localized: "Encrypted"),
+                        message: String(localized: "History is encrypted with a Keychain-backed AES-GCM key."),
+                        symbol: "key.fill"
+                    )
+                    privacyCard(
+                        title: String(localized: "No tracking"),
+                        message: String(localized: "No analytics, telemetry, ads, or account login are built into Clippa."),
+                        symbol: "eye.slash.fill"
+                    )
+                }
+
+                SettingsPanel(title: String(localized: "Permissions")) {
+                    statusRow(
+                        title: String(localized: "Accessibility"),
+                        value: AccessibilityService.isTrusted ? String(localized: "Granted") : String(localized: "Required for automatic paste"),
+                        symbol: AccessibilityService.isTrusted ? "checkmark.circle.fill" : "exclamationmark.triangle.fill",
+                        color: AccessibilityService.isTrusted ? .green : .orange
+                    )
+                    Text("Accessibility is only used to paste the selected clip into the frontmost app.")
+                        .font(.callout)
+                        .foregroundStyle(.secondary)
+                }
+
                 HStack {
                     Button("Request Access") {
                         AccessibilityService.requestPrompt()
@@ -693,39 +702,44 @@ private struct PrivacyDashboardView: View {
                     }
                 }
             }
+            .padding(24)
+        }
+        .navigationTitle("Privacy")
+    }
 
-            Section("Excluded Apps") {
-                Text("Source app detection is best-effort. Apps listed here are not saved to history.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                HStack {
-                    TextField("Bundle identifier", text: $newExcludedIdentifier)
-                    Button {
-                        settings.addExcludedBundleIdentifier(newExcludedIdentifier)
-                        newExcludedIdentifier = ""
-                    } label: {
-                        Image(systemName: "plus")
-                    }
-                    .accessibilityLabel(Text("Add excluded app"))
-                }
-                ForEach(settings.excludedBundleIdentifiers, id: \.self) { identifier in
-                    HStack {
-                        Text(identifier)
-                            .textSelection(.enabled)
-                        Spacer()
-                        Button {
-                            settings.removeExcludedBundleIdentifier(identifier)
-                        } label: {
-                            Image(systemName: "trash")
-                        }
-                        .buttonStyle(.borderless)
-                        .accessibilityLabel(Text("Remove \(identifier)"))
-                    }
-                }
+    private func privacyCard(title: String, message: String, symbol: String) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Image(systemName: symbol)
+                .font(.title3)
+                .foregroundStyle(Color.accentColor)
+            Text(title)
+                .font(.headline)
+            Text(message)
+                .font(.callout)
+                .foregroundStyle(.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, minHeight: 150, alignment: .topLeading)
+        .background(Color(nsColor: .controlBackgroundColor), in: .rect(cornerRadius: 8))
+        .overlay {
+            RoundedRectangle(cornerRadius: 8)
+                .strokeBorder(.separator.opacity(0.5))
+        }
+    }
+
+    private func statusRow(title: String, value: String, symbol: String, color: Color) -> some View {
+        LabeledContent {
+            Text(value)
+                .foregroundStyle(.secondary)
+        } label: {
+            Label {
+                Text(title)
+            } icon: {
+                Image(systemName: symbol)
+                    .foregroundStyle(color)
             }
         }
-        .formStyle(.grouped)
-        .navigationTitle("Privacy")
     }
 }
 

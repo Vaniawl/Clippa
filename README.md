@@ -25,6 +25,10 @@ npx clippa-macos
 
 Or download `outputs/Clippa.app.zip`, unzip it, move `Clippa.app` to `/Applications`, then open it. macOS may require Accessibility permission for automatic paste. Without Accessibility permission, Clippa still copies the selected item to the clipboard.
 
+## Privacy
+
+Clippa does not upload clipboard contents, does not use analytics, and does not require an account. Clipboard history is stored only on your Mac and encrypted locally with a Keychain-backed AES-GCM key.
+
 ## Build
 
 ```bash
