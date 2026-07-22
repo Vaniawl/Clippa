@@ -1,10 +1,11 @@
 {
-  "name": "clippa-macos",
+  "name": "install-clippa",
   "version": "1.0.0",
   "description": "Installer for Clippa, a private-by-default macOS clipboard history app.",
   "bin": {
-    "clippa-macos": "bin/install-clippa.js",
-    "install-clippa": "bin/install-clippa.js"
+    "install-clippa": "bin/install-clippa.js",
+    "clippa": "bin/install-clippa.js",
+    "Clippa": "bin/install-clippa.js"
   },
   "scripts": {
     "release": "./scripts/release.sh",
@@ -12,6 +13,7 @@
   },
   "files": [
     "bin",
+    "docs/assets",
     "outputs/Clippa.app.zip",
     "README.md",
     "LICENSE"

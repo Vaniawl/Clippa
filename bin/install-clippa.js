@@ -16,7 +16,7 @@ function usage() {
 
 Usage:
   npx github:Vaniawl/Clippa
-  npx clippa-macos
+  npx install-clippa
 
 Options:
   --help       Show this help.

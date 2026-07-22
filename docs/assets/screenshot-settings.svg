@@ -1,0 +1,34 @@
+<svg width="1440" height="900" viewBox="0 0 1440 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1440" height="900" fill="#F7F8F5"/>
+  <rect x="150" y="100" width="1140" height="700" rx="24" fill="#FFFFFF"/>
+  <rect x="150.5" y="100.5" width="1139" height="699" rx="23.5" stroke="#DCE2DD"/>
+  <rect x="150" y="100" width="260" height="700" rx="24" fill="#EEF2EF"/>
+  <text x="198" y="176" fill="#151A1D" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="30" font-weight="750">Clippa</text>
+  <rect x="184" y="226" width="194" height="46" rx="10" fill="#DDE8E5"/>
+  <text x="224" y="255" fill="#0B7C75" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="17" font-weight="700">History</text>
+  <text x="224" y="319" fill="#65706B" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="17">Settings</text>
+  <text x="224" y="379" fill="#65706B" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="17">Privacy</text>
+  <text x="466" y="176" fill="#151A1D" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="34" font-weight="750">Settings</text>
+  <g>
+    <text x="466" y="245" fill="#151A1D" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="22" font-weight="700">General</text>
+    <rect x="466" y="270" width="730" height="138" rx="12" fill="#F5F7F5" stroke="#DCE2DD"/>
+    <text x="494" y="316" fill="#151A1D" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="19">Launch at login</text>
+    <rect x="1114" y="294" width="50" height="28" rx="14" fill="#0B7C75"/>
+    <circle cx="1150" cy="308" r="11" fill="#FFFFFF"/>
+    <line x1="494" y1="340" x2="1168" y2="340" stroke="#DCE2DD"/>
+    <text x="494" y="376" fill="#151A1D" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="19">Save new copies</text>
+    <rect x="1114" y="354" width="50" height="28" rx="14" fill="#0B7C75"/>
+    <circle cx="1150" cy="368" r="11" fill="#FFFFFF"/>
+  </g>
+  <g>
+    <text x="466" y="466" fill="#151A1D" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="22" font-weight="700">Keyboard</text>
+    <rect x="466" y="491" width="730" height="138" rx="12" fill="#F5F7F5" stroke="#DCE2DD"/>
+    <text x="494" y="537" fill="#151A1D" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="19">Show history</text>
+    <rect x="1024" y="512" width="140" height="34" rx="8" fill="#E8EEEB" stroke="#CAD4CF"/>
+    <text x="1060" y="535" fill="#151A1D" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="17" font-weight="700">⇧⌘V</text>
+    <line x1="494" y1="560" x2="1168" y2="560" stroke="#DCE2DD"/>
+    <text x="494" y="597" fill="#151A1D" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="19">Pin selected item</text>
+    <rect x="1024" y="572" width="140" height="34" rx="8" fill="#E8EEEB" stroke="#CAD4CF"/>
+    <text x="1070" y="595" fill="#151A1D" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="17" font-weight="700">⌘P</text>
+  </g>
+</svg>

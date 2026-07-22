@@ -1,64 +1,86 @@
-# Clippa
+<p align="center">
+  <img src="docs/assets/app-icon.png" width="96" height="96" alt="Clippa icon">
+</p>
 
-Clippa is a macOS menu-bar clipboard history app built with SwiftUI. It keeps text, links, images, and file references locally, encrypts stored history with AES-GCM using a Keychain-backed key, and supports quick paste from a global shortcut.
+<h1 align="center">Clippa</h1>
 
-Website: https://vaniawl.github.io/Clippa/
+<p align="center">
+  A fast, private macOS clipboard history app for text, links, images, and files.
+</p>
 
-## Requirements
+<p align="center">
+  <a href="https://vaniawl.github.io/Clippa/">Website</a>
+  ·
+  <a href="https://github.com/Vaniawl/Clippa/releases">Releases</a>
+  ·
+  <a href="#privacy">Privacy</a>
+</p>
 
-- macOS 26.0 or newer
-- Xcode 26.6 or newer
+<p align="center">
+  <img src="docs/assets/screenshot-panel.svg" alt="Clippa clipboard panel" width="900">
+</p>
 
-## Install
+## Install Clippa
 
-Fast install from GitHub:
+Install the current GitHub build:
 
 ```bash
 npx github:Vaniawl/Clippa
 ```
 
-After the npm package is published:
+After the npm package is published, the public install command will be:
 
 ```bash
-npx clippa-macos
+npx install-clippa
 ```
 
-Or download `outputs/Clippa.app.zip`, unzip it, move `Clippa.app` to `/Applications`, then open it. macOS may require Accessibility permission for automatic paste. Without Accessibility permission, Clippa still copies the selected item to the clipboard.
+You can also download `outputs/Clippa.app.zip`, unzip it, move `Clippa.app` to `/Applications`, and open it.
+
+## Highlights
+
+- Search clipboard history from a menu-bar panel.
+- Keep text, links, images, and file references.
+- Pin important clips so cleanup never removes them.
+- Choose your own global shortcuts.
+- Paste automatically with Accessibility permission, or copy-only without it.
+- Runs locally as a native SwiftUI macOS app.
+
+## Screenshots
+
+<p>
+  <img src="docs/assets/screenshot-settings.svg" alt="Clippa settings" width="49%">
+  <img src="docs/assets/screenshot-privacy.svg" alt="Clippa privacy screen" width="49%">
+</p>
 
 ## Privacy
 
 Clippa does not upload clipboard contents, does not use analytics, and does not require an account. Clipboard history is stored only on your Mac and encrypted locally with a Keychain-backed AES-GCM key.
 
-## Build
+Accessibility permission is only used to paste the selected clip into the frontmost app. Without that permission, Clippa still copies the selected item to the clipboard.
+
+## Requirements
+
+- macOS 26.0 or newer
+- Xcode 26.6 or newer, only if you want to build from source
+
+## Build From Source
 
 ```bash
+git clone https://github.com/Vaniawl/Clippa.git
+cd Clippa
 xcodebuild -project Clippa.xcodeproj -scheme Clippa -destination 'platform=macOS' test
-xcodebuild -project Clippa.xcodeproj -scheme Clippa -configuration Release -destination 'platform=macOS' build
+SMOKE_LAUNCH=1 ./scripts/release.sh
 ```
 
-## Release
-
-Use the release script so tests, packaging, and bundle verification run the same way every time:
-
-```bash
-./scripts/release.sh
-```
-
-The distributable app archive is written to:
+The packaged app is written to:
 
 ```bash
 outputs/Clippa.app.zip
 ```
 
-To also launch the built app once as a smoke test:
-
-```bash
-SMOKE_LAUNCH=1 ./scripts/release.sh
-```
-
 ## npm Publish
 
-The npm package is prepared as `clippa-macos`. Publishing requires an authenticated npm session:
+The npm installer package is prepared as `install-clippa`. Publishing requires an authenticated npm session:
 
 ```bash
 npm adduser
@@ -73,17 +95,9 @@ For an existing checkout:
 git pull origin main
 ```
 
-For a fresh checkout:
-
-```bash
-git clone https://github.com/Vaniawl/Clippa.git
-cd Clippa
-```
-
 ## Production Notes
 
 - Bundle identifier: `com.ivandovhosheia.Clippa`
 - Version: `1.0.0`
 - Release builds use hardened runtime.
-- Clipboard history is stored under Application Support and encrypted locally.
-- Pinned items are retained until deleted; unpinned history is limited to 100 active items and seven days since last activity.
+- Pinned items are retained until deleted; unpinned history is limited to 100 active items.

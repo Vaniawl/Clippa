@@ -47,7 +47,6 @@
 "Use Command, Control, or Option with another key." = "Використайте Command, Control або Option разом з іншою клавішею.";
 "Paused" = "Призупинено";
 "Watching" = "Відстежує";
-"Capturing" = "Зберігає";
 "Permissions" = "Дозволи";
 "Accessibility" = "Accessibility";
 "Granted" = "Надано";
@@ -61,16 +60,8 @@
 "Login item status" = "Стан запуску";
 "Shortcut" = "Комбінація";
 "Shortcut status" = "Стан комбінації";
-"Resume monitoring" = "Продовжити моніторинг";
-"Pause monitoring" = "Призупинити моніторинг";
-"Pause clipboard monitoring" = "Призупинити відстеження буфера";
-"Capture status" = "Стан відстеження";
-"Resume capture" = "Продовжити збереження";
-"Pause capture" = "Призупинити збереження";
-"Capture new copies" = "Зберігати нові копії";
 "Save new copies" = "Зберігати нові копії";
 "Stop saving new copies" = "Не зберігати нові копії";
-"Clipboard capture" = "Збереження буфера";
 "Clipboard image" = "Зображення з буфера";
 "Image details" = "Деталі зображення";
 "Private clipboard history" = "Приватна історія буфера";
@@ -91,11 +82,6 @@
 "History" = "Історія";
 "100 unpinned items / 7 days" = "100 незакріплених записів / 7 днів";
 "Pinned items are kept until you delete them. Clipboard history is encrypted locally with a Keychain-backed AES-GCM key." = "Закріплені записи зберігаються, доки ви їх не видалите. Історія шифрується локально ключем AES-GCM із Keychain.";
-"Excluded Apps" = "Виключені програми";
-"Source app detection is best-effort. Apps listed here are not saved to history." = "Визначення програми-джерела є best-effort. Дані з цих програм не зберігаються в історії.";
-"Bundle identifier" = "Bundle identifier";
-"Add excluded app" = "Додати виключену програму";
-"Remove %@" = "Видалити %@";
 "Clear unpinned history" = "Очистити незакріплену історію";
 "Clear unpinned clipboard history?" = "Очистити незакріплену історію буфера?";
 "Clear all history" = "Очистити всю історію";

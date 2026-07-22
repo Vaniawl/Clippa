@@ -1,0 +1,36 @@
+<svg width="1440" height="900" viewBox="0 0 1440 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1440" height="900" fill="#111414"/>
+  <rect x="190" y="120" width="1060" height="660" rx="28" fill="#1B1F1F"/>
+  <rect x="190.5" y="120.5" width="1059" height="659" rx="27.5" stroke="#38403E"/>
+  <g opacity=".9">
+    <circle cx="232" cy="162" r="8" fill="#FF5F57"/>
+    <circle cx="260" cy="162" r="8" fill="#FEBC2E"/>
+    <circle cx="288" cy="162" r="8" fill="#28C840"/>
+  </g>
+  <text x="230" y="226" fill="#F2F4F2" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="32" font-weight="700">Clippa</text>
+  <rect x="230" y="258" width="560" height="52" rx="10" fill="#242A29"/>
+  <text x="260" y="291" fill="#8F9A95" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="20">Search clipboard</text>
+  <rect x="808" y="258" width="172" height="52" rx="10" fill="#22302E"/>
+  <text x="840" y="291" fill="#7ED5CA" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="18" font-weight="650">Auto-paste ready</text>
+  <rect x="230" y="334" width="552" height="92" rx="14" fill="#123833"/>
+  <rect x="250" y="354" width="52" height="52" rx="12" fill="#D9A332"/>
+  <path d="M265 392l17-22 14 18 8-10 18 24h-57v-10z" fill="#F8F2D8"/>
+  <text x="326" y="378" fill="#F8FBF9" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="22" font-weight="700">Clipboard image</text>
+  <text x="326" y="404" fill="#9CCBC5" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="16">1280 x 720 / 482 KB / Preview</text>
+  <rect x="230" y="442" width="552" height="78" rx="14" fill="#222727"/>
+  <rect x="250" y="461" width="42" height="42" rx="10" fill="#27403D"/>
+  <text x="326" y="486" fill="#EEF3EF" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="20" font-weight="650">https://example.com/research</text>
+  <text x="326" y="510" fill="#95A19B" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="15">Link / Browser</text>
+  <rect x="230" y="534" width="552" height="78" rx="14" fill="#222727"/>
+  <rect x="250" y="553" width="42" height="42" rx="10" fill="#343A39"/>
+  <text x="326" y="578" fill="#EEF3EF" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="20" font-weight="650">Release checklist</text>
+  <text x="326" y="602" fill="#95A19B" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="15">Text / pinned</text>
+  <rect x="828" y="334" width="382" height="280" rx="18" fill="#222727"/>
+  <rect x="852" y="358" width="334" height="190" rx="14" fill="#17211F"/>
+  <path d="M916 498l92-118 76 96 36-45 72 94H916v-27z" fill="#2FAEA3"/>
+  <circle cx="1128" cy="408" r="24" fill="#F0BD57"/>
+  <text x="852" y="586" fill="#F8FBF9" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="22" font-weight="700">Clipboard image</text>
+  <text x="852" y="614" fill="#95A19B" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="16">Image details / Source: Preview</text>
+  <rect x="828" y="638" width="382" height="58" rx="12" fill="#0B7C75"/>
+  <text x="938" y="674" fill="#FFFFFF" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="18" font-weight="700">Paste selected</text>
+</svg>

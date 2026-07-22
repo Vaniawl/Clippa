@@ -47,7 +47,6 @@
 "Use Command, Control, or Option with another key." = "Use Command, Control, or Option with another key.";
 "Paused" = "Paused";
 "Watching" = "Watching";
-"Capturing" = "Capturing";
 "Permissions" = "Permissions";
 "Accessibility" = "Accessibility";
 "Granted" = "Granted";
@@ -61,16 +60,8 @@
 "Login item status" = "Login item status";
 "Shortcut" = "Shortcut";
 "Shortcut status" = "Shortcut status";
-"Resume monitoring" = "Resume monitoring";
-"Pause monitoring" = "Pause monitoring";
-"Pause clipboard monitoring" = "Pause clipboard monitoring";
-"Capture status" = "Capture status";
-"Resume capture" = "Resume capture";
-"Pause capture" = "Pause capture";
-"Capture new copies" = "Capture new copies";
 "Save new copies" = "Save new copies";
 "Stop saving new copies" = "Stop saving new copies";
-"Clipboard capture" = "Clipboard capture";
 "Clipboard image" = "Clipboard image";
 "Image details" = "Image details";
 "Private clipboard history" = "Private clipboard history";
@@ -91,11 +82,6 @@
 "History" = "History";
 "100 unpinned items / 7 days" = "100 unpinned items / 7 days";
 "Pinned items are kept until you delete them. Clipboard history is encrypted locally with a Keychain-backed AES-GCM key." = "Pinned items are kept until you delete them. Clipboard history is encrypted locally with a Keychain-backed AES-GCM key.";
-"Excluded Apps" = "Excluded Apps";
-"Source app detection is best-effort. Apps listed here are not saved to history." = "Source app detection is best-effort. Apps listed here are not saved to history.";
-"Bundle identifier" = "Bundle identifier";
-"Add excluded app" = "Add excluded app";
-"Remove %@" = "Remove %@";
 "Clear unpinned history" = "Clear unpinned history";
 "Clear unpinned clipboard history?" = "Clear unpinned clipboard history?";
 "Clear all history" = "Clear all history";
