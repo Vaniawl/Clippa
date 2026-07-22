@@ -7,42 +7,9 @@ struct ClippaApp: App {
 
     var body: some Scene {
         MenuBarExtra("Clippa", systemImage: "paperclip") {
-            Button("Open Clippa") {
-                appDelegate.appWindowController.show(appState: appDelegate.appState, selection: .history)
-            }
-            Button("Show Quick Panel") {
-                appDelegate.appState.togglePanel()
-            }
-            Divider()
-            Button(appDelegate.appState.settings.isMonitoringPaused ? "Save new copies" : "Stop saving new copies") {
-                appDelegate.appState.settings.isMonitoringPaused.toggle()
-            }
-            Button("Clear Unpinned") {
-                appDelegate.appState.confirmClearUnpinned()
-            }
-            Divider()
-            Button("Settings") {
-                appDelegate.appWindowController.show(appState: appDelegate.appState, selection: .settings)
-            }
-            Button("Privacy") {
-                appDelegate.appWindowController.show(appState: appDelegate.appState, selection: .privacy)
-            }
             Button("Quit") {
                 appDelegate.appState.quit()
             }
-        }
-        Settings {
-            SettingsView(
-                settings: appDelegate.appState.settings,
-                store: appDelegate.appState.store,
-                hotKeyStatus: appDelegate.appState.hotKeyService.registrationStatus,
-                onShowShortcutChange: { shortcut in
-                    appDelegate.appState.updateShowPanelShortcut(shortcut)
-                },
-                onPinShortcutChange: { shortcut in
-                    appDelegate.appState.updatePinShortcut(shortcut)
-                }
-            )
         }
     }
 }
@@ -50,7 +17,6 @@ struct ClippaApp: App {
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let appState = AppState()
-    let appWindowController = AppWindowController()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)

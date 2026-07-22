@@ -18,6 +18,7 @@ function usage() {
 
 Usage:
   npx github:Vaniawl/Clippa
+  npx clippa
 
 Options:
   --install-dir <path>  Copy Clippa.app into a custom applications folder.
@@ -26,6 +27,7 @@ Options:
   --help                Show this help.
 
 The installer copies Clippa.app to /Applications when possible, otherwise to ~/Applications.
+Press Command-Shift-W in a text field to open Clippa.
 `);
 }
 
@@ -186,7 +188,7 @@ async function main() {
     if (!options.noOpen) {
       console.log("Opening Clippa...");
       run("/usr/bin/open", [installPath]);
-      console.log("If automatic paste is unavailable, grant Accessibility access in System Settings.");
+      console.log("Press Command-Shift-W in a text field to open Clippa. Grant Accessibility access if macOS asks.");
     }
   } finally {
     fs.rmSync(tempDir, { recursive: true, force: true });

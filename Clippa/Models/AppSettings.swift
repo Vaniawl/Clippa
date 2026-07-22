@@ -7,8 +7,7 @@ struct HotKeyShortcut: Codable, Equatable, Sendable {
     var keyCode: UInt32
     var modifiers: UInt32
 
-    static let defaultShowPanel = HotKeyShortcut(keyCode: UInt32(kVK_ANSI_V), modifiers: UInt32(cmdKey | shiftKey))
-    static let defaultPinSelected = HotKeyShortcut(keyCode: UInt32(kVK_ANSI_P), modifiers: UInt32(cmdKey))
+    static let defaultShowPanel = HotKeyShortcut(keyCode: UInt32(kVK_ANSI_W), modifiers: UInt32(cmdKey | shiftKey))
 
     var displayString: String {
         var result = ""
@@ -128,12 +127,6 @@ struct HotKeyShortcut: Codable, Equatable, Sendable {
 @MainActor
 @Observable
 final class AppSettings {
-    var isMonitoringPaused: Bool {
-        didSet { persist() }
-    }
-    var launchAtLogin: Bool {
-        didSet { persist() }
-    }
     var excludedBundleIdentifiers: [String] {
         didSet { persist() }
     }
@@ -143,21 +136,15 @@ final class AppSettings {
     var showPanelShortcut: HotKeyShortcut {
         didSet { persist() }
     }
-    var pinShortcut: HotKeyShortcut {
-        didSet { persist() }
-    }
 
     private let defaults: UserDefaults
     private let encoder = JSONEncoder()
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
-        self.isMonitoringPaused = defaults.bool(forKey: Keys.isMonitoringPaused)
-        self.launchAtLogin = defaults.bool(forKey: Keys.launchAtLogin)
         self.excludedBundleIdentifiers = defaults.array(forKey: Keys.excludedBundleIdentifiers) as? [String] ?? PrivacyFilter.defaultExcludedBundleIdentifiers
         self.hasShownAccessibilityOnboarding = defaults.bool(forKey: Keys.hasShownAccessibilityOnboarding)
-        self.showPanelShortcut = Self.shortcut(forKey: Keys.showPanelShortcut, defaults: defaults, fallback: .defaultShowPanel)
-        self.pinShortcut = Self.shortcut(forKey: Keys.pinShortcut, defaults: defaults, fallback: .defaultPinSelected)
+        self.showPanelShortcut = .defaultShowPanel
     }
 
     func addExcludedBundleIdentifier(_ identifier: String) {
@@ -174,29 +161,14 @@ final class AppSettings {
     }
 
     private func persist() {
-        defaults.set(isMonitoringPaused, forKey: Keys.isMonitoringPaused)
-        defaults.set(launchAtLogin, forKey: Keys.launchAtLogin)
         defaults.set(excludedBundleIdentifiers, forKey: Keys.excludedBundleIdentifiers)
         defaults.set(hasShownAccessibilityOnboarding, forKey: Keys.hasShownAccessibilityOnboarding)
         defaults.set(try? encoder.encode(showPanelShortcut), forKey: Keys.showPanelShortcut)
-        defaults.set(try? encoder.encode(pinShortcut), forKey: Keys.pinShortcut)
-    }
-
-    private static func shortcut(forKey key: String, defaults: UserDefaults, fallback: HotKeyShortcut) -> HotKeyShortcut {
-        guard let data = defaults.data(forKey: key),
-              let shortcut = try? JSONDecoder().decode(HotKeyShortcut.self, from: data)
-        else {
-            return fallback
-        }
-        return shortcut
     }
 
     private enum Keys {
-        static let isMonitoringPaused = "isMonitoringPaused"
-        static let launchAtLogin = "launchAtLogin"
         static let excludedBundleIdentifiers = "excludedBundleIdentifiers"
         static let hasShownAccessibilityOnboarding = "hasShownAccessibilityOnboarding"
         static let showPanelShortcut = "showPanelShortcut"
-        static let pinShortcut = "pinShortcut"
     }
 }

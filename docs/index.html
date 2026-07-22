@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Clippa for macOS</title>
-    <meta name="description" content="Clippa is a fast, private macOS clipboard history app for text, links, images, and files.">
+    <meta name="description" content="Clippa is a private macOS clipboard app: press Command-Shift-W, choose a clip, paste.">
     <style>
       :root {
         color-scheme: light dark;
@@ -431,15 +431,17 @@
 
       <section class="hero">
         <div>
-          <p class="eyebrow">macOS clipboard history</p>
+          <p class="eyebrow">macOS clipboard paste panel</p>
           <h1>Clippa</h1>
-          <p class="lede">A fast background menu-bar clipboard manager for text, links, images, and file references. History stays local, encrypted, searchable, and ready from a global shortcut.</p>
+          <p class="lede">A focused background clipboard app for macOS. Press Command-Shift-W, choose a recent clip with the arrow keys or mouse, then press Enter or click to paste.</p>
           <div class="actions">
             <a class="button primary" href="https://github.com/Vaniawl/Clippa/releases/download/v1.0.0/Clippa.app.zip">Download app</a>
             <a class="button" href="https://github.com/Vaniawl/Clippa">View source</a>
           </div>
           <div class="install" id="install">
-            <pre>npx github:Vaniawl/Clippa</pre>
+            <pre>npx github:Vaniawl/Clippa
+# after npm publish:
+npx clippa</pre>
           </div>
         </div>
 
@@ -451,7 +453,6 @@
           </div>
           <div class="mock-body">
             <div class="list">
-              <div class="search">Search clipboard</div>
               <div class="row active">
                 <div class="thumb photo"></div>
                 <div><strong>Clipboard image</strong><span>1280 x 720 / 482 KB / Preview</span></div>
@@ -462,19 +463,19 @@
               </div>
               <div class="row">
                 <div class="thumb"></div>
-                <div><strong>Release checklist</strong><span>Text / pinned</span></div>
+                <div><strong>Release checklist</strong><span>Text / Notes</span></div>
               </div>
             </div>
             <div class="detail">
               <div class="detail-top">
                 <img src="assets/app-icon.png" alt="">
-                <div><strong>Clipboard image</strong><br><span>Image details</span></div>
+                <div><strong>Command-Shift-W</strong><br><span>Open, choose, paste</span></div>
               </div>
               <div class="photo-preview">
                 <img src="assets/app-icon.png" alt="">
               </div>
               <div class="meta">
-                <span>Source: Preview</span>
+                <span>Enter pastes the selected item</span>
                 <span>Stored locally with encrypted history</span>
               </div>
             </div>
@@ -485,12 +486,12 @@
       <section class="sections">
         <div class="grid">
           <article class="feature">
-            <h2>Fast capture</h2>
-            <p>Text, links, images, and file references appear in a quick paste panel and a full History window.</p>
+            <h2>One shortcut</h2>
+            <p>Command-Shift-W opens the paste panel only when your cursor is in an editable field.</p>
           </article>
           <article class="feature">
             <h2>Keyboard first</h2>
-            <p>Choose your global shortcuts, paste the selected item, and pin important clips for later.</p>
+            <p>Use Up and Down to choose an item. Press Enter to paste. Click an item to paste with the mouse.</p>
           </article>
           <article class="feature" id="privacy">
             <h2>Private by default</h2>
@@ -500,31 +501,32 @@
 
         <section class="privacy-band">
           <h2>No cloud clipboard storage</h2>
-          <p>Clippa has no account system, no analytics, no telemetry, and no remote database for your clipboard. The app keeps history only on your Mac so search and paste can work locally.</p>
+          <p>Clippa has no account system, no analytics, no telemetry, and no remote database for your clipboard. The app keeps history only on your Mac so paste can work locally.</p>
           <div class="privacy-list">
             <div><strong>No uploads</strong><span>Clipboard text, images, links, and files are not uploaded by Clippa.</span></div>
             <div><strong>Local encryption</strong><span>Stored history is encrypted with a per-user AES-GCM key file in Application Support.</span></div>
-            <div><strong>Your control</strong><span>You can clear unpinned history or all history from the app settings.</span></div>
+            <div><strong>Limited access</strong><span>Accessibility is used only to paste into the frontmost editable app.</span></div>
           </div>
         </section>
 
         <section class="download">
           <div>
-            <h2>Screenshots</h2>
-            <p>Clippa keeps the daily workflow small: a quick panel for paste, a focused settings screen, and privacy details that are easy to verify.</p>
+            <h2>Simple panel</h2>
+            <p>The app has one working surface: a compact paste panel with recent text, links, images, and file references.</p>
           </div>
           <div>
-            <img src="assets/screenshot-settings.svg" alt="Clippa settings screen" style="width:100%;border-radius:8px;border:1px solid var(--line);background:var(--surface)">
+            <img src="assets/screenshot-panel.svg" alt="Clippa paste panel" style="width:100%;border-radius:8px;border:1px solid var(--line);background:var(--surface)">
           </div>
         </section>
 
         <section class="download">
           <div>
             <h2>Install</h2>
-            <p>Run the npx command on macOS. The installer opens Clippa after copying the app. Grant Accessibility only if you want automatic paste.</p>
+            <p>Run the npx command on macOS. The installer opens Clippa after copying the app. Grant Accessibility so Enter and click can paste into the active text field.</p>
           </div>
           <div class="install">
             <pre>npx github:Vaniawl/Clippa
+npx clippa
 npx github:Vaniawl/Clippa -- --no-open
 npx github:Vaniawl/Clippa -- --install-dir ~/Applications</pre>
           </div>

@@ -233,21 +233,18 @@ final class ClipboardCoreTests: XCTestCase {
         XCTAssertThrowsError(try AES.GCM.open(AES.GCM.SealedBox(combined: combined), using: SymmetricKey(size: .bits256)))
     }
 
-    func testShortcutDefaultsAndPersistence() throws {
+    func testShowPanelShortcutIsAlwaysCommandShiftW() throws {
         let suiteName = "ClippaTests.shortcuts.\(UUID().uuidString)"
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
         defaults.removePersistentDomain(forName: suiteName)
 
         var settings = AppSettings(defaults: defaults)
-        XCTAssertEqual(settings.showPanelShortcut.displayString, "⇧⌘V")
-        XCTAssertEqual(settings.pinShortcut.displayString, "⌘P")
+        XCTAssertEqual(settings.showPanelShortcut.displayString, "⇧⌘W")
 
         settings.showPanelShortcut = HotKeyShortcut(keyCode: UInt32(kVK_ANSI_B), modifiers: UInt32(controlKey | optionKey))
-        settings.pinShortcut = HotKeyShortcut(keyCode: UInt32(kVK_F6), modifiers: UInt32(cmdKey | shiftKey))
 
         settings = AppSettings(defaults: defaults)
-        XCTAssertEqual(settings.showPanelShortcut.displayString, "⌃⌥B")
-        XCTAssertEqual(settings.pinShortcut.displayString, "⇧⌘F6")
+        XCTAssertEqual(settings.showPanelShortcut.displayString, "⇧⌘W")
 
         defaults.removePersistentDomain(forName: suiteName)
     }

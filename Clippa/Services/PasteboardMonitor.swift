@@ -48,10 +48,6 @@ final class PasteboardMonitor {
         if internalChangeCounts.remove(current) != nil {
             return
         }
-        guard !settings.isMonitoringPaused else {
-            return
-        }
-
         let sourceBundleIdentifier = NSWorkspace.shared.frontmostApplication?.bundleIdentifier
         let types = pasteboard.types ?? []
         let filter = PrivacyFilter(excludedBundleIdentifiers: settings.excludedBundleIdentifiers)

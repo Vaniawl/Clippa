@@ -48,19 +48,6 @@ final class AppState {
         }
     }
 
-    func updateShowPanelShortcut(_ shortcut: HotKeyShortcut) {
-        settings.showPanelShortcut = shortcut
-        registerShowPanelShortcut()
-    }
-
-    func updatePinShortcut(_ shortcut: HotKeyShortcut) {
-        settings.pinShortcut = shortcut
-    }
-
-    func togglePanel() {
-        panelController.toggle(appState: self, requiresEditableTarget: false)
-    }
-
     func togglePanelFromShortcut() {
         panelController.toggle(appState: self, requiresEditableTarget: true)
     }
@@ -74,13 +61,6 @@ final class AppState {
         }
     }
 
-    func copySelectedItem() {
-        guard let id = store.selectedItemID, let item = store.visibleItems.first(where: { $0.id == id }) else {
-            return
-        }
-        copy(item)
-    }
-
     func performPanelAction(_ action: PanelKeyAction) {
         switch action {
         case .selectNext:
@@ -89,22 +69,8 @@ final class AppState {
             store.selectPrevious()
         case .paste:
             pasteSelectedItem()
-        case .copy:
-            copySelectedItem()
-        case .open:
-            openSelectedItem()
-        case .reveal:
-            revealSelectedItem()
-        case .closeOrClearSearch:
-            if store.searchQuery.isEmpty {
-                panelController.close()
-            } else {
-                store.searchQuery = ""
-            }
-        case .togglePin:
-            store.togglePinSelected()
-        case .delete:
-            store.deleteSelected()
+        case .close:
+            panelController.close()
         }
     }
 
@@ -126,70 +92,6 @@ final class AppState {
             notice = String(localized: "Copied. Enable Accessibility access for automatic paste.")
         case .copiedOnlyPasteUnavailable:
             notice = String(localized: "Copied. Put the cursor in a text field before pasting from Clippa.")
-        }
-    }
-
-    func paste(_ item: ClipboardItem, into application: NSRunningApplication?) async {
-        await paste(item, into: PasteTarget(application: application, focusedElement: nil))
-    }
-
-    func copy(_ item: ClipboardItem) {
-        pasteService.copyPayload(item.payload)
-        store.use(item)
-        notice = String(localized: "Copied to clipboard.")
-        panelController.close()
-    }
-
-    func openSelectedItem() {
-        guard let id = store.selectedItemID, let item = store.visibleItems.first(where: { $0.id == id }) else {
-            return
-        }
-        open(item)
-    }
-
-    func open(_ item: ClipboardItem) {
-        switch item.payload {
-        case .url(let url):
-            NSWorkspace.shared.open(url)
-            panelController.close()
-        case .files(let refs):
-            refs.filter(\.exists).forEach { NSWorkspace.shared.open($0.url) }
-            panelController.close()
-        case .text, .image:
-            copy(item)
-        }
-    }
-
-    func revealSelectedItem() {
-        guard let id = store.selectedItemID, let item = store.visibleItems.first(where: { $0.id == id }) else {
-            return
-        }
-        reveal(item)
-    }
-
-    func reveal(_ item: ClipboardItem) {
-        guard case .files(let refs) = item.payload else {
-            return
-        }
-        let urls = refs.filter(\.exists).map(\.url)
-        guard !urls.isEmpty else {
-            return
-        }
-        NSWorkspace.shared.activateFileViewerSelecting(urls)
-        panelController.close()
-    }
-
-    func confirmClearUnpinned() {
-        let alert = NSAlert()
-        alert.messageText = String(localized: "Clear unpinned clipboard history?")
-        alert.informativeText = String(localized: "Pinned items will stay in history.")
-        alert.alertStyle = .warning
-        alert.addButton(withTitle: String(localized: "Clear unpinned history"))
-        alert.addButton(withTitle: String(localized: "Cancel"))
-        NSApp.activate(ignoringOtherApps: true)
-        if alert.runModal() == .alertFirstButtonReturn {
-            store.clearUnpinned()
-            notice = String(localized: "Unpinned history cleared.")
         }
     }
 
@@ -243,16 +145,7 @@ final class PanelController {
         let content = PanelView(
             store: appState.store,
             notice: appState.notice,
-            isAutoPasteReady: appState.isAutoPasteReady,
-            showShortcutText: appState.settings.showPanelShortcut.displayString,
-            pinShortcutText: appState.settings.pinShortcut.displayString,
-            onPasteSelected: { [weak appState] in appState?.pasteSelectedItem() },
-            onCopy: { [weak appState] item in appState?.copy(item) },
-            onOpen: { [weak appState] item in appState?.open(item) },
-            onReveal: { [weak appState] item in appState?.reveal(item) },
-            onTogglePin: { [weak appState] item in appState?.store.togglePin(item) },
-            onDelete: { [weak appState] item in appState?.store.delete(item) },
-            onClose: { [weak self] in self?.close() }
+            onPasteSelected: { [weak appState] in appState?.pasteSelectedItem() }
         )
         let hostingView = NSHostingView(rootView: content)
         let size = NSSize(width: DesignSystem.panelWidth, height: DesignSystem.panelHeight)
@@ -287,7 +180,7 @@ final class PanelController {
 
     private func installMonitors(appState: AppState) {
         keyMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak appState] event in
-            guard let appState, let action = Self.action(for: event, settings: appState.settings) else {
+            guard let appState, let action = Self.action(for: event) else {
                 return event
             }
             Task { @MainActor in
@@ -302,28 +195,16 @@ final class PanelController {
         }
     }
 
-    private static func action(for event: NSEvent, settings: AppSettings) -> PanelKeyAction? {
-        let command = event.modifierFlags.contains(.command)
-        if settings.pinShortcut.matches(event) {
-            return .togglePin
-        }
-        switch (event.keyCode, command) {
-        case (UInt16(kVK_DownArrow), _):
+    private static func action(for event: NSEvent) -> PanelKeyAction? {
+        switch event.keyCode {
+        case UInt16(kVK_DownArrow):
             return .selectNext
-        case (UInt16(kVK_UpArrow), _):
+        case UInt16(kVK_UpArrow):
             return .selectPrevious
-        case (UInt16(kVK_Return), _), (UInt16(kVK_ANSI_KeypadEnter), _):
+        case UInt16(kVK_Return), UInt16(kVK_ANSI_KeypadEnter):
             return .paste
-        case (UInt16(kVK_ANSI_C), true):
-            return .copy
-        case (UInt16(kVK_ANSI_O), true):
-            return .open
-        case (UInt16(kVK_ANSI_R), true):
-            return .reveal
-        case (UInt16(kVK_Escape), _):
-            return .closeOrClearSearch
-        case (UInt16(kVK_Delete), true), (UInt16(kVK_ForwardDelete), true):
-            return .delete
+        case UInt16(kVK_Escape):
+            return .close
         default:
             return nil
         }
@@ -360,12 +241,7 @@ enum PanelKeyAction: Sendable {
     case selectNext
     case selectPrevious
     case paste
-    case copy
-    case open
-    case reveal
-    case closeOrClearSearch
-    case togglePin
-    case delete
+    case close
 }
 
 final class ClippaPanel: NSPanel {
