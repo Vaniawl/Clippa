@@ -195,6 +195,21 @@ final class ClipboardCoreTests: XCTestCase {
         XCTAssertEqual(opened, payload)
     }
 
+    func testKeyStoreUsesExistingFallbackKeyWithoutKeychainPrompt() async throws {
+        let folder = FileManager.default.temporaryDirectory
+            .appendingPathComponent("ClippaTests.\(UUID().uuidString)", isDirectory: true)
+        let keyURL = folder.appendingPathComponent("history.key")
+        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        let key = Data(repeating: 7, count: 32)
+        try key.write(to: keyURL)
+
+        let store = KeychainKeyStore(fallbackURL: keyURL)
+        let loaded = try await store.loadOrCreateKey()
+
+        XCTAssertEqual(loaded, key)
+        try? FileManager.default.removeItem(at: folder)
+    }
+
     func testWrongKeyFailsAESGCMOpen() throws {
         let payload = Data("private".utf8)
         let box = try AES.GCM.seal(payload, using: SymmetricKey(size: .bits256))

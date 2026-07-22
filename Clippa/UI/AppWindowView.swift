@@ -665,7 +665,7 @@ private struct PrivacyDashboardView: View {
                     )
                     privacyCard(
                         title: String(localized: "Encrypted"),
-                        message: String(localized: "History is encrypted with a Keychain-backed AES-GCM key."),
+                        message: String(localized: "History is encrypted locally with an AES-GCM key."),
                         symbol: "key.fill"
                     )
                     privacyCard(

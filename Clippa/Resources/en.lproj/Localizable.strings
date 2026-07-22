@@ -70,7 +70,7 @@
 "On this Mac" = "On this Mac";
 "Clipboard history is stored locally, not in Clippa cloud storage." = "Clipboard history is stored locally, not in Clippa cloud storage.";
 "Encrypted" = "Encrypted";
-"History is encrypted with a Keychain-backed AES-GCM key." = "History is encrypted with a Keychain-backed AES-GCM key.";
+"History is encrypted locally with an AES-GCM key." = "History is encrypted locally with an AES-GCM key.";
 "No tracking" = "No tracking";
 "No analytics, telemetry, ads, or account login are built into Clippa." = "No analytics, telemetry, ads, or account login are built into Clippa.";
 "Accessibility is only used to paste the selected clip into the frontmost app." = "Accessibility is only used to paste the selected clip into the frontmost app.";
@@ -82,7 +82,7 @@
 "Retention" = "Retention";
 "History" = "History";
 "100 unpinned items / 7 days" = "100 unpinned items / 7 days";
-"Pinned items are kept until you delete them. Clipboard history is encrypted locally with a Keychain-backed AES-GCM key." = "Pinned items are kept until you delete them. Clipboard history is encrypted locally with a Keychain-backed AES-GCM key.";
+"Pinned items are kept until you delete them. Clipboard history is encrypted locally with an AES-GCM key." = "Pinned items are kept until you delete them. Clipboard history is encrypted locally with an AES-GCM key.";
 "Clear unpinned history" = "Clear unpinned history";
 "Clear unpinned clipboard history?" = "Clear unpinned clipboard history?";
 "Clear all history" = "Clear all history";

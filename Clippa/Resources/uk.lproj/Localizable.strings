@@ -70,7 +70,7 @@
 "On this Mac" = "На цьому Mac";
 "Clipboard history is stored locally, not in Clippa cloud storage." = "Історія буфера зберігається локально, не в хмарі Clippa.";
 "Encrypted" = "Зашифровано";
-"History is encrypted with a Keychain-backed AES-GCM key." = "Історія зашифрована AES-GCM ключем із Keychain.";
+"History is encrypted locally with an AES-GCM key." = "Історія локально зашифрована AES-GCM ключем.";
 "No tracking" = "Без трекінгу";
 "No analytics, telemetry, ads, or account login are built into Clippa." = "У Clippa немає аналітики, телеметрії, реклами або входу в акаунт.";
 "Accessibility is only used to paste the selected clip into the frontmost app." = "Accessibility використовується тільки для вставлення вибраного запису в активну програму.";
@@ -82,7 +82,7 @@
 "Retention" = "Зберігання";
 "History" = "Історія";
 "100 unpinned items / 7 days" = "100 незакріплених записів / 7 днів";
-"Pinned items are kept until you delete them. Clipboard history is encrypted locally with a Keychain-backed AES-GCM key." = "Закріплені записи зберігаються, доки ви їх не видалите. Історія шифрується локально ключем AES-GCM із Keychain.";
+"Pinned items are kept until you delete them. Clipboard history is encrypted locally with an AES-GCM key." = "Закріплені записи зберігаються, доки ви їх не видалите. Історія локально шифрується ключем AES-GCM.";
 "Clear unpinned history" = "Очистити незакріплену історію";
 "Clear unpinned clipboard history?" = "Очистити незакріплену історію буфера?";
 "Clear all history" = "Очистити всю історію";
