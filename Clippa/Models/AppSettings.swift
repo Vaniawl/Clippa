@@ -199,6 +199,9 @@ final class AppSettings {
 
     init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
+        if defaults === UserDefaults.standard {
+            Self.migrateLegacyDefaultsIfNeeded(to: defaults)
+        }
         self.excludedBundleIdentifiers = defaults.array(forKey: Keys.excludedBundleIdentifiers) as? [String] ?? PrivacyFilter.defaultExcludedBundleIdentifiers
         self.hasShownAccessibilityOnboarding = defaults.bool(forKey: Keys.hasShownAccessibilityOnboarding)
         self.showPanelShortcut = .defaultShowPanel
@@ -231,6 +234,21 @@ final class AppSettings {
         defaults.set(historyLimit.rawValue, forKey: Keys.historyLimit)
     }
 
+    private static func migrateLegacyDefaultsIfNeeded(to defaults: UserDefaults) {
+        guard defaults.object(forKey: Keys.migratedLegacyBundleDefaults) == nil,
+              let legacyDefaults = UserDefaults(suiteName: legacyBundleIdentifier)
+        else {
+            return
+        }
+
+        for key in Keys.persistedKeys where defaults.object(forKey: key) == nil {
+            if let value = legacyDefaults.object(forKey: key) {
+                defaults.set(value, forKey: key)
+            }
+        }
+        defaults.set(true, forKey: Keys.migratedLegacyBundleDefaults)
+    }
+
     private enum Keys {
         static let excludedBundleIdentifiers = "excludedBundleIdentifiers"
         static let hasShownAccessibilityOnboarding = "hasShownAccessibilityOnboarding"
@@ -238,5 +256,16 @@ final class AppSettings {
         static let addSpaceAfterPaste = "addSpaceAfterPaste"
         static let historyRetention = "historyRetention"
         static let historyLimit = "historyLimit"
+        static let migratedLegacyBundleDefaults = "migratedLegacyBundleDefaults"
+        static let persistedKeys = [
+            excludedBundleIdentifiers,
+            hasShownAccessibilityOnboarding,
+            showPanelShortcut,
+            addSpaceAfterPaste,
+            historyRetention,
+            historyLimit
+        ]
     }
+
+    private static let legacyBundleIdentifier = "com.ivandovhosheia.Clippa"
 }
