@@ -22,6 +22,8 @@
 		AA000101000000000000000D /* AccessibilityService.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000201000000000000000D /* AccessibilityService.swift */; };
 		AA000101000000000000000F /* DesignSystem.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA000201000000000000000F /* DesignSystem.swift */; };
 		AA0001010000000000000010 /* PanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002010000000000000010 /* PanelView.swift */; };
+		AA0001010000000000000011 /* AppExperienceServices.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002010000000000000011 /* AppExperienceServices.swift */; };
+		AA0001010000000000000017 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002010000000000000017 /* SettingsView.swift */; };
 		AA0001010000000000000012 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = AA0003010000000000000001 /* Localizable.strings */; };
 		AA0001010000000000000013 /* ClipboardCoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002010000000000000013 /* ClipboardCoreTests.swift */; };
 		AA0001010000000000000019 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA0002010000000000000019 /* Assets.xcassets */; };
@@ -53,6 +55,8 @@
 		AA000201000000000000000D /* AccessibilityService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityService.swift; sourceTree = "<group>"; };
 		AA000201000000000000000F /* DesignSystem.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignSystem.swift; sourceTree = "<group>"; };
 		AA0002010000000000000010 /* PanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PanelView.swift; sourceTree = "<group>"; };
+		AA0002010000000000000011 /* AppExperienceServices.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppExperienceServices.swift; sourceTree = "<group>"; };
+		AA0002010000000000000017 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		AA0002010000000000000012 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
 		AA0002010000000000000014 /* uk */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = uk; path = uk.lproj/Localizable.strings; sourceTree = "<group>"; };
 		AA0002010000000000000013 /* ClipboardCoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardCoreTests.swift; sourceTree = "<group>"; };
@@ -103,13 +107,13 @@
 		};
 		AA0007010000000000000005 /* Services */ = {
 			isa = PBXGroup;
-			children = (AA0002010000000000000007, AA0002010000000000000008, AA0002010000000000000009, AA000201000000000000000A, AA000201000000000000000B, AA000201000000000000000C, AA000201000000000000000D);
+			children = (AA0002010000000000000007, AA0002010000000000000008, AA0002010000000000000009, AA000201000000000000000A, AA000201000000000000000B, AA000201000000000000000C, AA000201000000000000000D, AA0002010000000000000011);
 			path = Services;
 			sourceTree = "<group>";
 		};
 		AA0007010000000000000006 /* UI */ = {
 			isa = PBXGroup;
-			children = (AA000201000000000000000F, AA0002010000000000000010);
+			children = (AA000201000000000000000F, AA0002010000000000000010, AA0002010000000000000017);
 			path = UI;
 			sourceTree = "<group>";
 		};
@@ -192,7 +196,7 @@
 		AA0009010000000000000001 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
-			files = (AA0001010000000000000001, AA0001010000000000000002, AA0001010000000000000003, AA0001010000000000000004, AA0001010000000000000005, AA0001010000000000000006, AA0001010000000000000007, AA0001010000000000000008, AA0001010000000000000009, AA000101000000000000000A, AA000101000000000000000B, AA000101000000000000000C, AA000101000000000000000D, AA000101000000000000000F, AA0001010000000000000010);
+			files = (AA0001010000000000000001, AA0001010000000000000002, AA0001010000000000000003, AA0001010000000000000004, AA0001010000000000000005, AA0001010000000000000006, AA0001010000000000000007, AA0001010000000000000008, AA0001010000000000000009, AA000101000000000000000A, AA000101000000000000000B, AA000101000000000000000C, AA000101000000000000000D, AA000101000000000000000F, AA0001010000000000000010, AA0001010000000000000011, AA0001010000000000000017);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		AA0009010000000000000002 /* Sources */ = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (AA0001010000000000000013); runOnlyForDeploymentPostprocessing = 0; };

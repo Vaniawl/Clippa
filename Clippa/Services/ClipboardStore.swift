@@ -19,12 +19,15 @@ final class ClipboardStore {
     var storageMessage: String?
 
     private let historyStore: EncryptedHistoryStore
-    private let maxUnpinnedCount = 100
-    private let retention: TimeInterval = 7 * 24 * 60 * 60
+    private var policy: ClipboardHistoryPolicy
     private var persistTask: Task<Void, Never>?
 
-    init(historyStore: EncryptedHistoryStore = EncryptedHistoryStore()) {
+    init(
+        historyStore: EncryptedHistoryStore = EncryptedHistoryStore(),
+        policy: ClipboardHistoryPolicy = .default
+    ) {
         self.historyStore = historyStore
+        self.policy = policy
     }
 
     func load() async {
@@ -133,8 +136,26 @@ final class ClipboardStore {
         moveSelection(offset: -1)
     }
 
+    func selectAdjacentFilter(offset: Int) {
+        let filters = ClipboardFilter.allCases
+        guard let currentIndex = filters.firstIndex(of: selectedFilter) else {
+            selectedFilter = .all
+            return
+        }
+        selectedFilter = filters[(currentIndex + offset + filters.count) % filters.count]
+    }
+
     func select(_ item: ClipboardItem) {
         selectedItemID = item.id
+    }
+
+    @discardableResult
+    func updatePolicy(_ policy: ClipboardHistoryPolicy, now: Date = Date()) -> [ClipboardItem] {
+        let previousItems = items
+        self.policy = policy
+        applyOrderingAndRetention(now: now)
+        let remainingIDs = Set(items.map(\.id))
+        return previousItems.filter { !remainingIDs.contains($0.id) }
     }
 
     func applyOrderingAndRetention(now: Date) {
@@ -202,12 +223,15 @@ final class ClipboardStore {
 
     private func enforceRetention(now: Date) {
         items.removeAll { item in
-            !item.isPinned && now.timeIntervalSince(activityDate(item)) > retention
+            guard !item.isPinned, let retention = policy.retention.timeInterval else {
+                return false
+            }
+            return now.timeIntervalSince(activityDate(item)) > retention
         }
 
         let unpinned = items.filter { !$0.isPinned }
-        if unpinned.count > maxUnpinnedCount {
-            let allowed = Set(unpinned.sorted { activityDate($0) > activityDate($1) }.prefix(maxUnpinnedCount).map(\.id))
+        if unpinned.count > policy.limit.rawValue {
+            let allowed = Set(unpinned.sorted { activityDate($0) > activityDate($1) }.prefix(policy.limit.rawValue).map(\.id))
             items.removeAll { !$0.isPinned && !allowed.contains($0.id) }
         }
     }

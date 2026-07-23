@@ -21,6 +21,7 @@ final class PasteboardMonitor {
 
     func start() {
         task?.cancel()
+        lastChangeCount = pasteboard.changeCount
         task = Task { [weak self] in
             while !Task.isCancelled {
                 try? await Task.sleep(for: .milliseconds(350))

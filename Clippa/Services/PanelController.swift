@@ -13,14 +13,21 @@ final class AppState {
     let pasteService: PasteService
     let panelController = PanelController()
     let settingsWindowController = SettingsWindowController()
+    let launchAtLoginController = LaunchAtLoginController()
+    let previewController = ClipboardPreviewController()
+    private var undoHistory: [[ClipboardItem]] = []
 
     var isAutoPasteReady: Bool {
         AccessibilityService.isTrusted
     }
 
+    var canUndoHistoryAction: Bool {
+        !undoHistory.isEmpty
+    }
+
     init() {
         let settings = AppSettings()
-        let store = ClipboardStore()
+        let store = ClipboardStore(policy: settings.historyPolicy)
         let monitor = PasteboardMonitor(store: store, settings: settings)
         self.settings = settings
         self.store = store
@@ -32,8 +39,8 @@ final class AppState {
     func start() {
         Task {
             await store.load()
+            monitor.start()
         }
-        monitor.start()
         registerShowPanelShortcut()
         if !settings.hasShownAccessibilityOnboarding && !AccessibilityService.isTrusted {
             settings.hasShownAccessibilityOnboarding = true
@@ -48,7 +55,7 @@ final class AppState {
     }
 
     func togglePanelFromShortcut() {
-        panelController.toggle(appState: self, requiresEditableTarget: true)
+        panelController.toggle(appState: self, requiresEditableTarget: false)
     }
 
     func pasteSelectedItem() {
@@ -64,14 +71,94 @@ final class AppState {
         settingsWindowController.show(appState: self)
     }
 
+    func setHistoryRetention(_ retention: HistoryRetention) {
+        settings.historyRetention = retention
+        recordUndo(store.updatePolicy(settings.historyPolicy))
+    }
+
+    func setHistoryLimit(_ limit: HistoryLimit) {
+        settings.historyLimit = limit
+        recordUndo(store.updatePolicy(settings.historyPolicy))
+    }
+
+    func copy(_ item: ClipboardItem) {
+        pasteService.copyPayload(item.payload)
+        store.use(item)
+    }
+
+    func preview(_ item: ClipboardItem) {
+        previewController.show(item)
+    }
+
+    func open(_ item: ClipboardItem) {
+        let url: URL?
+        switch item.payload {
+        case .url(let itemURL):
+            url = itemURL
+        case .files(let references):
+            url = references.first(where: \.exists)?.url
+        default:
+            url = nil
+        }
+        guard let url else {
+            NSSound.beep()
+            return
+        }
+        panelController.close()
+        NSWorkspace.shared.open(url)
+    }
+
+    func togglePin(_ item: ClipboardItem) {
+        store.togglePin(item)
+    }
+
+    func delete(_ item: ClipboardItem) {
+        guard let deleted = store.delete(item) else {
+            return
+        }
+        recordUndo([deleted])
+    }
+
+    func clearUnpinnedHistory() {
+        let removed = store.clearUnpinned()
+        recordUndo(removed)
+    }
+
+    func clearAllHistory() {
+        let removed = store.clearAll()
+        recordUndo(removed)
+    }
+
+    func undoLastHistoryAction() {
+        guard let items = undoHistory.popLast() else {
+            NSSound.beep()
+            return
+        }
+        store.restore(items)
+    }
+
     func performPanelAction(_ action: PanelKeyAction) {
         switch action {
         case .selectNext:
             store.selectNext()
         case .selectPrevious:
             store.selectPrevious()
+        case .selectNextFilter:
+            store.selectAdjacentFilter(offset: 1)
+        case .selectPreviousFilter:
+            store.selectAdjacentFilter(offset: -1)
         case .paste:
             pasteSelectedItem()
+        case .copy:
+            withSelectedItem(copy)
+        case .preview:
+            withSelectedItem(preview)
+        case .togglePin:
+            withSelectedItem(togglePin)
+        case .delete:
+            withSelectedItem(delete)
+        case .undo:
+            undoLastHistoryAction()
         case .close:
             panelController.close()
         }
@@ -87,14 +174,25 @@ final class AppState {
         store.use(item)
         panelController.close()
         try? await Task.sleep(for: .milliseconds(35))
-        let outcome = await pasteService.paste(item, into: target)
-        switch outcome {
-        case .pasted:
-            break
-        case .copiedOnlyRequiresAccessibility:
-            break
-        case .copiedOnlyPasteUnavailable:
-            break
+        _ = await pasteService.paste(item, into: target)
+    }
+
+    private func withSelectedItem(_ action: (ClipboardItem) -> Void) {
+        guard let id = store.selectedItemID,
+              let item = store.visibleItems.first(where: { $0.id == id })
+        else {
+            return
+        }
+        action(item)
+    }
+
+    private func recordUndo(_ items: [ClipboardItem]) {
+        guard !items.isEmpty else {
+            return
+        }
+        undoHistory.append(items)
+        if undoHistory.count > 10 {
+            undoHistory.removeFirst(undoHistory.count - 10)
         }
     }
 
@@ -144,7 +242,12 @@ final class PanelController {
 
         let content = PanelView(
             store: appState.store,
-            onPasteSelected: { [weak appState] in appState?.pasteSelectedItem() }
+            onPasteSelected: { [weak appState] in appState?.pasteSelectedItem() },
+            onCopy: { [weak appState] item in appState?.copy(item) },
+            onPreview: { [weak appState] item in appState?.preview(item) },
+            onOpen: { [weak appState] item in appState?.open(item) },
+            onTogglePin: { [weak appState] item in appState?.togglePin(item) },
+            onDelete: { [weak appState] item in appState?.delete(item) }
         )
         let hostingView = NSHostingView(rootView: content)
         let size = NSSize(width: DesignSystem.panelWidth, height: DesignSystem.panelHeight)
@@ -195,7 +298,29 @@ final class PanelController {
     }
 
     private static func action(for event: NSEvent) -> PanelKeyAction? {
+        let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
+        if modifiers == .command {
+            switch event.keyCode {
+            case UInt16(kVK_ANSI_C):
+                return .copy
+            case UInt16(kVK_ANSI_Y):
+                return .preview
+            case UInt16(kVK_ANSI_D):
+                return .togglePin
+            case UInt16(kVK_Delete), UInt16(kVK_ForwardDelete):
+                return .delete
+            case UInt16(kVK_ANSI_Z):
+                return .undo
+            default:
+                break
+            }
+        }
+
         switch event.keyCode {
+        case UInt16(kVK_RightArrow):
+            return .selectNextFilter
+        case UInt16(kVK_LeftArrow):
+            return .selectPreviousFilter
         case UInt16(kVK_DownArrow):
             return .selectNext
         case UInt16(kVK_UpArrow):
@@ -239,7 +364,14 @@ final class PanelController {
 enum PanelKeyAction: Sendable {
     case selectNext
     case selectPrevious
+    case selectNextFilter
+    case selectPreviousFilter
     case paste
+    case copy
+    case preview
+    case togglePin
+    case delete
+    case undo
     case close
 }
 
