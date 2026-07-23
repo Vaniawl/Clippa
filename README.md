@@ -9,6 +9,7 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/Vaniawl/Clippa/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/Vaniawl/Clippa/ci.yml?branch=main&style=flat-square"></a>
   <a href="https://github.com/Vaniawl/Clippa/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/Vaniawl/Clippa?style=flat-square"></a>
   <img alt="macOS 26+" src="https://img.shields.io/badge/macOS-26%2B-111111?style=flat-square">
   <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-087f78?style=flat-square"></a>
@@ -20,6 +21,8 @@
   <a href="https://github.com/Vaniawl/Clippa/releases">Releases</a>
   ·
   <a href="#privacy">Privacy</a>
+  ·
+  <a href="CONTRIBUTING.md">Contributing</a>
 </p>
 
 <p align="center">
