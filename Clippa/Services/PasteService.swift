@@ -37,7 +37,11 @@ final class PasteService {
         monitor.noteInternalWrite(changeCount: pasteboard.changeCount)
     }
 
-    func paste(_ item: ClipboardItem, into target: PasteTarget?) async -> PasteOutcome {
+    func paste(
+        _ item: ClipboardItem,
+        into target: PasteTarget?,
+        addTrailingSpace: Bool = false
+    ) async -> PasteOutcome {
         copyPayload(item.payload)
         guard AccessibilityService.isTrusted else {
             return .copiedOnlyRequiresAccessibility
@@ -51,12 +55,37 @@ final class PasteService {
         }
         let focusedElement = AccessibilityService.focusedEditableTextElement(in: application) ?? target?.focusedElement
         await restoreFocus(focusedElement, in: application)
-        _ = await sendCommandV(to: application)
+        guard await sendCommandV(to: application) else {
+            return .copiedOnlyPasteUnavailable
+        }
+        if Self.shouldAddTrailingSpace(to: item.payload, enabled: addTrailingSpace) {
+            _ = await sendSpace(to: application)
+        }
         return .pasted
     }
 
-    func paste(_ item: ClipboardItem, into application: NSRunningApplication?) async -> PasteOutcome {
-        await paste(item, into: PasteTarget(application: application, focusedElement: nil))
+    func paste(
+        _ item: ClipboardItem,
+        into application: NSRunningApplication?,
+        addTrailingSpace: Bool = false
+    ) async -> PasteOutcome {
+        await paste(
+            item,
+            into: PasteTarget(application: application, focusedElement: nil),
+            addTrailingSpace: addTrailingSpace
+        )
+    }
+
+    static func shouldAddTrailingSpace(to payload: ClipboardPayload, enabled: Bool) -> Bool {
+        guard enabled else {
+            return false
+        }
+        switch payload {
+        case .text, .url:
+            return true
+        case .image, .files:
+            return false
+        }
     }
 
     private func focus(_ element: AXUIElement?) {
@@ -142,9 +171,40 @@ final class PasteService {
             event.postToPid(application.processIdentifier)
         })
     }
+
+    private func sendSpace(to application: NSRunningApplication) async -> Bool {
+        try? await Task.sleep(for: .milliseconds(80))
+        let source = CGEventSource(stateID: .hidSystemState)
+        source?.localEventsSuppressionInterval = 0
+        guard
+            let keyDown = CGEvent(
+                keyboardEventSource: source,
+                virtualKey: CGKeyCode(kVK_Space),
+                keyDown: true
+            ),
+            let keyUp = CGEvent(
+                keyboardEventSource: source,
+                virtualKey: CGKeyCode(kVK_Space),
+                keyDown: false
+            )
+        else {
+            return false
+        }
+
+        if NSWorkspace.shared.frontmostApplication?.processIdentifier == application.processIdentifier {
+            keyDown.post(tap: .cghidEventTap)
+            try? await Task.sleep(for: .milliseconds(10))
+            keyUp.post(tap: .cghidEventTap)
+        } else {
+            keyDown.postToPid(application.processIdentifier)
+            try? await Task.sleep(for: .milliseconds(10))
+            keyUp.postToPid(application.processIdentifier)
+        }
+        return true
+    }
 }
 
-enum PasteOutcome {
+enum PasteOutcome: Equatable {
     case pasted
     case copiedOnlyRequiresAccessibility
     case copiedOnlyPasteUnavailable

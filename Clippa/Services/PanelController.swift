@@ -15,6 +15,7 @@ final class AppState {
     let settingsWindowController = SettingsWindowController()
     let launchAtLoginController = LaunchAtLoginController()
     let previewController = ClipboardPreviewController()
+    let pasteFailureController = PasteFailureController()
     private var undoHistory: [[ClipboardItem]] = []
 
     var isAutoPasteReady: Bool {
@@ -174,7 +175,15 @@ final class AppState {
         store.use(item)
         panelController.close()
         try? await Task.sleep(for: .milliseconds(35))
-        _ = await pasteService.paste(item, into: target)
+        let outcome = await pasteService.paste(
+            item,
+            into: target,
+            addTrailingSpace: settings.addSpaceAfterPaste
+        )
+        guard outcome != .pasted else {
+            return
+        }
+        pasteFailureController.show(requiresAccessibility: outcome == .copiedOnlyRequiresAccessibility)
     }
 
     private func withSelectedItem(_ action: (ClipboardItem) -> Void) {
@@ -236,7 +245,7 @@ final class PanelController {
         }
         appState.store.searchQuery = ""
         appState.store.selectedFilter = .all
-        if let first = appState.store.visibleItems.first ?? appState.store.items.first {
+        if let first = appState.store.visibleItems.first {
             appState.store.select(first)
         }
 

@@ -52,6 +52,8 @@ You can also download `Clippa.app.zip` from the latest GitHub release, unzip it,
 - Use `Up` / `Down` to choose a clipboard item.
 - Use `Left` / `Right` to switch between clipboard filters.
 - Press `Enter` or click an item to paste it.
+- Keeps the newest copied item at the top and shows pinned items only in the Pinned filter.
+- Optionally adds one space after pasted text or links.
 - Use the context menu to copy, pin, delete, open, or Quick Look an item.
 - Drag text, links, images, and files directly into other apps.
 - Press `Esc` or click outside the panel to close it.
@@ -62,7 +64,7 @@ You can also download `Clippa.app.zip` from the latest GitHub release, unzip it,
 
 Clippa does not upload clipboard contents, does not use analytics, and does not require an account. Clipboard history is stored only on your Mac and encrypted locally with a per-user AES-GCM key file in Application Support. Clippa does not read or write Keychain items at startup, so locally signed reinstall builds do not trigger Keychain password prompts.
 
-Accessibility permission is only used to restore focus and paste the selected clip into the app that was active before Clippa opened. Without it, Clippa still copies the selected item to the system clipboard.
+Accessibility permission is only used to restore focus and paste the selected clip into the app that was active before Clippa opened. If automatic paste is unavailable, Clippa keeps the item on the system clipboard and shows a direct link to the required permission.
 
 ## Requirements
 
@@ -95,6 +97,6 @@ git pull origin main
 ## Production Notes
 
 - Bundle identifier: `com.ivandovhosheia.Clippa`
-- Version: `1.0.7`
+- Version: `1.0.8`
 - Release builds use hardened runtime.
 - History retention and item limits are configurable; the default is 100 items for one week.

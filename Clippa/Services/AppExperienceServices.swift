@@ -34,6 +34,33 @@ final class LaunchAtLoginController {
 }
 
 @MainActor
+final class PasteFailureController {
+    private var isShowing = false
+
+    func show(requiresAccessibility: Bool) {
+        guard !isShowing else {
+            return
+        }
+        isShowing = true
+        defer { isShowing = false }
+
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = String(localized: "Clippa Could Not Paste")
+        alert.informativeText = requiresAccessibility
+            ? String(localized: "Allow Clippa in Accessibility settings to paste automatically. The item was copied to your clipboard.")
+            : String(localized: "The item was copied to your clipboard. Check Accessibility permission and try again.")
+        alert.addButton(withTitle: String(localized: "Open Accessibility Settings"))
+        alert.addButton(withTitle: String(localized: "Not Now"))
+
+        NSApp.activate(ignoringOtherApps: true)
+        if alert.runModal() == .alertFirstButtonReturn {
+            AccessibilityService.openSystemSettings()
+        }
+    }
+}
+
+@MainActor
 final class ClipboardPreviewController: NSObject, @preconcurrency QLPreviewPanelDataSource, QLPreviewPanelDelegate {
     private var previewURLs: [URL] = []
     private let previewDirectory = FileManager.default.temporaryDirectory
