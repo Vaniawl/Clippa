@@ -130,7 +130,7 @@ Accessibility permission is only used to restore focus and paste the selected cl
 
 ## Verification
 
-The current public release is `1.0.11`.
+The current public release is `1.0.12`.
 
 | Check | Status |
 | --- | --- |
@@ -139,9 +139,9 @@ The current public release is `1.0.11`.
 | Local iOS companion tests | 6/6 passing |
 | Release build | Passing |
 | Smoke launch | Passing |
-| GitHub release | `v1.0.11` live |
-| npm package | `clippa@1.0.11` |
-| Homebrew cask | `clippa 1.0.11` |
+| GitHub release | `v1.0.12` live |
+| npm package | `clippa@1.0.12` |
+| Homebrew cask | `clippa 1.0.12` |
 | Bundle identifier | `app.clippa.Clippa` |
 
 Useful verification commands:
@@ -184,6 +184,6 @@ git pull origin main
 ## Production Notes
 
 - Bundle identifier: `app.clippa.Clippa`
-- Version: `1.0.11`
+- Version: `1.0.12`
 - Release builds use hardened runtime.
 - History retention and item limits are configurable; the default is 100 items for one week.

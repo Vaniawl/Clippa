@@ -10,7 +10,7 @@ const appName = "Clippa";
 const bundleIdentifiers = ["app.clippa.Clippa", "io.github.vaniawl.Clippa", "com.ivandovhosheia.Clippa"];
 const localZipPath = path.resolve(__dirname, "../outputs/Clippa.app.zip");
 const packageJson = require("../package.json");
-const defaultZipUrl = "https://github.com/Vaniawl/Clippa/releases/download/v1.0.11/Clippa.app.zip";
+const defaultZipUrl = "https://github.com/Vaniawl/Clippa/releases/download/v1.0.12/Clippa.app.zip";
 const zipUrl = process.env.CLIPPA_ZIP_URL || defaultZipUrl;
 
 function usage() {
