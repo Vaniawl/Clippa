@@ -12,8 +12,8 @@ final class AppState {
     let monitor: PasteboardMonitor
     let pasteService: PasteService
     let panelController = PanelController()
+    let settingsWindowController = SettingsWindowController()
 
-    var notice: String?
     var isAutoPasteReady: Bool {
         AccessibilityService.isTrusted
     }
@@ -37,7 +37,6 @@ final class AppState {
         registerShowPanelShortcut()
         if !settings.hasShownAccessibilityOnboarding && !AccessibilityService.isTrusted {
             settings.hasShownAccessibilityOnboarding = true
-            notice = String(localized: "Accessibility access enables automatic paste. Without it, Clippa still copies the selected item.")
             AccessibilityService.requestPrompt()
         }
     }
@@ -59,6 +58,10 @@ final class AppState {
         Task {
             await paste(item)
         }
+    }
+
+    func showSettings() {
+        settingsWindowController.show(appState: self)
     }
 
     func performPanelAction(_ action: PanelKeyAction) {
@@ -89,9 +92,9 @@ final class AppState {
         case .pasted:
             break
         case .copiedOnlyRequiresAccessibility:
-            notice = String(localized: "Copied. Enable Accessibility access for automatic paste.")
+            break
         case .copiedOnlyPasteUnavailable:
-            notice = String(localized: "Copied. Put the cursor in a text field before pasting from Clippa.")
+            break
         }
     }
 
@@ -123,10 +126,7 @@ final class PanelController {
         let targetApplication = frontmostApplication?.bundleIdentifier == Bundle.main.bundleIdentifier ? nil : frontmostApplication
         let focusedElement = AccessibilityService.focusedEditableTextElement(in: targetApplication)
         if requiresEditableTarget, focusedElement == nil {
-            if AccessibilityService.isTrusted {
-                appState.notice = String(localized: "Place the cursor in a text field to show Clippa.")
-            } else {
-                appState.notice = String(localized: "Accessibility access enables automatic paste. Without it, Clippa still copies the selected item.")
+            if !AccessibilityService.isTrusted {
                 AccessibilityService.requestPrompt()
             }
             NSSound.beep()
@@ -144,7 +144,6 @@ final class PanelController {
 
         let content = PanelView(
             store: appState.store,
-            notice: appState.notice,
             onPasteSelected: { [weak appState] in appState?.pasteSelectedItem() }
         )
         let hostingView = NSHostingView(rootView: content)

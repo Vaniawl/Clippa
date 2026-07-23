@@ -3,7 +3,6 @@ import SwiftUI
 
 struct PanelView: View {
     @Bindable var store: ClipboardStore
-    var notice: String?
     var onPasteSelected: @MainActor () -> Void
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -14,15 +13,6 @@ struct PanelView: View {
             headerRow
             Divider()
             results
-            if let notice {
-                Text(notice)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .truncationMode(.tail)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .transition(.opacity)
-            }
         }
         .padding(10)
         .frame(width: DesignSystem.panelWidth, height: DesignSystem.panelHeight)

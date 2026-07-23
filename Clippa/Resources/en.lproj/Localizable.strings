@@ -10,10 +10,6 @@
 "Unavailable" = "Unavailable";
 "Encrypted history was reset because the local store was damaged. The damaged file was isolated at %@." = "Encrypted history was reset because the local store was damaged. The damaged file was isolated at %@.";
 "Encrypted history could not be loaded. A clean history is active." = "Encrypted history could not be loaded. A clean history is active.";
-"Accessibility access enables automatic paste. Without it, Clippa still copies the selected item." = "Accessibility access lets Clippa paste the selected item.";
-"Copied. Enable Accessibility access for automatic paste." = "Copied. Enable Accessibility access for automatic paste.";
-"Copied. Put the cursor in a text field before pasting from Clippa." = "Copied. Put the cursor in a text field before pasting from Clippa.";
-"Place the cursor in a text field to show Clippa." = "Place the cursor in a text field to show Clippa.";
 "Clippa clipboard history" = "Clippa clipboard history";
 "Clipboard is empty" = "Clipboard is empty";
 "Copy something and it will appear here." = "Copy something and it will appear here.";
@@ -22,4 +18,14 @@
 "Clipboard image" = "Clipboard image";
 "Clippa" = "Clippa";
 "Items" = "Items";
+"Show Panel" = "Show Panel";
+"Settings" = "Settings";
+"Shortcut" = "Shortcut";
+"History" = "History";
+"Accessibility" = "Accessibility";
+"Ready" = "Ready";
+"Needs access" = "Needs access";
+"Open" = "Open";
+"Clear History" = "Clear History";
+"Clippa Settings" = "Clippa Settings";
 "Quit" = "Quit";

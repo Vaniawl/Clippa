@@ -10,10 +10,6 @@
 "Unavailable" = "Недоступно";
 "Encrypted history was reset because the local store was damaged. The damaged file was isolated at %@." = "Зашифровану історію скинуто, бо локальне сховище пошкоджене. Пошкоджений файл ізольовано як %@.";
 "Encrypted history could not be loaded. A clean history is active." = "Не вдалося завантажити зашифровану історію. Активна чиста історія.";
-"Accessibility access enables automatic paste. Without it, Clippa still copies the selected item." = "Доступ Accessibility дозволяє Clippa вставляти вибраний запис.";
-"Copied. Enable Accessibility access for automatic paste." = "Скопійовано. Увімкніть Accessibility-доступ для автоматичного вставлення.";
-"Copied. Put the cursor in a text field before pasting from Clippa." = "Скопійовано. Поставте курсор у текстове поле перед вставленням із Clippa.";
-"Place the cursor in a text field to show Clippa." = "Поставте курсор у текстове поле, щоб відкрити Clippa.";
 "Clippa clipboard history" = "Історія буфера Clippa";
 "Clipboard is empty" = "Буфер порожній";
 "Copy something and it will appear here." = "Скопіюйте щось, і воно з’явиться тут.";
@@ -22,4 +18,14 @@
 "Clipboard image" = "Зображення з буфера";
 "Clippa" = "Clippa";
 "Items" = "Записи";
+"Show Panel" = "Показати панель";
+"Settings" = "Налаштування";
+"Shortcut" = "Комбінація";
+"History" = "Історія";
+"Accessibility" = "Accessibility";
+"Ready" = "Готово";
+"Needs access" = "Потрібен доступ";
+"Open" = "Відкрити";
+"Clear History" = "Очистити історію";
+"Clippa Settings" = "Налаштування Clippa";
 "Quit" = "Вийти";
