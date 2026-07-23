@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Clippa website
+    url: https://vaniawl.github.io/Clippa/
+    about: View installation instructions and product details.
+  - name: Latest release
+    url: https://github.com/Vaniawl/Clippa/releases/latest
+    about: Download the latest supported build before reporting a problem.

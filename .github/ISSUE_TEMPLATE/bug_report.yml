@@ -1,0 +1,74 @@
+name: Bug report
+description: Report a reproducible problem in Clippa.
+title: "[Bug]: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for helping improve Clippa. Please update to the latest release before reporting.
+
+  - type: input
+    id: app-version
+    attributes:
+      label: Clippa version
+      description: Find this in Clippa Settings.
+      placeholder: "1.0.9"
+    validations:
+      required: true
+
+  - type: input
+    id: macos-version
+    attributes:
+      label: macOS version
+      placeholder: "26.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: installation
+    attributes:
+      label: Installation method
+      options:
+        - Homebrew
+        - GitHub release
+        - npx from GitHub
+        - Built from source
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: Describe the problem and what you expected instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Copy ...
+        2. Press Command-Shift-V
+        3. Select ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Add screenshots, screen recordings, or relevant logs. Remove private clipboard content first.
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Checklist
+      options:
+        - label: I reproduced this with the latest Clippa release.
+          required: true
+        - label: I removed passwords and private clipboard content from this report.
+          required: true
