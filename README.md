@@ -145,7 +145,7 @@ The current public release is `1.0.13`.
 | Release build | Passing |
 | Smoke launch | Passing |
 | GitHub release | `v1.0.13` live |
-| npm package | `clippa@1.0.13` |
+| npm package | `clippa@1.0.13` prepared; publish requires npm 2FA |
 | Homebrew cask | `clippa 1.0.13` |
 | Bundle identifier | `app.clippa.Clippa` |
 
