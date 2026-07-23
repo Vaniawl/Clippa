@@ -49,7 +49,13 @@
 "Launch at Login" = "Launch at Login";
 "Launch at Login could not be changed." = "Launch at Login could not be changed.";
 "Auto-Paste" = "Auto-Paste";
+"Add Space After Paste" = "Add Space After Paste";
+"Adds one space after pasted text or links." = "Adds one space after pasted text or links.";
 "Open Accessibility Settings" = "Open Accessibility Settings";
+"Clippa Could Not Paste" = "Clippa Could Not Paste";
+"Allow Clippa in Accessibility settings to paste automatically. The item was copied to your clipboard." = "Allow Clippa in Accessibility settings to paste automatically. The item was copied to your clipboard.";
+"The item was copied to your clipboard. Check Accessibility permission and try again." = "The item was copied to your clipboard. Check Accessibility permission and try again.";
+"Not Now" = "Not Now";
 "Undo History Change" = "Undo History Change";
 "Storage" = "Storage";
 "Keep History" = "Keep History";

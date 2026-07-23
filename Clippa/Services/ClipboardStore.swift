@@ -173,17 +173,17 @@ final class ClipboardStore {
         let filteredByKind: [ClipboardItem]
         switch filter {
         case .all:
-            filteredByKind = items
+            filteredByKind = items.filter { !$0.isPinned }
         case .pinned:
             filteredByKind = items.filter(\.isPinned)
         case .text:
-            filteredByKind = items.filter { $0.kind == .text }
+            filteredByKind = items.filter { !$0.isPinned && $0.kind == .text }
         case .url:
-            filteredByKind = items.filter { $0.kind == .url }
+            filteredByKind = items.filter { !$0.isPinned && $0.kind == .url }
         case .image:
-            filteredByKind = items.filter { $0.kind == .image }
+            filteredByKind = items.filter { !$0.isPinned && $0.kind == .image }
         case .files:
-            filteredByKind = items.filter { $0.kind == .files }
+            filteredByKind = items.filter { !$0.isPinned && $0.kind == .files }
         }
 
         let cleanedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
@@ -237,12 +237,7 @@ final class ClipboardStore {
     }
 
     private func ordered(_ source: [ClipboardItem]) -> [ClipboardItem] {
-        source.sorted {
-            if $0.isPinned != $1.isPinned {
-                return $0.isPinned && !$1.isPinned
-            }
-            return activityDate($0) > activityDate($1)
-        }
+        source.sorted { $0.createdAt > $1.createdAt }
     }
 
     private func activityDate(_ item: ClipboardItem) -> Date {

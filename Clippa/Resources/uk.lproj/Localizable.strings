@@ -49,7 +49,13 @@
 "Launch at Login" = "Запускати разом із macOS";
 "Launch at Login could not be changed." = "Не вдалося змінити запуск разом із macOS.";
 "Auto-Paste" = "Автовставка";
+"Add Space After Paste" = "Додавати пробіл після вставлення";
+"Adds one space after pasted text or links." = "Додає один пробіл після вставленого тексту або посилання.";
 "Open Accessibility Settings" = "Відкрити налаштування доступності";
+"Clippa Could Not Paste" = "Clippa не змогла вставити";
+"Allow Clippa in Accessibility settings to paste automatically. The item was copied to your clipboard." = "Дозвольте Clippa керування в налаштуваннях доступності для автоматичного вставлення. Запис уже скопійовано в буфер.";
+"The item was copied to your clipboard. Check Accessibility permission and try again." = "Запис скопійовано в буфер. Перевірте дозвіл доступності та спробуйте ще раз.";
+"Not Now" = "Не зараз";
 "Undo History Change" = "Скасувати зміну історії";
 "Storage" = "Зберігання";
 "Keep History" = "Зберігати історію";

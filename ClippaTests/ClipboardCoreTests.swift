@@ -26,7 +26,7 @@ final class ClipboardCoreTests: XCTestCase {
         XCTAssertEqual(store.items.first?.sourceBundleIdentifier, "b")
     }
 
-    func testUsingOlderItemMovesItToTop() {
+    func testUsingOlderItemDoesNotChangeCopyOrder() {
         let store = ClipboardStore()
         store.add(payload: .text("old"), sourceBundleIdentifier: nil, date: Date(timeIntervalSince1970: 10))
         store.add(payload: .text("new"), sourceBundleIdentifier: nil, date: Date(timeIntervalSince1970: 20))
@@ -34,33 +34,45 @@ final class ClipboardCoreTests: XCTestCase {
         let oldItem = store.items.first { $0.preview == "old" }!
         store.use(oldItem, date: Date(timeIntervalSince1970: 30))
 
-        XCTAssertEqual(store.items.first?.preview, "old")
-        XCTAssertEqual(store.items.first?.lastUsedAt, Date(timeIntervalSince1970: 30))
+        XCTAssertEqual(store.items.map(\.preview), ["new", "old"])
+        XCTAssertEqual(
+            store.items.first { $0.preview == "old" }?.lastUsedAt,
+            Date(timeIntervalSince1970: 30)
+        )
     }
 
-    func testPinnedItemsSortBeforeNewestUnpinned() {
+    func testPinnedItemsOnlyAppearInPinnedFilterAndHistoryStaysNewestFirst() {
         let store = ClipboardStore()
-        store.add(payload: .text("old"), sourceBundleIdentifier: nil, date: Date(timeIntervalSince1970: 1))
-        store.add(payload: .text("new"), sourceBundleIdentifier: nil, date: Date(timeIntervalSince1970: 2))
+        let now = Date()
+        store.add(payload: .text("old"), sourceBundleIdentifier: nil, date: now.addingTimeInterval(-1))
+        store.add(payload: .text("new"), sourceBundleIdentifier: nil, date: now)
         store.select(store.items.last!)
         store.togglePinSelected()
-        XCTAssertEqual(store.items.first?.preview, "old")
+
+        XCTAssertEqual(store.items.first?.preview, "new")
+        XCTAssertEqual(store.filteredItems(query: "", filter: .all).map(\.preview), ["new"])
+        XCTAssertEqual(store.filteredItems(query: "", filter: .text).map(\.preview), ["new"])
+        XCTAssertEqual(store.filteredItems(query: "", filter: .pinned).map(\.preview), ["old"])
     }
 
     func testItemScopedPinAndDeleteActionsSelectTargetItem() {
         let store = ClipboardStore()
-        store.add(payload: .text("first"), sourceBundleIdentifier: nil, date: Date(timeIntervalSince1970: 1))
-        store.add(payload: .text("second"), sourceBundleIdentifier: nil, date: Date(timeIntervalSince1970: 2))
+        let now = Date()
+        store.add(payload: .text("first"), sourceBundleIdentifier: nil, date: now.addingTimeInterval(-1))
+        store.add(payload: .text("second"), sourceBundleIdentifier: nil, date: now)
         let first = store.items.first { $0.preview == "first" }!
         let second = store.items.first { $0.preview == "second" }!
 
         store.select(second)
         store.togglePin(first)
-        XCTAssertEqual(store.selectedItemID, first.id)
+        XCTAssertEqual(store.selectedItemID, second.id)
         XCTAssertTrue(store.items.first { $0.id == first.id }?.isPinned == true)
 
         store.delete(second)
         XCTAssertNil(store.items.first { $0.id == second.id })
+        XCTAssertNil(store.selectedItemID)
+
+        store.selectedFilter = .pinned
         XCTAssertEqual(store.selectedItemID, first.id)
     }
 
@@ -165,7 +177,8 @@ final class ClipboardCoreTests: XCTestCase {
         XCTAssertEqual(store.filteredItems(query: "", filter: .url).first?.kind, .url)
         XCTAssertEqual(store.filteredItems(query: "", filter: .files).first?.kind, .files)
         XCTAssertEqual(store.filteredItems(query: "", filter: .pinned).first?.preview, "alpha note")
-        XCTAssertEqual(store.filteredItems(query: "alpha", filter: .text).first?.preview, "alpha note")
+        XCTAssertTrue(store.filteredItems(query: "alpha", filter: .all).isEmpty)
+        XCTAssertTrue(store.filteredItems(query: "alpha", filter: .text).isEmpty)
     }
 
     func testDerivedVisibleStateUpdatesOnlyWhenVisibleItemsChange() {
@@ -186,8 +199,11 @@ final class ClipboardCoreTests: XCTestCase {
         XCTAssertEqual(store.visibleItemsRevision, revisionAfterEmptySearch)
 
         store.searchQuery = ""
+        let revisionBeforePin = store.visibleItemsRevision
         store.togglePin(store.items.first!)
         XCTAssertEqual(store.pinnedItemCount, 1)
+        XCTAssertTrue(store.visibleItems.isEmpty)
+        XCTAssertGreaterThan(store.visibleItemsRevision, revisionBeforePin)
     }
 
     func testImageMetadataUsesImagePropertiesWithoutViewDecode() throws {
@@ -301,6 +317,44 @@ final class ClipboardCoreTests: XCTestCase {
         )
 
         defaults.removePersistentDomain(forName: suiteName)
+    }
+
+    func testSpaceAfterPasteSettingDefaultsOnAndPersists() throws {
+        let suiteName = "ClippaTests.spaceAfterPaste.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+
+        var settings = AppSettings(defaults: defaults)
+        XCTAssertTrue(settings.addSpaceAfterPaste)
+
+        settings.addSpaceAfterPaste = false
+        settings = AppSettings(defaults: defaults)
+        XCTAssertFalse(settings.addSpaceAfterPaste)
+
+        defaults.removePersistentDomain(forName: suiteName)
+    }
+
+    func testTrailingSpaceOnlyAppliesToTextAndLinksWhenEnabled() {
+        XCTAssertTrue(PasteService.shouldAddTrailingSpace(to: .text("hello"), enabled: true))
+        XCTAssertTrue(
+            PasteService.shouldAddTrailingSpace(
+                to: .url(URL(string: "https://example.com")!),
+                enabled: true
+            )
+        )
+        XCTAssertFalse(
+            PasteService.shouldAddTrailingSpace(
+                to: .image(data: Data([1]), uti: nil),
+                enabled: true
+            )
+        )
+        XCTAssertFalse(
+            PasteService.shouldAddTrailingSpace(
+                to: .files([FileReference(url: URL(fileURLWithPath: "/tmp/example.txt"))]),
+                enabled: true
+            )
+        )
+        XCTAssertFalse(PasteService.shouldAddTrailingSpace(to: .text("hello"), enabled: false))
     }
 
     @MainActor

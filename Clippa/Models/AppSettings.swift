@@ -180,6 +180,9 @@ final class AppSettings {
     var showPanelShortcut: HotKeyShortcut {
         didSet { persist() }
     }
+    var addSpaceAfterPaste: Bool {
+        didSet { persist() }
+    }
     var historyRetention: HistoryRetention {
         didSet { persist() }
     }
@@ -199,6 +202,9 @@ final class AppSettings {
         self.excludedBundleIdentifiers = defaults.array(forKey: Keys.excludedBundleIdentifiers) as? [String] ?? PrivacyFilter.defaultExcludedBundleIdentifiers
         self.hasShownAccessibilityOnboarding = defaults.bool(forKey: Keys.hasShownAccessibilityOnboarding)
         self.showPanelShortcut = .defaultShowPanel
+        self.addSpaceAfterPaste = defaults.object(forKey: Keys.addSpaceAfterPaste) == nil
+            ? true
+            : defaults.bool(forKey: Keys.addSpaceAfterPaste)
         self.historyRetention = defaults.string(forKey: Keys.historyRetention).flatMap(HistoryRetention.init(rawValue:)) ?? .oneWeek
         self.historyLimit = HistoryLimit(rawValue: defaults.integer(forKey: Keys.historyLimit)) ?? .oneHundred
     }
@@ -220,6 +226,7 @@ final class AppSettings {
         defaults.set(excludedBundleIdentifiers, forKey: Keys.excludedBundleIdentifiers)
         defaults.set(hasShownAccessibilityOnboarding, forKey: Keys.hasShownAccessibilityOnboarding)
         defaults.set(try? encoder.encode(showPanelShortcut), forKey: Keys.showPanelShortcut)
+        defaults.set(addSpaceAfterPaste, forKey: Keys.addSpaceAfterPaste)
         defaults.set(historyRetention.rawValue, forKey: Keys.historyRetention)
         defaults.set(historyLimit.rawValue, forKey: Keys.historyLimit)
     }
@@ -228,6 +235,7 @@ final class AppSettings {
         static let excludedBundleIdentifiers = "excludedBundleIdentifiers"
         static let hasShownAccessibilityOnboarding = "hasShownAccessibilityOnboarding"
         static let showPanelShortcut = "showPanelShortcut"
+        static let addSpaceAfterPaste = "addSpaceAfterPaste"
         static let historyRetention = "historyRetention"
         static let historyLimit = "historyLimit"
     }

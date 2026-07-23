@@ -42,6 +42,9 @@ private struct GeneralSettingsView: View {
             }
 
             Section("Auto-Paste") {
+                Toggle("Add Space After Paste", isOn: addSpaceAfterPasteBinding)
+                    .help("Adds one space after pasted text or links.")
+
                 LabeledContent("Accessibility") {
                     Label(
                         accessibilityTrusted ? "Ready" : "Needs access",
@@ -90,6 +93,13 @@ private struct GeneralSettingsView: View {
         Binding(
             get: { appState.launchAtLoginController.isEnabled },
             set: { appState.launchAtLoginController.setEnabled($0) }
+        )
+    }
+
+    private var addSpaceAfterPasteBinding: Binding<Bool> {
+        Binding(
+            get: { appState.settings.addSpaceAfterPaste },
+            set: { appState.settings.addSpaceAfterPaste = $0 }
         )
     }
 
