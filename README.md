@@ -28,7 +28,21 @@
 
 ## Install Clippa
 
-Install the current version directly from GitHub:
+Recommended:
+
+```bash
+brew tap Vaniawl/clippa
+brew install --cask clippa
+```
+
+Update later with:
+
+```bash
+brew update
+brew upgrade --cask clippa
+```
+
+You can also install the current version directly from GitHub:
 
 ```bash
 npx --yes github:Vaniawl/Clippa#main
