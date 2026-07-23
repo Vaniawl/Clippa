@@ -28,7 +28,7 @@
 "Clippa" = "Clippa";
 "Items" = "Записи";
 "Settings" = "Налаштування";
-"Enable Auto-Paste" = "Увімкнути автовставку";
+"Auto-Paste Needs Access" = "Автовставці потрібен доступ";
 "Quit Clippa" = "Вийти з Clippa";
 "Private clipboard history" = "Приватна історія буфера";
 "Shortcut" = "Комбінація";

@@ -20,7 +20,7 @@ private struct MenuBarContentView: View {
             Button {
                 AccessibilityService.openSystemSettings()
             } label: {
-                Label("Enable Auto-Paste", systemImage: "accessibility")
+                Label("Auto-Paste Needs Access", systemImage: "accessibility")
             }
             Divider()
         }
@@ -60,6 +60,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
         appState.start()
+    }
+
+    func applicationDidBecomeActive(_ notification: Notification) {
+        appState.refreshAccessibilityState()
     }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {

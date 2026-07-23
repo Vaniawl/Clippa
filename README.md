@@ -51,6 +51,7 @@ You can also download `Clippa.app.zip` from the latest GitHub release, unzip it,
 - Press `Command-Shift-V` anywhere to open clipboard history.
 - Use `Up` / `Down` to choose a clipboard item.
 - Use `Left` / `Right` to switch between clipboard filters.
+- Press `Command-P` to pin or unpin the selected item.
 - Press `Enter` or click an item to paste it.
 - Keeps the newest copied item at the top and shows pinned items only in the Pinned filter.
 - Optionally adds one space after pasted text or links.
@@ -97,6 +98,6 @@ git pull origin main
 ## Production Notes
 
 - Bundle identifier: `com.ivandovhosheia.Clippa`
-- Version: `1.0.8`
+- Version: `1.0.9`
 - Release builds use hardened runtime.
 - History retention and item limits are configurable; the default is 100 items for one week.

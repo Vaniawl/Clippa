@@ -135,22 +135,23 @@ struct PanelView: View {
     private func count(for filter: ClipboardFilter) -> Int? {
         switch filter {
         case .all:
-            store.items.isEmpty ? nil : store.items.count
+            let total = store.items.count(where: { !$0.isPinned })
+            return total == 0 ? nil : total
         case .pinned:
-            store.pinnedItemCount == 0 ? nil : store.pinnedItemCount
+            return store.pinnedItemCount == 0 ? nil : store.pinnedItemCount
         case .text:
-            count(kind: .text)
+            return count(kind: .text)
         case .url:
-            count(kind: .url)
+            return count(kind: .url)
         case .image:
-            count(kind: .image)
+            return count(kind: .image)
         case .files:
-            count(kind: .files)
+            return count(kind: .files)
         }
     }
 
     private func count(kind: ClipboardItemKind) -> Int? {
-        let total = store.items.filter { $0.kind == kind }.count
+        let total = store.items.count { !$0.isPinned && $0.kind == kind }
         return total == 0 ? nil : total
     }
 

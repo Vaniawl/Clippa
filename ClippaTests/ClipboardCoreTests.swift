@@ -370,6 +370,25 @@ final class ClipboardCoreTests: XCTestCase {
         XCTAssertEqual(store.selectedFilter, .pinned)
     }
 
+    func testCommandPMapsToTogglePin() throws {
+        let event = try XCTUnwrap(
+            NSEvent.keyEvent(
+                with: .keyDown,
+                location: .zero,
+                modifierFlags: .command,
+                timestamp: 0,
+                windowNumber: 0,
+                context: nil,
+                characters: "p",
+                charactersIgnoringModifiers: "p",
+                isARepeat: false,
+                keyCode: UInt16(kVK_ANSI_P)
+            )
+        )
+
+        XCTAssertEqual(PanelController.action(for: event), .togglePin)
+    }
+
     func testPanelPositionStaysInsideVisibleFrameAtEdges() {
         let screen = TestScreen(frame: NSRect(x: 0, y: 0, width: 800, height: 600), visibleFrame: NSRect(x: 0, y: 25, width: 800, height: 550))
         let size = NSSize(width: 500, height: 292)
