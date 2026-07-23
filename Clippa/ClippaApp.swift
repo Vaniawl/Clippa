@@ -16,6 +16,30 @@ private struct MenuBarContentView: View {
     @Bindable var appState: AppState
 
     var body: some View {
+        if appState.settings.isCapturePaused {
+            Button {
+                appState.settings.resumeCapture()
+            } label: {
+                Label(appState.settings.capturePauseDescription, systemImage: "pause.circle.fill")
+            }
+            Divider()
+        } else {
+            Menu {
+                Button("15 Minutes") {
+                    appState.settings.pauseCapture(for: 15 * 60)
+                }
+                Button("1 Hour") {
+                    appState.settings.pauseCapture(for: 60 * 60)
+                }
+                Button("Until Tomorrow") {
+                    appState.settings.pauseCapture(for: 24 * 60 * 60)
+                }
+            } label: {
+                Label("Pause History", systemImage: "pause.circle")
+            }
+            Divider()
+        }
+
         if !appState.isAutoPasteReady {
             Button {
                 AccessibilityService.openSystemSettings()

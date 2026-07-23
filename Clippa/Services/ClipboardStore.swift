@@ -170,27 +170,44 @@ final class ClipboardStore {
     }
 
     func filteredItems(query: String, filter: ClipboardFilter) -> [ClipboardItem] {
-        let filteredByKind: [ClipboardItem]
-        switch filter {
-        case .all:
-            filteredByKind = items.filter { !$0.isPinned }
-        case .pinned:
-            filteredByKind = items.filter(\.isPinned)
-        case .text:
-            filteredByKind = items.filter { !$0.isPinned && $0.kind == .text }
-        case .url:
-            filteredByKind = items.filter { !$0.isPinned && $0.kind == .url }
-        case .image:
-            filteredByKind = items.filter { !$0.isPinned && $0.kind == .image }
-        case .files:
-            filteredByKind = items.filter { !$0.isPinned && $0.kind == .files }
+        let parsedQuery = ClipboardSearchQuery(query)
+        return items.filter { item in
+            item.matches(filter: filter, parsedQuery: parsedQuery) &&
+            parsedQuery.matches(item)
         }
+    }
 
-        let cleanedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !cleanedQuery.isEmpty else {
-            return filteredByKind
+    func exportPinnedData() throws -> Data {
+        let archive = PinnedClipboardArchive(items: items.filter(\.isPinned))
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
+        return try encoder.encode(archive)
+    }
+
+    @discardableResult
+    func importPinnedData(_ data: Data, date: Date = Date()) throws -> [ClipboardItem] {
+        let decoder = JSONDecoder()
+        decoder.dateDecodingStrategy = .iso8601
+        let archive = try decoder.decode(PinnedClipboardArchive.self, from: data)
+        let existingHashes = Set(items.map(\.payloadHash))
+        let imported = archive.items.compactMap { item -> ClipboardItem? in
+            guard !existingHashes.contains(item.payloadHash) else {
+                return nil
+            }
+            var importedItem = item
+            importedItem.id = UUID()
+            importedItem.createdAt = date
+            importedItem.lastUsedAt = date
+            importedItem.isPinned = true
+            return importedItem
         }
-        return filteredByKind.filter { $0.payload.searchText.localizedStandardContains(cleanedQuery) }
+        guard !imported.isEmpty else {
+            return []
+        }
+        items.append(contentsOf: imported)
+        applyOrderingAndRetention(now: date)
+        return imported
     }
 
     private func rebuildVisibleItems() {
@@ -270,4 +287,116 @@ final class ClipboardStore {
 private enum PersistenceMode: Sendable {
     case immediate
     case deferred
+}
+
+private struct PinnedClipboardArchive: Codable {
+    var version = 1
+    var exportedAt = Date()
+    var items: [ClipboardItem]
+}
+
+private struct ClipboardSearchQuery {
+    enum DateScope {
+        case today
+        case yesterday
+    }
+
+    var terms: [String] = []
+    var kind: ClipboardItemKind?
+    var pinned: Bool?
+    var source: String?
+    var dateScope: DateScope?
+
+    init(_ rawValue: String) {
+        for token in rawValue.split(whereSeparator: \.isWhitespace).map(String.init) {
+            let lowercased = token.lowercased()
+            if let value = lowercased.value(afterPrefix: "kind:") ?? lowercased.value(afterPrefix: "type:") {
+                kind = ClipboardItemKind(searchToken: value)
+            } else if let value = lowercased.value(afterPrefix: "from:") ?? lowercased.value(afterPrefix: "app:") {
+                source = value
+            } else if let value = lowercased.value(afterPrefix: "is:") {
+                pinned = value == "pinned" ? true : value == "unpinned" ? false : pinned
+            } else if lowercased == "pinned" {
+                pinned = true
+            } else if lowercased == "today" {
+                dateScope = .today
+            } else if lowercased == "yesterday" {
+                dateScope = .yesterday
+            } else {
+                terms.append(token)
+            }
+        }
+    }
+
+    func matches(_ item: ClipboardItem) -> Bool {
+        if let kind, item.kind != kind {
+            return false
+        }
+        if let pinned, item.isPinned != pinned {
+            return false
+        }
+        if let source,
+           item.sourceBundleIdentifier?.localizedCaseInsensitiveContains(source) != true {
+            return false
+        }
+        if let dateScope, !matches(item.lastUsedAt, scope: dateScope) {
+            return false
+        }
+        return terms.allSatisfy { item.payload.searchText.localizedStandardContains($0) }
+    }
+
+    private func matches(_ date: Date, scope: DateScope) -> Bool {
+        let calendar = Calendar.current
+        switch scope {
+        case .today:
+            return calendar.isDateInToday(date)
+        case .yesterday:
+            return calendar.isDateInYesterday(date)
+        }
+    }
+}
+
+private extension ClipboardItem {
+    func matches(filter: ClipboardFilter, parsedQuery: ClipboardSearchQuery) -> Bool {
+        switch filter {
+        case .all:
+            return parsedQuery.pinned == true || !isPinned
+        case .pinned:
+            return isPinned
+        case .text:
+            return kind == .text && (parsedQuery.pinned == true || !isPinned)
+        case .url:
+            return kind == .url && (parsedQuery.pinned == true || !isPinned)
+        case .image:
+            return kind == .image && (parsedQuery.pinned == true || !isPinned)
+        case .files:
+            return kind == .files && (parsedQuery.pinned == true || !isPinned)
+        }
+    }
+}
+
+private extension ClipboardItemKind {
+    init?(searchToken: String) {
+        switch searchToken {
+        case "text", "txt":
+            self = .text
+        case "url", "link", "links":
+            self = .url
+        case "image", "img", "photo":
+            self = .image
+        case "file", "files", "doc":
+            self = .files
+        default:
+            return nil
+        }
+    }
+}
+
+private extension String {
+    func value(afterPrefix prefix: String) -> String? {
+        guard hasPrefix(prefix) else {
+            return nil
+        }
+        return String(dropFirst(prefix.count))
+    }
 }

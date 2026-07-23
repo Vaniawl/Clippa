@@ -238,6 +238,13 @@ enum ClipboardFormatters {
         formatter.unitsStyle = .short
         return formatter
     }()
+
+    static let time: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.timeStyle = .short
+        formatter.dateStyle = .none
+        return formatter
+    }()
 }
 
 @MainActor

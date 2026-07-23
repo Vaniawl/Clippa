@@ -7,6 +7,7 @@ struct PanelView: View {
     var onCopy: @MainActor (ClipboardItem) -> Void
     var onPreview: @MainActor (ClipboardItem) -> Void
     var onOpen: @MainActor (ClipboardItem) -> Void
+    var onExtractText: @MainActor (ClipboardItem) -> Void
     var onTogglePin: @MainActor (ClipboardItem) -> Void
     var onDelete: @MainActor (ClipboardItem) -> Void
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
@@ -183,6 +184,9 @@ struct PanelView: View {
                                 onOpen: {
                                     onOpen(item)
                                 },
+                                onExtractText: {
+                                    onExtractText(item)
+                                },
                                 onTogglePin: {
                                     animate { onTogglePin(item) }
                                 },
@@ -349,6 +353,7 @@ private struct ClipboardRow: View {
     let onCopy: @MainActor () -> Void
     let onPreview: @MainActor () -> Void
     let onOpen: @MainActor () -> Void
+    let onExtractText: @MainActor () -> Void
     let onTogglePin: @MainActor () -> Void
     let onDelete: @MainActor () -> Void
     @State private var isHovering = false
@@ -386,6 +391,11 @@ private struct ClipboardRow: View {
                     Label("Open", systemImage: "arrow.up.forward.square")
                 }
             }
+            if item.kind == .image {
+                Button(action: onExtractText) {
+                    Label("Extract Text", systemImage: "text.viewfinder")
+                }
+            }
             Divider()
             Button(action: onTogglePin) {
                 Label(item.isPinned ? "Unpin" : "Pin", systemImage: item.isPinned ? "pin.slash" : "pin")
@@ -411,6 +421,14 @@ private struct ClipboardRow: View {
                     action: onPreview
                 )
 
+                if item.kind == .image {
+                    RowIconButton(
+                        systemImage: "text.viewfinder",
+                        accessibilityLabel: "Extract Text",
+                        action: onExtractText
+                    )
+                }
+
                 RowIconButton(
                     systemImage: item.isPinned ? "pin.fill" : "pin",
                     accessibilityLabel: item.isPinned ? "Unpin" : "Pin",
@@ -427,9 +445,14 @@ private struct ClipboardRow: View {
             }
         } else {
             Color.clear
-                .frame(width: (DesignSystem.symbolButtonSize * 3) + 4, height: DesignSystem.symbolButtonSize)
+                .frame(width: hiddenActionWidth, height: DesignSystem.symbolButtonSize)
                 .accessibilityHidden(true)
         }
+    }
+
+    private var hiddenActionWidth: CGFloat {
+        let buttonCount: CGFloat = item.kind == .image ? 4 : 3
+        return (DesignSystem.symbolButtonSize * buttonCount) + max(0, buttonCount - 1) * 2
     }
 
     private var rowContent: some View {

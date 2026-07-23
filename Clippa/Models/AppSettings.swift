@@ -183,6 +183,15 @@ final class AppSettings {
     var addSpaceAfterPaste: Bool {
         didSet { persist() }
     }
+    var normalizeCopiedText: Bool {
+        didSet { persist() }
+    }
+    var removeTrackingParametersFromLinks: Bool {
+        didSet { persist() }
+    }
+    var pauseCaptureUntil: Date? {
+        didSet { persist() }
+    }
     var historyRetention: HistoryRetention {
         didSet { persist() }
     }
@@ -208,8 +217,35 @@ final class AppSettings {
         self.addSpaceAfterPaste = defaults.object(forKey: Keys.addSpaceAfterPaste) == nil
             ? true
             : defaults.bool(forKey: Keys.addSpaceAfterPaste)
+        self.normalizeCopiedText = defaults.bool(forKey: Keys.normalizeCopiedText)
+        self.removeTrackingParametersFromLinks = defaults.object(forKey: Keys.removeTrackingParametersFromLinks) == nil
+            ? true
+            : defaults.bool(forKey: Keys.removeTrackingParametersFromLinks)
+        self.pauseCaptureUntil = defaults.object(forKey: Keys.pauseCaptureUntil) as? Date
         self.historyRetention = defaults.string(forKey: Keys.historyRetention).flatMap(HistoryRetention.init(rawValue:)) ?? .oneWeek
         self.historyLimit = HistoryLimit(rawValue: defaults.integer(forKey: Keys.historyLimit)) ?? .oneHundred
+    }
+
+    var isCapturePaused: Bool {
+        guard let pauseCaptureUntil else {
+            return false
+        }
+        return pauseCaptureUntil > Date()
+    }
+
+    var capturePauseDescription: String {
+        guard let pauseCaptureUntil, pauseCaptureUntil > Date() else {
+            return String(localized: "History is active")
+        }
+        return String(localized: "Paused until \(ClipboardFormatters.time.string(from: pauseCaptureUntil))")
+    }
+
+    func pauseCapture(for interval: TimeInterval) {
+        pauseCaptureUntil = Date().addingTimeInterval(interval)
+    }
+
+    func resumeCapture() {
+        pauseCaptureUntil = nil
     }
 
     func addExcludedBundleIdentifier(_ identifier: String) {
@@ -230,6 +266,13 @@ final class AppSettings {
         defaults.set(hasShownAccessibilityOnboarding, forKey: Keys.hasShownAccessibilityOnboarding)
         defaults.set(try? encoder.encode(showPanelShortcut), forKey: Keys.showPanelShortcut)
         defaults.set(addSpaceAfterPaste, forKey: Keys.addSpaceAfterPaste)
+        defaults.set(normalizeCopiedText, forKey: Keys.normalizeCopiedText)
+        defaults.set(removeTrackingParametersFromLinks, forKey: Keys.removeTrackingParametersFromLinks)
+        if let pauseCaptureUntil {
+            defaults.set(pauseCaptureUntil, forKey: Keys.pauseCaptureUntil)
+        } else {
+            defaults.removeObject(forKey: Keys.pauseCaptureUntil)
+        }
         defaults.set(historyRetention.rawValue, forKey: Keys.historyRetention)
         defaults.set(historyLimit.rawValue, forKey: Keys.historyLimit)
     }
@@ -258,6 +301,9 @@ final class AppSettings {
         static let hasShownAccessibilityOnboarding = "hasShownAccessibilityOnboarding"
         static let showPanelShortcut = "showPanelShortcut"
         static let addSpaceAfterPaste = "addSpaceAfterPaste"
+        static let normalizeCopiedText = "normalizeCopiedText"
+        static let removeTrackingParametersFromLinks = "removeTrackingParametersFromLinks"
+        static let pauseCaptureUntil = "pauseCaptureUntil"
         static let historyRetention = "historyRetention"
         static let historyLimit = "historyLimit"
         static let migratedLegacyBundleDefaults = "migratedLegacyBundleDefaults"
@@ -266,6 +312,9 @@ final class AppSettings {
             hasShownAccessibilityOnboarding,
             showPanelShortcut,
             addSpaceAfterPaste,
+            normalizeCopiedText,
+            removeTrackingParametersFromLinks,
+            pauseCaptureUntil,
             historyRetention,
             historyLimit
         ]

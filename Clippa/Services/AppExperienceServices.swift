@@ -1,8 +1,10 @@
 import AppKit
+import ImageIO
 import Observation
 import QuickLookUI
 import ServiceManagement
 import UniformTypeIdentifiers
+import Vision
 
 @MainActor
 @Observable
@@ -129,5 +131,32 @@ final class ClipboardPreviewController: NSObject, @preconcurrency QLPreviewPanel
         } catch {
             return []
         }
+    }
+}
+
+enum ImageTextExtractor {
+    static func recognizeText(in data: Data) async -> String {
+        await Task.detached(priority: .userInitiated) {
+            guard let source = CGImageSourceCreateWithData(data as CFData, nil),
+                  let image = CGImageSourceCreateImageAtIndex(source, 0, nil)
+            else {
+                return ""
+            }
+
+            let request = VNRecognizeTextRequest()
+            request.recognitionLevel = .accurate
+            request.usesLanguageCorrection = true
+
+            let handler = VNImageRequestHandler(cgImage: image)
+            do {
+                try handler.perform([request])
+                return (request.results ?? [])
+                    .compactMap { $0.topCandidates(1).first?.string }
+                    .joined(separator: "\n")
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+            } catch {
+                return ""
+            }
+        }.value
     }
 }

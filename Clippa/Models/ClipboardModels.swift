@@ -168,6 +168,80 @@ enum ClipboardPayload: Codable, Equatable, Sendable {
         }
         return ClipboardImageMetadata(data: data, uti: uti)
     }
+
+    func cleaned(normalizeText: Bool, removeTrackingParameters: Bool) -> ClipboardPayload {
+        switch self {
+        case .text(let value):
+            let text = normalizeText ? ClipboardContentCleaner.normalizedText(value) : value
+            if removeTrackingParameters,
+               let url = URL(string: text),
+               let cleaned = ClipboardContentCleaner.removingTrackingParameters(from: url) {
+                return .url(cleaned)
+            }
+            return .text(text)
+        case .url(let url):
+            guard removeTrackingParameters,
+                  let cleaned = ClipboardContentCleaner.removingTrackingParameters(from: url)
+            else {
+                return self
+            }
+            return .url(cleaned)
+        case .image, .files:
+            return self
+        }
+    }
+}
+
+enum ClipboardContentCleaner {
+    static func normalizedText(_ value: String) -> String {
+        value
+            .replacingOccurrences(of: "\r\n", with: "\n")
+            .replacingOccurrences(of: "\r", with: "\n")
+            .replacingOccurrences(of: "\u{0000}", with: "")
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    static func removingTrackingParameters(from url: URL) -> URL? {
+        guard var components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+              let queryItems = components.queryItems,
+              !queryItems.isEmpty
+        else {
+            return url
+        }
+
+        let filtered = queryItems.filter { item in
+            !trackingParameterNames.contains(item.name.lowercased())
+        }
+        guard filtered.count != queryItems.count else {
+            return url
+        }
+        components.queryItems = filtered.isEmpty ? nil : filtered
+        return components.url
+    }
+
+    private static let trackingParameterNames: Set<String> = [
+        "utm_source",
+        "utm_medium",
+        "utm_campaign",
+        "utm_term",
+        "utm_content",
+        "utm_id",
+        "utm_name",
+        "utm_cid",
+        "utm_reader",
+        "utm_viz_id",
+        "utm_pubreferrer",
+        "fbclid",
+        "gclid",
+        "gbraid",
+        "wbraid",
+        "msclkid",
+        "mc_cid",
+        "mc_eid",
+        "igshid",
+        "ref",
+        "ref_src"
+    ]
 }
 
 struct ClipboardItem: Identifiable, Codable, Equatable, Sendable {

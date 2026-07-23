@@ -24,7 +24,7 @@ final class IOSClipStoreTests: XCTestCase {
     func testSaveCurrentPasteboardClassifiesLinksAndDeduplicates() throws {
         let defaults = try makeDefaults()
         let pasteboard = MockPasteboard()
-        pasteboard.string = "https://github.com/Vaniawl/Clippa"
+        pasteboard.string = "https://github.com/Vaniawl/Clippa?utm_source=test&ref=chat"
         let store = IOSClipStore(defaults: defaults, pasteboard: pasteboard)
 
         XCTAssertTrue(store.saveCurrentPasteboard())
@@ -33,6 +33,7 @@ final class IOSClipStoreTests: XCTestCase {
         XCTAssertEqual(store.clips.count, 1)
         XCTAssertEqual(store.clips.first?.kind, .link)
         XCTAssertEqual(store.clips.first?.title, "github.com")
+        XCTAssertEqual(store.clips.first?.content, "https://github.com/Vaniawl/Clippa?ref=chat")
     }
 
     func testFilteringPinAndDelete() throws {

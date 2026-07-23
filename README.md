@@ -100,7 +100,11 @@ Useful details:
 - Newest copied item stays at the top.
 - Pinned items stay available separately.
 - Optional trailing space for pasted text and links.
-- Context menu supports copy, pin, delete, open, and Quick Look.
+- Context menu supports copy, pin, delete, open, Quick Look, and image text extraction.
+- Search supports plain text plus tokens such as `kind:text`, `type:link`, `from:safari`, `is:pinned`, `today`, and `yesterday`.
+- History saving can be paused temporarily from the menu bar or Privacy settings.
+- Link tracking cleanup removes common `utm_*`, `fbclid`, `gclid`, and similar parameters.
+- Pinned clips can be exported and imported as local JSON.
 - History retention, item limits, excluded apps, and Launch at Login are configurable.
 
 ## iPhone Companion
@@ -111,6 +115,7 @@ The repo also includes an early `Clippa iOS` target. It is a separate iPhone com
 - Tap **Save current clipboard** to store the text, link, or image that is currently copied.
 - Tap any saved clip to copy it back to the system clipboard.
 - Return to the previous app and paste normally.
+- Use Shortcuts or Siri actions to save the current clipboard or open Clippa.
 
 iOS does not allow third-party apps to monitor the clipboard in the background, show a global floating paste window, or paste directly into other apps. This companion app keeps the flow explicit and local.
 
@@ -130,18 +135,18 @@ Accessibility permission is only used to restore focus and paste the selected cl
 
 ## Verification
 
-The current public release is `1.0.12`.
+The current public release is `1.0.13`.
 
 | Check | Status |
 | --- | --- |
 | GitHub Actions CI | Passing |
-| Local Swift tests | 30/30 passing |
+| Local Swift tests | 34/34 passing |
 | Local iOS companion tests | 6/6 passing |
 | Release build | Passing |
 | Smoke launch | Passing |
-| GitHub release | `v1.0.12` live |
-| npm package | `clippa@1.0.12` |
-| Homebrew cask | `clippa 1.0.12` |
+| GitHub release | `v1.0.13` live |
+| npm package | `clippa@1.0.13` |
+| Homebrew cask | `clippa 1.0.13` |
 | Bundle identifier | `app.clippa.Clippa` |
 
 Useful verification commands:
@@ -184,6 +189,6 @@ git pull origin main
 ## Production Notes
 
 - Bundle identifier: `app.clippa.Clippa`
-- Version: `1.0.12`
+- Version: `1.0.13`
 - Release builds use hardened runtime.
 - History retention and item limits are configurable; the default is 100 items for one week.

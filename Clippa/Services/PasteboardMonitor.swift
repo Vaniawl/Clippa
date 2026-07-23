@@ -49,11 +49,17 @@ final class PasteboardMonitor {
         if internalChangeCounts.remove(current) != nil {
             return
         }
+        guard !settings.isCapturePaused else {
+            return
+        }
         let sourceBundleIdentifier = NSWorkspace.shared.frontmostApplication?.bundleIdentifier
         let types = pasteboard.types ?? []
         let filter = PrivacyFilter(excludedBundleIdentifiers: settings.excludedBundleIdentifiers)
         guard filter.shouldCapture(types: types, sourceBundleIdentifier: sourceBundleIdentifier),
-              let payload = readPayload(from: pasteboard) else {
+              let payload = readPayload(from: pasteboard)?.cleaned(
+                normalizeText: settings.normalizeCopiedText,
+                removeTrackingParameters: settings.removeTrackingParametersFromLinks
+              ) else {
             return
         }
         store.add(payload: payload, sourceBundleIdentifier: sourceBundleIdentifier)

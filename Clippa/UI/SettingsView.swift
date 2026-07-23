@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct SettingsView: View {
     @Bindable var appState: AppState
@@ -60,6 +61,13 @@ private struct GeneralSettingsView: View {
                 }
             }
 
+            Section("Clipboard Cleanup") {
+                Toggle("Normalize Text", isOn: normalizeCopiedTextBinding)
+                    .help("Trims copied text and normalizes line endings before saving it.")
+                Toggle("Remove Link Tracking", isOn: removeTrackingParametersBinding)
+                    .help("Removes common tracking parameters such as utm_source, fbclid, and gclid.")
+            }
+
             if let message = appState.launchAtLoginController.message {
                 Text(message)
                     .font(.caption)
@@ -103,6 +111,20 @@ private struct GeneralSettingsView: View {
         )
     }
 
+    private var normalizeCopiedTextBinding: Binding<Bool> {
+        Binding(
+            get: { appState.settings.normalizeCopiedText },
+            set: { appState.settings.normalizeCopiedText = $0 }
+        )
+    }
+
+    private var removeTrackingParametersBinding: Binding<Bool> {
+        Binding(
+            get: { appState.settings.removeTrackingParametersFromLinks },
+            set: { appState.settings.removeTrackingParametersFromLinks = $0 }
+        )
+    }
+
     private var appVersion: String {
         Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0"
     }
@@ -133,6 +155,25 @@ private struct HistorySettingsView: View {
             Section("Current History") {
                 LabeledContent("Items", value: "\(appState.store.items.count)")
                 LabeledContent("Pinned", value: "\(appState.store.pinnedItemCount)")
+            }
+
+            Section("Pinned Clips") {
+                HStack {
+                    Button {
+                        appState.exportPinnedClips()
+                    } label: {
+                        Label("Export Pinned", systemImage: "square.and.arrow.up")
+                    }
+                    .disabled(appState.store.pinnedItemCount == 0)
+
+                    Button {
+                        appState.importPinnedClips()
+                    } label: {
+                        Label("Import Pinned", systemImage: "square.and.arrow.down")
+                    }
+
+                    Spacer()
+                }
             }
 
             Section {
@@ -233,6 +274,33 @@ private struct PrivacySettingsView: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Label(appState.settings.capturePauseDescription, systemImage: appState.settings.isCapturePaused ? "pause.circle.fill" : "checkmark.circle.fill")
+                        .foregroundStyle(appState.settings.isCapturePaused ? Color.orange : Color.green)
+                    Spacer()
+                    if appState.settings.isCapturePaused {
+                        Button("Resume") {
+                            appState.settings.resumeCapture()
+                        }
+                    }
+                }
+
+                HStack {
+                    Button("Pause 15 Min") {
+                        appState.settings.pauseCapture(for: 15 * 60)
+                    }
+                    Button("Pause 1 Hour") {
+                        appState.settings.pauseCapture(for: 60 * 60)
+                    }
+                    Button("Pause Until Tomorrow") {
+                        appState.settings.pauseCapture(for: 24 * 60 * 60)
+                    }
+                }
+            }
+            .padding(12)
+            .background(Color.secondary.opacity(0.08), in: .rect(cornerRadius: 12))
+
             Text("Excluded Applications")
                 .font(.headline)
             Text("Clippa ignores clipboard changes made by these applications.")

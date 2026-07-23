@@ -76,12 +76,13 @@ final class IOSClipStore {
         }
 
         if let url = pasteboard.url {
+            let cleanedURL = IOSClipboardContentCleaner.removingTrackingParameters(from: url) ?? url
             upsert(
                 IOSClip(
                     kind: .link,
-                    title: url.host(percentEncoded: false) ?? url.absoluteString,
-                    detail: url.absoluteString,
-                    content: url.absoluteString
+                    title: cleanedURL.host(percentEncoded: false) ?? cleanedURL.absoluteString,
+                    detail: cleanedURL.absoluteString,
+                    content: cleanedURL.absoluteString
                 )
             )
             lastCopyMessage = "Saved current link."
@@ -91,12 +92,13 @@ final class IOSClipStore {
         if let text = pasteboard.string?.trimmingCharacters(in: .whitespacesAndNewlines),
            !text.isEmpty {
             if let url = URL(string: text), url.scheme?.hasPrefix("http") == true {
+                let cleanedURL = IOSClipboardContentCleaner.removingTrackingParameters(from: url) ?? url
                 upsert(
                     IOSClip(
                         kind: .link,
-                        title: url.host(percentEncoded: false) ?? text.previewLine(limit: 64),
-                        detail: text,
-                        content: text
+                        title: cleanedURL.host(percentEncoded: false) ?? cleanedURL.absoluteString.previewLine(limit: 64),
+                        detail: cleanedURL.absoluteString,
+                        content: cleanedURL.absoluteString
                     )
                 )
             } else {
@@ -228,4 +230,39 @@ private extension String {
         let end = trimmed.index(trimmed.startIndex, offsetBy: limit)
         return "\(trimmed[..<end])..."
     }
+}
+
+enum IOSClipboardContentCleaner {
+    static func removingTrackingParameters(from url: URL) -> URL? {
+        guard var components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+              let queryItems = components.queryItems,
+              !queryItems.isEmpty
+        else {
+            return url
+        }
+        let filtered = queryItems.filter { item in
+            !trackingParameterNames.contains(item.name.lowercased())
+        }
+        guard filtered.count != queryItems.count else {
+            return url
+        }
+        components.queryItems = filtered.isEmpty ? nil : filtered
+        return components.url
+    }
+
+    private static let trackingParameterNames: Set<String> = [
+        "utm_source",
+        "utm_medium",
+        "utm_campaign",
+        "utm_term",
+        "utm_content",
+        "fbclid",
+        "gclid",
+        "gbraid",
+        "wbraid",
+        "msclkid",
+        "mc_cid",
+        "mc_eid",
+        "igshid"
+    ]
 }

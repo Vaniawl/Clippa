@@ -2,6 +2,7 @@ import AppKit
 import Carbon.HIToolbox
 import Foundation
 import SwiftUI
+import UniformTypeIdentifiers
 
 @MainActor
 @Observable
@@ -111,6 +112,26 @@ final class AppState {
         NSWorkspace.shared.open(url)
     }
 
+    func extractText(_ item: ClipboardItem) {
+        guard case .image(let data, _) = item.payload else {
+            NSSound.beep()
+            return
+        }
+        Task {
+            let text = await ImageTextExtractor.recognizeText(in: data)
+            guard !text.isEmpty else {
+                NSSound.beep()
+                return
+            }
+            store.add(
+                payload: .text(text),
+                sourceBundleIdentifier: Bundle.main.bundleIdentifier,
+                date: Date()
+            )
+            store.selectedFilter = .text
+        }
+    }
+
     func togglePin(_ item: ClipboardItem) {
         store.togglePin(item)
     }
@@ -130,6 +151,37 @@ final class AppState {
     func clearAllHistory() {
         let removed = store.clearAll()
         recordUndo(removed)
+    }
+
+    func exportPinnedClips() {
+        let panel = NSSavePanel()
+        panel.title = String(localized: "Export Pinned Clips")
+        panel.nameFieldStringValue = "Clippa Pinned Clips.json"
+        panel.allowedContentTypes = [.json]
+        guard panel.runModal() == .OK, let url = panel.url else {
+            return
+        }
+        do {
+            try store.exportPinnedData().write(to: url, options: .atomic)
+        } catch {
+            NSSound.beep()
+        }
+    }
+
+    func importPinnedClips() {
+        let panel = NSOpenPanel()
+        panel.title = String(localized: "Import Pinned Clips")
+        panel.allowedContentTypes = [.json]
+        panel.allowsMultipleSelection = false
+        panel.canChooseDirectories = false
+        guard panel.runModal() == .OK, let url = panel.url else {
+            return
+        }
+        do {
+            _ = try store.importPinnedData(Data(contentsOf: url))
+        } catch {
+            NSSound.beep()
+        }
     }
 
     func undoLastHistoryAction() {
@@ -257,6 +309,7 @@ final class PanelController {
             onCopy: { [weak appState] item in appState?.copy(item) },
             onPreview: { [weak appState] item in appState?.preview(item) },
             onOpen: { [weak appState] item in appState?.open(item) },
+            onExtractText: { [weak appState] item in appState?.extractText(item) },
             onTogglePin: { [weak appState] item in appState?.togglePin(item) },
             onDelete: { [weak appState] item in appState?.delete(item) }
         )

@@ -181,6 +181,53 @@ final class ClipboardCoreTests: XCTestCase {
         XCTAssertTrue(store.filteredItems(query: "alpha", filter: .text).isEmpty)
     }
 
+    func testAdvancedSearchTokens() {
+        let store = ClipboardStore()
+        let now = Date()
+        store.add(payload: .text("alpha note"), sourceBundleIdentifier: "com.apple.Notes", date: now)
+        store.add(payload: .url(URL(string: "https://example.com/beta")!), sourceBundleIdentifier: "com.apple.Safari", date: now)
+        store.add(payload: .image(data: Data([1]), uti: nil), sourceBundleIdentifier: "com.apple.Preview", date: now.addingTimeInterval(-86_400))
+        store.togglePin(store.items.first { $0.kind == .text }!)
+
+        XCTAssertEqual(store.filteredItems(query: "kind:link beta", filter: .all).first?.kind, .url)
+        XCTAssertEqual(store.filteredItems(query: "from:safari", filter: .all).first?.kind, .url)
+        XCTAssertEqual(store.filteredItems(query: "is:pinned alpha", filter: .all).first?.kind, .text)
+        XCTAssertTrue(store.filteredItems(query: "today kind:image", filter: .all).isEmpty)
+    }
+
+    func testContentCleanerNormalizesTextAndRemovesTrackingParameters() {
+        XCTAssertEqual(
+            ClipboardContentCleaner.normalizedText("  one\r\ntwo\u{0000}  "),
+            "one\ntwo"
+        )
+
+        let dirtyURL = URL(string: "https://example.com/read?utm_source=newsletter&id=42&fbclid=abc")!
+        XCTAssertEqual(
+            ClipboardContentCleaner.removingTrackingParameters(from: dirtyURL)?.absoluteString,
+            "https://example.com/read?id=42"
+        )
+
+        let cleanedPayload = ClipboardPayload.text("https://example.com/?gclid=1&q=clippa")
+            .cleaned(normalizeText: true, removeTrackingParameters: true)
+        XCTAssertEqual(cleanedPayload, .url(URL(string: "https://example.com/?q=clippa")!))
+    }
+
+    func testPinnedExportImportRoundTrip() throws {
+        let source = ClipboardStore()
+        source.add(payload: .text("pinned"), sourceBundleIdentifier: nil, date: Date(timeIntervalSince1970: 1))
+        source.add(payload: .text("regular"), sourceBundleIdentifier: nil, date: Date(timeIntervalSince1970: 2))
+        source.togglePin(source.items.first { $0.preview == "pinned" }!)
+
+        let data = try source.exportPinnedData()
+        let target = ClipboardStore()
+        let imported = try target.importPinnedData(data, date: Date(timeIntervalSince1970: 3))
+
+        XCTAssertEqual(imported.count, 1)
+        XCTAssertEqual(target.items.first?.preview, "pinned")
+        XCTAssertTrue(target.items.first?.isPinned == true)
+        XCTAssertTrue(try target.importPinnedData(data).isEmpty)
+    }
+
     func testDerivedVisibleStateUpdatesOnlyWhenVisibleItemsChange() {
         let store = ClipboardStore()
         let initialRevision = store.visibleItemsRevision
@@ -330,6 +377,31 @@ final class ClipboardCoreTests: XCTestCase {
         settings.addSpaceAfterPaste = false
         settings = AppSettings(defaults: defaults)
         XCTAssertFalse(settings.addSpaceAfterPaste)
+
+        defaults.removePersistentDomain(forName: suiteName)
+    }
+
+    func testPrivacyAndCleanupSettingsPersist() throws {
+        let suiteName = "ClippaTests.privacyCleanup.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+
+        var settings = AppSettings(defaults: defaults)
+        XCTAssertFalse(settings.normalizeCopiedText)
+        XCTAssertTrue(settings.removeTrackingParametersFromLinks)
+        XCTAssertFalse(settings.isCapturePaused)
+
+        settings.normalizeCopiedText = true
+        settings.removeTrackingParametersFromLinks = false
+        settings.pauseCapture(for: 60)
+
+        settings = AppSettings(defaults: defaults)
+        XCTAssertTrue(settings.normalizeCopiedText)
+        XCTAssertFalse(settings.removeTrackingParametersFromLinks)
+        XCTAssertTrue(settings.isCapturePaused)
+
+        settings.resumeCapture()
+        XCTAssertFalse(AppSettings(defaults: defaults).isCapturePaused)
 
         defaults.removePersistentDomain(forName: suiteName)
     }
