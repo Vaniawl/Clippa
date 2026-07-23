@@ -3,6 +3,15 @@ import Observation
 import UIKit
 
 @MainActor
+protocol IOSPasteboard: AnyObject {
+    var string: String? { get set }
+    var url: URL? { get set }
+    var image: UIImage? { get set }
+}
+
+extension UIPasteboard: IOSPasteboard {}
+
+@MainActor
 @Observable
 final class IOSClipStore {
     private(set) var clips: [IOSClip]
@@ -10,13 +19,15 @@ final class IOSClipStore {
     var lastCopyMessage: String?
 
     private let defaults: UserDefaults
+    private let pasteboard: IOSPasteboard
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
     private let clipsKey = "clippa.ios.clips"
     private let maxClips = 200
 
-    init(defaults: UserDefaults = .standard) {
+    init(defaults: UserDefaults = .standard, pasteboard: IOSPasteboard = UIPasteboard.general) {
         self.defaults = defaults
+        self.pasteboard = pasteboard
         if let data = defaults.data(forKey: clipsKey),
            let decoded = try? decoder.decode([IOSClip].self, from: data) {
             self.clips = decoded
@@ -50,7 +61,6 @@ final class IOSClipStore {
 
     @discardableResult
     func saveCurrentPasteboard() -> Bool {
-        let pasteboard = UIPasteboard.general
         if let image = pasteboard.image,
            let data = image.pngData() {
             upsert(
@@ -112,19 +122,19 @@ final class IOSClipStore {
         switch clip.kind {
         case .text:
             guard let content = clip.content else { return false }
-            UIPasteboard.general.string = content
+            pasteboard.string = content
         case .link:
             guard let content = clip.content else { return false }
             if let url = URL(string: content) {
-                UIPasteboard.general.url = url
+                pasteboard.url = url
             } else {
-                UIPasteboard.general.string = content
+                pasteboard.string = content
             }
         case .image:
             guard let data = clip.imageData,
                   let image = UIImage(data: data)
             else { return false }
-            UIPasteboard.general.image = image
+            pasteboard.image = image
         }
 
         if let index = clips.firstIndex(where: { $0.id == clip.id }) {

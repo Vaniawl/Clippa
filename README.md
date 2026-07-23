@@ -136,6 +136,7 @@ The current public release is `1.0.11`.
 | --- | --- |
 | GitHub Actions CI | Passing |
 | Local Swift tests | 30/30 passing |
+| Local iOS companion tests | 5/5 passing |
 | Release build | Passing |
 | Smoke launch | Passing |
 | GitHub release | `v1.0.11` live |
@@ -162,6 +163,7 @@ brew info clippa
 git clone https://github.com/Vaniawl/Clippa.git
 cd Clippa
 xcodebuild -project Clippa.xcodeproj -scheme Clippa -destination 'platform=macOS' test
+xcodebuild -project Clippa.xcodeproj -scheme 'Clippa iOS' -destination 'platform=iOS Simulator,name=iPhone 17 Pro' CODE_SIGNING_ALLOWED=NO test
 SMOKE_LAUNCH=1 ./scripts/release.sh
 ```
 

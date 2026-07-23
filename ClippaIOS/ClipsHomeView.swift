@@ -3,6 +3,7 @@ import SwiftUI
 struct ClipsHomeView: View {
     let store: IOSClipStore
     @State private var searchQuery = ""
+    @State private var previewClip: IOSClip?
 
     var body: some View {
         NavigationStack {
@@ -11,13 +12,15 @@ struct ClipsHomeView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 18) {
                         HeaderView()
+                        WorkflowCard()
                         SaveClipboardButton {
                             store.saveCurrentPasteboard()
                         }
                         FilterStrip(store: store)
                         ClipList(
                             clips: store.filteredClips(query: searchQuery),
-                            store: store
+                            store: store,
+                            onPreview: { previewClip = $0 }
                         )
                     }
                     .padding(.horizontal, 18)
@@ -40,6 +43,10 @@ struct ClipsHomeView: View {
                 }
             }
             .animation(.snappy(duration: 0.22), value: store.lastCopyMessage)
+            .sheet(item: $previewClip) { clip in
+                ClipPreviewSheet(clip: clip, store: store)
+                    .presentationDetents([.medium, .large])
+            }
         }
     }
 }
@@ -63,6 +70,46 @@ private struct HeaderView: View {
                 .lineSpacing(2)
         }
         .padding(.top, 8)
+    }
+}
+
+private struct WorkflowCard: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            WorkflowStep(number: "1", title: "Copy", detail: "Copy text, a link, or an image in another app.")
+            WorkflowStep(number: "2", title: "Save", detail: "Open Clippa and save the current clipboard.")
+            WorkflowStep(number: "3", title: "Paste", detail: "Tap a saved clip, go back, and paste normally.")
+        }
+        .padding(14)
+        .background(.background.opacity(0.82), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(.black.opacity(0.06), lineWidth: 1)
+        )
+    }
+}
+
+private struct WorkflowStep: View {
+    let number: String
+    let title: String
+    let detail: String
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 11) {
+            Text(number)
+                .font(.caption.weight(.bold))
+                .foregroundStyle(.blue)
+                .frame(width: 24, height: 24)
+                .background(.blue.opacity(0.11), in: Circle())
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.subheadline.weight(.semibold))
+                Text(detail)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+        }
     }
 }
 
@@ -130,6 +177,7 @@ private struct FilterStrip: View {
 private struct ClipList: View {
     let clips: [IOSClip]
     let store: IOSClipStore
+    let onPreview: (IOSClip) -> Void
 
     var body: some View {
         VStack(spacing: 10) {
@@ -143,6 +191,8 @@ private struct ClipList: View {
                         store.togglePin(clip)
                     } onDelete: {
                         store.delete(clip)
+                    } onPreview: {
+                        onPreview(clip)
                     }
                 }
             }
@@ -155,50 +205,140 @@ private struct ClipRow: View {
     let onCopy: () -> Void
     let onPin: () -> Void
     let onDelete: () -> Void
+    let onPreview: () -> Void
 
     var body: some View {
-        Button(action: onCopy) {
-            HStack(spacing: 13) {
-                ClipIcon(clip: clip)
-                VStack(alignment: .leading, spacing: 5) {
-                    HStack(spacing: 6) {
-                        Text(clip.title)
-                            .font(.headline)
-                            .foregroundStyle(.primary)
-                            .lineLimit(1)
-                        if clip.isPinned {
-                            Image(systemName: "pin.fill")
-                                .font(.caption.weight(.bold))
-                                .foregroundStyle(.blue)
-                        }
+        HStack(spacing: 13) {
+            ClipIcon(clip: clip)
+            VStack(alignment: .leading, spacing: 5) {
+                HStack(spacing: 6) {
+                    Text(clip.title)
+                        .font(.headline)
+                        .foregroundStyle(.primary)
+                        .lineLimit(1)
+                    if clip.isPinned {
+                        Image(systemName: "pin.fill")
+                            .font(.caption.weight(.bold))
+                            .foregroundStyle(.blue)
                     }
-                    Text(clip.detail)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                        .lineLimit(2)
                 }
-                Spacer(minLength: 12)
-                Image(systemName: "doc.on.clipboard")
+                Text(clip.detail)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+            }
+            Spacer(minLength: 12)
+            Button(action: onPreview) {
+                Image(systemName: "info.circle")
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundStyle(.secondary)
+                    .frame(width: 38, height: 38)
+                    .contentShape(Circle())
             }
-            .padding(14)
-            .background(.background, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .stroke(.black.opacity(0.06), lineWidth: 1)
-            )
+            .buttonStyle(.plain)
+            .accessibilityLabel("Preview clip")
         }
-        .buttonStyle(.plain)
-        .swipeActions(edge: .leading, allowsFullSwipe: true) {
+        .padding(14)
+        .background(.background, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(.black.opacity(0.06), lineWidth: 1)
+        )
+        .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .onTapGesture(perform: onCopy)
+        .contextMenu {
+            Button(action: onCopy) {
+                Label("Copy", systemImage: "doc.on.clipboard")
+            }
+            Button(action: onPreview) {
+                Label("Preview", systemImage: "eye")
+            }
             Button(action: onPin) {
                 Label(clip.isPinned ? "Unpin" : "Pin", systemImage: clip.isPinned ? "pin.slash" : "pin")
             }
-            .tint(.blue)
-        }
-        .swipeActions(edge: .trailing, allowsFullSwipe: true) {
             Button(role: .destructive, action: onDelete) {
                 Label("Delete", systemImage: "trash")
+            }
+        }
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction(named: "Copy", onCopy)
+        .accessibilityAction(named: clip.isPinned ? "Unpin" : "Pin", onPin)
+        .accessibilityAction(named: "Delete", onDelete)
+    }
+}
+
+private struct ClipPreviewSheet: View {
+    let clip: IOSClip
+    let store: IOSClipStore
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 18) {
+                    HStack(spacing: 12) {
+                        ClipIcon(clip: clip)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(clip.kind.title)
+                                .font(.caption.weight(.semibold))
+                                .foregroundStyle(.secondary)
+                            Text(clip.title)
+                                .font(.title3.weight(.bold))
+                                .lineLimit(2)
+                        }
+                    }
+
+                    PreviewBody(clip: clip)
+
+                    Button {
+                        store.copy(clip)
+                        dismiss()
+                    } label: {
+                        Label("Copy and return", systemImage: "doc.on.clipboard")
+                            .font(.headline)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 50)
+                            .background(.blue, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+                            .foregroundStyle(.white)
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(18)
+            }
+            .navigationTitle("Preview")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+            }
+        }
+    }
+}
+
+private struct PreviewBody: View {
+    let clip: IOSClip
+
+    var body: some View {
+        Group {
+            if clip.kind == .image,
+               let data = clip.imageData,
+               let image = UIImage(data: data) {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFit()
+                    .frame(maxWidth: .infinity)
+                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            } else {
+                Text(clip.content ?? clip.detail)
+                    .font(.body)
+                    .textSelection(.enabled)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(16)
+                    .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
             }
         }
     }

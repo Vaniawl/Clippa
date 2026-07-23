@@ -75,11 +75,16 @@ jobs:
       - name: Show toolchain
         run: xcodebuild -version
 
-      - name: Build iPhone companion
+      - name: Test iPhone companion
         run: |
+          IOS_DESTINATION="$(xcrun simctl list devices available | awk -F '[()]' '/iPhone/ {print "platform=iOS Simulator,id="$2; exit}')"
+          if [ -z "$IOS_DESTINATION" ]; then
+            echo "No available iPhone simulator found"
+            exit 1
+          fi
           xcodebuild \
             -project Clippa.xcodeproj \
             -scheme 'Clippa iOS' \
-            -destination 'generic/platform=iOS Simulator' \
+            -destination "$IOS_DESTINATION" \
             CODE_SIGNING_ALLOWED=NO \
-            build
+            test
