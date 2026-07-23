@@ -1,0 +1,43 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1600" height="900" fill="#101112"/>
+  <filter id="shadow" x="255" y="90" width="1090" height="660" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+    <feDropShadow dx="0" dy="34" stdDeviation="40" flood-color="#000000" flood-opacity=".5"/>
+  </filter>
+  <g filter="url(#shadow)">
+    <rect x="330" y="145" width="940" height="535" rx="28" fill="#202223"/>
+    <rect x="330.5" y="145.5" width="939" height="534" rx="27.5" stroke="#FFFFFF" stroke-opacity=".13"/>
+  </g>
+
+  <text x="388" y="218" fill="#F7F8F7" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="34" font-weight="780">Privacy by design</text>
+  <text x="388" y="256" fill="#A7ADAB" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="18">Clipboard history stays on your Mac. No account, no uploads, no analytics.</text>
+
+  <g font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif">
+    <rect x="388" y="318" width="255" height="220" rx="20" fill="#FFFFFF" fill-opacity=".05"/>
+    <circle cx="430" cy="367" r="22" fill="#30D158" fill-opacity=".13"/>
+    <path d="M420 367l7 7 14-16" stroke="#70E083" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+    <text x="388" y="432" fill="#F4F6F5" font-size="22" font-weight="740">Local storage</text>
+    <text x="388" y="466" fill="#A8AEAC" font-size="16">History is written to</text>
+    <text x="388" y="490" fill="#A8AEAC" font-size="16">Application Support on</text>
+    <text x="388" y="514" fill="#A8AEAC" font-size="16">your machine only.</text>
+
+    <rect x="673" y="318" width="255" height="220" rx="20" fill="#FFFFFF" fill-opacity=".05"/>
+    <circle cx="715" cy="367" r="22" fill="#0A84FF" fill-opacity=".14"/>
+    <path d="M704 368h22M715 357v22" stroke="#78BCFF" stroke-width="4" stroke-linecap="round"/>
+    <text x="673" y="432" fill="#F4F6F5" font-size="22" font-weight="740">Encrypted</text>
+    <text x="673" y="466" fill="#A8AEAC" font-size="16">Items are protected</text>
+    <text x="673" y="490" fill="#A8AEAC" font-size="16">with local AES-GCM</text>
+    <text x="673" y="514" fill="#A8AEAC" font-size="16">history encryption.</text>
+
+    <rect x="958" y="318" width="255" height="220" rx="20" fill="#FFFFFF" fill-opacity=".05"/>
+    <circle cx="1000" cy="367" r="22" fill="#FFD60A" fill-opacity=".14"/>
+    <path d="M989 371c8-13 14-19 22-25M991 347l21 24" stroke="#FFD95A" stroke-width="4" stroke-linecap="round"/>
+    <text x="958" y="432" fill="#F4F6F5" font-size="22" font-weight="740">No tracking</text>
+    <text x="958" y="466" fill="#A8AEAC" font-size="16">No telemetry SDKs,</text>
+    <text x="958" y="490" fill="#A8AEAC" font-size="16">cloud clipboard sync,</text>
+    <text x="958" y="514" fill="#A8AEAC" font-size="16">or user accounts.</text>
+  </g>
+
+  <rect x="388" y="582" width="825" height="46" rx="14" fill="#0A84FF" fill-opacity=".13"/>
+  <text x="416" y="611" fill="#7CBCFF" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="17" font-weight="650">Password managers are excluded by default, and users can add more excluded apps.</text>
+  <text x="330" y="755" fill="#7E8582" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="16" font-weight="600">Accessibility access is used only to paste the selected item back into the previous app.</text>
+</svg>

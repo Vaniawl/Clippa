@@ -1,11 +1,12 @@
 <p align="center">
-  <img src="docs/assets/app-icon.png" width="96" height="96" alt="Clippa icon">
+  <img src="docs/assets/app-icon.png" width="108" height="108" alt="Clippa icon">
 </p>
 
 <h1 align="center">Clippa</h1>
 
 <p align="center">
-  Private, keyboard-first clipboard history for macOS.
+  <strong>Private clipboard history for macOS.</strong><br>
+  Open with <code>Command-Shift-V</code>, pick an item, press <code>Return</code>, and keep working.
 </p>
 
 <p align="center">
@@ -19,6 +20,8 @@
 <p align="center">
   <a href="https://vaniawl.github.io/Clippa/">Website</a>
   ·
+  <a href="https://www.npmjs.com/package/clippa">npm</a>
+  ·
   <a href="https://github.com/Vaniawl/Clippa/releases">Releases</a>
   ·
   <a href="#privacy">Privacy</a>
@@ -30,15 +33,15 @@
   <img src="docs/assets/screenshot-panel.svg" alt="Clippa clipboard panel" width="900">
 </p>
 
-## Install Clippa
+## Install
 
-Install the latest release with npm:
+Run the installer with npm:
 
 ```bash
 npx --yes clippa
 ```
 
-Or use Homebrew:
+Or install with Homebrew:
 
 ```bash
 brew tap Vaniawl/clippa
@@ -69,27 +72,73 @@ npx --yes github:Vaniawl/Clippa#main --install-dir ~/Applications
 
 You can also download `Clippa.app.zip` from the latest GitHub release, unzip it, move `Clippa.app` to `/Applications`, and open it.
 
-## How It Works
+## Screenshots
 
-- Runs quietly in the background as a menu-bar app.
-- Press `Command-Shift-V` anywhere to open clipboard history.
-- Use `Up` / `Down` to choose a clipboard item.
-- Use `Left` / `Right` to switch between clipboard filters.
-- Press `Command-P` to pin or unpin the selected item.
-- Press `Enter` or click an item to paste it.
-- Keeps the newest copied item at the top and shows pinned items only in the Pinned filter.
-- Optionally adds one space after pasted text or links.
-- Use the context menu to copy, pin, delete, open, or Quick Look an item.
-- Drag text, links, images, and files directly into other apps.
-- Press `Esc` or click outside the panel to close it.
-- Stores recent text, links, images, and file references locally on your Mac.
-- Supports configurable retention, history limits, excluded apps, and Launch at Login.
+| Clipboard panel | Settings |
+| --- | --- |
+| <img src="docs/assets/screenshot-panel.svg" alt="Clippa clipboard panel"> | <img src="docs/assets/screenshot-settings.svg" alt="Clippa settings window"> |
+
+| Privacy | Install and release |
+| --- | --- |
+| <img src="docs/assets/screenshot-privacy.svg" alt="Clippa privacy overview"> | <img src="docs/assets/screenshot-distribution.svg" alt="Clippa install commands and release checks"> |
+
+## What It Does
+
+Clippa runs quietly in the menu bar. Press `Command-Shift-V` in any app, select a clipboard item with the keyboard or mouse, then press `Return` or click to paste it back into the app you were using.
+
+Core workflow:
+
+- `Command-Shift-V` opens clipboard history.
+- `Up` / `Down` selects items.
+- `Left` / `Right` switches filters.
+- `Return` or click pastes the selected item.
+- `Esc` closes the panel.
+
+Useful details:
+
+- Keeps recent text, links, images, and file references.
+- Newest copied item stays at the top.
+- Pinned items stay available separately.
+- Optional trailing space for pasted text and links.
+- Context menu supports copy, pin, delete, open, and Quick Look.
+- History retention, item limits, excluded apps, and Launch at Login are configurable.
 
 ## Privacy
 
-Clippa does not upload clipboard contents, does not use analytics, and does not require an account. Clipboard history is stored only on your Mac and encrypted locally with a per-user AES-GCM key file in Application Support. Clippa does not read or write Keychain items at startup, so locally signed reinstall builds do not trigger Keychain password prompts.
+Clippa does not upload clipboard contents, does not use analytics, and does not require an account.
+
+Privacy behavior:
+
+- Clipboard history stays on your Mac.
+- Stored history is encrypted locally with AES-GCM.
+- No telemetry, advertising SDKs, account system, or cloud clipboard database.
+- Common password managers are excluded by default.
+- Additional apps can be added to the excluded-apps list.
 
 Accessibility permission is only used to restore focus and paste the selected clip into the app that was active before Clippa opened. If automatic paste is unavailable, Clippa keeps the item on the system clipboard and shows a direct link to the required permission.
+
+## Verification
+
+The current public release is `1.0.11`.
+
+| Check | Status |
+| --- | --- |
+| GitHub Actions CI | Passing |
+| Local Swift tests | 30/30 passing |
+| Release build | Passing |
+| Smoke launch | Passing |
+| GitHub release | `v1.0.11` live |
+| npm package | `clippa@1.0.11` |
+| Homebrew cask | `clippa 1.0.11` |
+| Bundle identifier | `app.clippa.Clippa` |
+
+Useful verification commands:
+
+```bash
+npm view clippa version
+npx --yes clippa --version
+brew info clippa
+```
 
 ## Requirements
 
