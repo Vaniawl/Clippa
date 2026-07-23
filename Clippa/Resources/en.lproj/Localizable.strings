@@ -28,7 +28,7 @@
 "Clippa" = "Clippa";
 "Items" = "Items";
 "Settings" = "Settings";
-"Enable Auto-Paste" = "Enable Auto-Paste";
+"Auto-Paste Needs Access" = "Auto-Paste Needs Access";
 "Quit Clippa" = "Quit Clippa";
 "Private clipboard history" = "Private clipboard history";
 "Shortcut" = "Shortcut";

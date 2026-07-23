@@ -17,10 +17,7 @@ final class AppState {
     let previewController = ClipboardPreviewController()
     let pasteFailureController = PasteFailureController()
     private var undoHistory: [[ClipboardItem]] = []
-
-    var isAutoPasteReady: Bool {
-        AccessibilityService.isTrusted
-    }
+    private(set) var isAutoPasteReady = AccessibilityService.isTrusted
 
     var canUndoHistoryAction: Bool {
         !undoHistory.isEmpty
@@ -38,6 +35,7 @@ final class AppState {
     }
 
     func start() {
+        refreshAccessibilityState()
         Task {
             await store.load()
             monitor.start()
@@ -47,6 +45,10 @@ final class AppState {
             settings.hasShownAccessibilityOnboarding = true
             AccessibilityService.requestPrompt()
         }
+    }
+
+    func refreshAccessibilityState() {
+        isAutoPasteReady = AccessibilityService.isTrusted
     }
 
     func registerShowPanelShortcut() {
@@ -306,7 +308,7 @@ final class PanelController {
         }
     }
 
-    private static func action(for event: NSEvent) -> PanelKeyAction? {
+    static func action(for event: NSEvent) -> PanelKeyAction? {
         let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
         if modifiers == .command {
             switch event.keyCode {
@@ -314,7 +316,7 @@ final class PanelController {
                 return .copy
             case UInt16(kVK_ANSI_Y):
                 return .preview
-            case UInt16(kVK_ANSI_D):
+            case UInt16(kVK_ANSI_P):
                 return .togglePin
             case UInt16(kVK_Delete), UInt16(kVK_ForwardDelete):
                 return .delete
@@ -370,7 +372,7 @@ final class PanelController {
     }
 }
 
-enum PanelKeyAction: Sendable {
+enum PanelKeyAction: Sendable, Equatable {
     case selectNext
     case selectPrevious
     case selectNextFilter

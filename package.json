@@ -1,6 +1,6 @@
 {
   "name": "clippa",
-  "version": "1.0.8",
+  "version": "1.0.9",
   "description": "Installer for Clippa, a private keyboard-first clipboard history app for macOS.",
   "bin": {
     "install-clippa": "bin/install-clippa.js",
