@@ -10,7 +10,7 @@ struct PanelView: View {
     @Environment(\.colorSchemeContrast) private var contrast
 
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 8) {
             headerRow
             Divider()
             results
@@ -24,7 +24,7 @@ struct PanelView: View {
                     .transition(.opacity)
             }
         }
-        .padding(14)
+        .padding(10)
         .frame(width: DesignSystem.panelWidth, height: DesignSystem.panelHeight)
         .background(panelBackground)
         .clipShape(.rect(cornerRadius: DesignSystem.panelCornerRadius))
@@ -33,22 +33,22 @@ struct PanelView: View {
     }
 
     private var headerRow: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 8) {
             Image(systemName: "paperclip.circle.fill")
-                .font(.system(size: 24, weight: .semibold))
+                .font(.system(size: 22, weight: .semibold))
                 .foregroundStyle(Color.accentColor)
 
             VStack(alignment: .leading, spacing: 1) {
                 Text("Clippa")
-                    .font(.headline)
+                    .font(.callout.weight(.semibold))
                 Text("\(store.items.count) \(String(localized: "Items"))")
-                    .font(.caption)
+                    .font(.caption2)
                     .foregroundStyle(.secondary)
             }
 
             Spacer(minLength: 0)
         }
-        .frame(height: 34)
+        .frame(height: 30)
     }
 
     @ViewBuilder
@@ -64,27 +64,38 @@ struct PanelView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         } else {
-            ScrollView {
-                LazyVStack(spacing: 4) {
-                    ForEach(store.visibleItems.prefix(100)) { item in
-                        ClipboardRow(
-                            item: item,
-                            isSelected: item.id == store.selectedItemID,
-                            contrast: contrast,
-                            reduceMotion: reduceMotion
-                        )
-                        .contentShape(.rect)
-                        .onTapGesture {
-                            animate { store.select(item) }
-                            onPasteSelected()
+            ScrollViewReader { proxy in
+                ScrollView {
+                    LazyVStack(spacing: 3) {
+                        ForEach(store.visibleItems) { item in
+                            ClipboardRow(
+                                item: item,
+                                isSelected: item.id == store.selectedItemID,
+                                contrast: contrast,
+                                reduceMotion: reduceMotion
+                            )
+                            .id(item.id)
+                            .contentShape(.rect)
+                            .onTapGesture {
+                                animate { store.select(item) }
+                                onPasteSelected()
+                            }
+                            .transition(.opacity.combined(with: .move(edge: .top)))
                         }
-                        .transition(.opacity.combined(with: .move(edge: .top)))
+                    }
+                    .padding(.vertical, 1)
+                }
+                .scrollIndicators(.automatic)
+                .onChange(of: store.selectedItemID) { _, selectedID in
+                    guard let selectedID else {
+                        return
+                    }
+                    animate {
+                        proxy.scrollTo(selectedID, anchor: .center)
                     }
                 }
-                .padding(.vertical, 2)
+                .animation(reduceMotion ? nil : .snappy(duration: 0.16), value: store.visibleItemsRevision)
             }
-            .scrollIndicators(.automatic)
-            .animation(reduceMotion ? nil : .snappy(duration: 0.16), value: store.visibleItemsRevision)
         }
     }
 
@@ -117,12 +128,12 @@ private struct ClipboardRow: View {
     @State private var isHovering = false
 
     var body: some View {
-        HStack(spacing: 10) {
+        HStack(spacing: 8) {
             ClipboardThumbnailView(item: item, size: DesignSystem.iconWellSize, showsPin: false)
 
-            VStack(alignment: .leading, spacing: 3) {
+            VStack(alignment: .leading, spacing: 2) {
                 Text(rowTitle)
-                    .font(.callout)
+                    .font(.subheadline)
                     .lineLimit(1)
                     .foregroundStyle(.primary)
                 metadataLine
@@ -132,7 +143,7 @@ private struct ClipboardRow: View {
         }
         .onHover { isHovering = $0 }
         .frame(height: DesignSystem.rowHeight)
-        .padding(.horizontal, 10)
+        .padding(.horizontal, 8)
         .background(selectionBackground)
         .overlay {
             RoundedRectangle(cornerRadius: DesignSystem.rowCornerRadius)
