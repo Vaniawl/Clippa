@@ -5,7 +5,13 @@
 <h1 align="center">Clippa</h1>
 
 <p align="center">
-  A small, private macOS clipboard app built around one shortcut: press Command-Shift-V, choose a clip, paste.
+  Private, keyboard-first clipboard history for macOS.
+</p>
+
+<p align="center">
+  <a href="https://github.com/Vaniawl/Clippa/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/Vaniawl/Clippa?style=flat-square"></a>
+  <img alt="macOS 26+" src="https://img.shields.io/badge/macOS-26%2B-111111?style=flat-square">
+  <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-087f78?style=flat-square"></a>
 </p>
 
 <p align="center">
@@ -22,23 +28,18 @@
 
 ## Install Clippa
 
-Install from npm:
+Install the current version directly from GitHub:
+
+```bash
+npx --yes github:Vaniawl/Clippa#main
+```
+
+The npm installer is also available:
 
 ```bash
 npx clippa
-```
-
-Or install the command globally:
-
-```bash
 npm install -g clippa
 clippa
-```
-
-GitHub install is also available:
-
-```bash
-npx github:Vaniawl/Clippa
 ```
 
 Do not use `npx install clippa`: npm treats `install` as the package name in that command. The correct npx command is `npx clippa`.
@@ -50,8 +51,8 @@ Useful installer options:
 ```bash
 npx clippa -- --no-open
 npx clippa -- --install-dir ~/Applications
-npx github:Vaniawl/Clippa -- --no-open
-npx github:Vaniawl/Clippa -- --install-dir ~/Applications
+npx --yes github:Vaniawl/Clippa#main -- --no-open
+npx --yes github:Vaniawl/Clippa#main -- --install-dir ~/Applications
 ```
 
 You can also download `Clippa.app.zip` from the latest GitHub release, unzip it, move `Clippa.app` to `/Applications`, and open it.
@@ -115,6 +116,6 @@ git pull origin main
 ## Production Notes
 
 - Bundle identifier: `com.ivandovhosheia.Clippa`
-- Version: `1.0.6`
+- Version: `1.0.7`
 - Release builds use hardened runtime.
-- Recent history is limited to 100 active items and stored only on this Mac.
+- History retention and item limits are configurable; the default is 100 items for one week.

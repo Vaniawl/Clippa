@@ -1,7 +1,7 @@
 {
   "name": "clippa",
-  "version": "1.0.6",
-  "description": "Installer for Clippa, a private macOS paste panel.",
+  "version": "1.0.7",
+  "description": "Installer for Clippa, a private keyboard-first clipboard history app for macOS.",
   "bin": {
     "install-clippa": "bin/install-clippa.js",
     "clippa": "bin/install-clippa.js"
@@ -28,6 +28,9 @@
   "keywords": [
     "macos",
     "clipboard",
+    "clipboard-manager",
+    "clipboard-history",
+    "privacy",
     "swiftui",
     "productivity"
   ],
