@@ -34,23 +34,11 @@ Install the current version directly from GitHub:
 npx --yes github:Vaniawl/Clippa#main
 ```
 
-The npm installer is also available:
-
-```bash
-npx clippa
-npm install -g clippa
-clippa
-```
-
-Do not use `npx install clippa`: npm treats `install` as the package name in that command. The correct npx command is `npx clippa`.
-
 After it opens, grant Accessibility access when macOS asks. Clippa needs that permission only to paste the selected item into the app where your cursor is already active.
 
 Useful installer options:
 
 ```bash
-npx clippa -- --no-open
-npx clippa -- --install-dir ~/Applications
 npx --yes github:Vaniawl/Clippa#main -- --no-open
 npx --yes github:Vaniawl/Clippa#main -- --install-dir ~/Applications
 ```
@@ -94,15 +82,6 @@ The packaged app is written to:
 
 ```bash
 outputs/Clippa.app.zip
-```
-
-## npm Publish
-
-The npm installer package is prepared as `clippa`. Publishing to npm requires an authenticated npm session:
-
-```bash
-npm adduser
-npm publish --access public
 ```
 
 ## Update From Git
