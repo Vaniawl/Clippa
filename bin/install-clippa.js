@@ -7,10 +7,10 @@ const path = require("node:path");
 const https = require("node:https");
 
 const appName = "Clippa";
-const bundleIdentifier = "com.ivandovhosheia.Clippa";
+const bundleIdentifiers = ["io.github.vaniawl.Clippa", "com.ivandovhosheia.Clippa"];
 const localZipPath = path.resolve(__dirname, "../outputs/Clippa.app.zip");
 const packageJson = require("../package.json");
-const defaultZipUrl = "https://github.com/Vaniawl/Clippa/releases/download/v1.0.9/Clippa.app.zip";
+const defaultZipUrl = "https://github.com/Vaniawl/Clippa/releases/download/v1.0.10/Clippa.app.zip";
 const zipUrl = process.env.CLIPPA_ZIP_URL || defaultZipUrl;
 
 function usage() {
@@ -116,17 +116,20 @@ function copyApp(source, destination) {
 }
 
 function quitRunningApp() {
-  try {
-    run("/usr/bin/osascript", ["-e", `tell application id "${bundleIdentifier}" to quit`], {
-      stdio: "ignore",
-      timeout: 3000
-    });
-  } catch {
+  for (const bundleIdentifier of bundleIdentifiers) {
     try {
-      run("/usr/bin/killall", [appName], { stdio: "ignore", timeout: 3000 });
+      run("/usr/bin/osascript", ["-e", `tell application id "${bundleIdentifier}" to quit`], {
+        stdio: "ignore",
+        timeout: 3000
+      });
     } catch {
-      // The app may not be running yet.
+      // The app may not be registered with this bundle identifier.
     }
+  }
+  try {
+    run("/usr/bin/killall", [appName], { stdio: "ignore", timeout: 3000 });
+  } catch {
+    // The app may not be running yet.
   }
 }
 
