@@ -466,7 +466,7 @@
             <a class="button" href="https://github.com/Vaniawl/Clippa">View on GitHub</a>
           </div>
           <div class="command">
-            <code>brew tap Vaniawl/clippa && brew install clippa</code>
+            <code>npx --yes clippa</code>
             <span>macOS 26+</span>
           </div>
         </div>
@@ -524,11 +524,14 @@
       <section class="section install-section" id="install">
         <h2>Install in one command.</h2>
         <div class="section-copy">
-          <p>Install with Homebrew Cask, install from GitHub with the current app archive, or download the ZIP manually. Clippa requests Accessibility only so it can paste the selected clip into the app you were already using, and points you to that permission if automatic paste is unavailable.</p>
-          <div class="install-code">brew tap Vaniawl/clippa
+          <p>Install the latest release from npm, use Homebrew Cask, install the current main build from GitHub, or download the ZIP manually. Clippa requests Accessibility only so it can paste the selected clip into the app you were already using, and points you to that permission if automatic paste is unavailable.</p>
+          <div class="install-code">npx --yes clippa
+
+# Homebrew
+brew tap Vaniawl/clippa
 brew install clippa
 
-# Alternative GitHub installer
+# Current main build
 npx --yes github:Vaniawl/Clippa#main
 
 # Install somewhere other than /Applications
