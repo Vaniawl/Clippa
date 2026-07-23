@@ -102,6 +102,32 @@ final class ClipboardCoreTests: XCTestCase {
         XCTAssertEqual(store.items.first?.preview, "item 119")
     }
 
+    func testConfigurableHistoryLimitIsApplied() {
+        let store = ClipboardStore(
+            policy: ClipboardHistoryPolicy(retention: .forever, limit: .fifty)
+        )
+        for index in 0..<75 {
+            store.add(
+                payload: .text("item \(index)"),
+                sourceBundleIdentifier: nil,
+                date: Date(timeIntervalSince1970: TimeInterval(index))
+            )
+        }
+
+        XCTAssertEqual(store.items.count, 50)
+        XCTAssertEqual(store.items.first?.preview, "item 74")
+    }
+
+    func testForeverRetentionKeepsOldUnpinnedItems() {
+        let store = ClipboardStore(
+            policy: ClipboardHistoryPolicy(retention: .forever, limit: .oneHundred)
+        )
+        store.add(payload: .text("old"), sourceBundleIdentifier: nil, date: Date(timeIntervalSince1970: 0))
+        store.applyOrderingAndRetention(now: Date(timeIntervalSince1970: 365 * 24 * 60 * 60))
+
+        XCTAssertEqual(store.items.map(\.preview), ["old"])
+    }
+
     func testRetentionKeepsPinnedAndRemovesOldUnpinned() {
         let store = ClipboardStore()
         let old = Date(timeIntervalSince1970: 0)
@@ -172,6 +198,14 @@ final class ClipboardCoreTests: XCTestCase {
         XCTAssertEqual(item.imageMetadata?.heightPixels, 3)
         XCTAssertEqual(item.imageMetadata?.byteCount, data.count)
         XCTAssertEqual(item.imageMetadata?.uti, "public.png")
+    }
+
+    func testImageThumbnailIsDownsampledForPanelRendering() async throws {
+        let data = try makePNGData(width: 800, height: 400)
+        let loadedImage = await ClipboardImageCache.image(for: UUID().uuidString, data: data)
+        let image = try XCTUnwrap(loadedImage)
+
+        XCTAssertLessThanOrEqual(max(image.size.width, image.size.height), 256)
     }
 
     func testPrivacyMarkersAndExcludedBundleIDs() {
@@ -245,6 +279,48 @@ final class ClipboardCoreTests: XCTestCase {
 
         settings = AppSettings(defaults: defaults)
         XCTAssertEqual(settings.showPanelShortcut.displayString, "⇧⌘V")
+
+        defaults.removePersistentDomain(forName: suiteName)
+    }
+
+    func testPanelDesignPersists() throws {
+        let suiteName = "ClippaTests.panelDesign.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+
+        var settings = AppSettings(defaults: defaults)
+        XCTAssertEqual(settings.panelDesign, .glass)
+
+        settings.panelDesign = .compact
+        settings = AppSettings(defaults: defaults)
+        XCTAssertEqual(settings.panelDesign, .compact)
+
+        settings.panelDesign = .focus
+        settings = AppSettings(defaults: defaults)
+        XCTAssertEqual(settings.panelDesign, .focus)
+
+        defaults.removePersistentDomain(forName: suiteName)
+    }
+
+    func testHistoryAndMonitoringSettingsPersist() throws {
+        let suiteName = "ClippaTests.historySettings.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+
+        var settings = AppSettings(defaults: defaults)
+        XCTAssertEqual(settings.historyPolicy, .default)
+        XCTAssertFalse(settings.isMonitoringPaused)
+
+        settings.historyRetention = .oneMonth
+        settings.historyLimit = .fiveHundred
+        settings.isMonitoringPaused = true
+
+        settings = AppSettings(defaults: defaults)
+        XCTAssertEqual(
+            settings.historyPolicy,
+            ClipboardHistoryPolicy(retention: .oneMonth, limit: .fiveHundred)
+        )
+        XCTAssertTrue(settings.isMonitoringPaused)
 
         defaults.removePersistentDomain(forName: suiteName)
     }

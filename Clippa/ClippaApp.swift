@@ -7,134 +7,87 @@ struct ClippaApp: App {
 
     var body: some Scene {
         MenuBarExtra("Clippa", systemImage: "paperclip") {
-            Button("Show Panel") {
-                appDelegate.appState.panelController.show(appState: appDelegate.appState)
-            }
-            Button("Settings") {
-                appDelegate.appState.showSettings()
-            }
-            Divider()
-            Button("Quit") {
-                appDelegate.appState.quit()
-            }
+            MenuBarContentView(appState: appDelegate.appState)
         }
     }
 }
 
-struct SettingsView: View {
+private struct MenuBarContentView: View {
     @Bindable var appState: AppState
-    @State private var accessibilityTrusted = AccessibilityService.isTrusted
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            HStack(spacing: 12) {
-                Image(systemName: "paperclip.circle.fill")
-                    .font(.system(size: 32, weight: .semibold))
-                    .foregroundStyle(Color.accentColor)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Clippa")
-                        .font(.title3.weight(.semibold))
-                    Text("Version \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0")")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                Spacer()
-            }
+        if appState.settings.isMonitoringPaused {
+            Label("Monitoring Paused", systemImage: "pause.circle.fill")
+        } else {
+            Text(historySummary)
+        }
 
-            VStack(spacing: 0) {
-                SettingsRow(title: "Shortcut", value: appState.settings.showPanelShortcut.displayString)
-                Divider()
-                SettingsRow(title: "History", value: "\(appState.store.items.count) \(String(localized: "Items"))")
-                Divider()
-                SettingsRow(
-                    title: "Accessibility",
-                    value: accessibilityTrusted ? String(localized: "Ready") : String(localized: "Needs access")
-                ) {
-                    Button("Open") {
-                        AccessibilityService.openSystemSettings()
-                    }
-                }
-            }
-            .background(.regularMaterial, in: .rect(cornerRadius: 12))
-
-            HStack {
-                Button("Clear History", role: .destructive) {
-                    _ = appState.store.clearAll()
-                }
-                .disabled(appState.store.items.isEmpty)
-
-                Spacer()
-
-                Button("Quit") {
-                    appState.quit()
-                }
+        if !appState.isAutoPasteReady {
+            Button {
+                AccessibilityService.openSystemSettings()
+            } label: {
+                Label("Enable Auto-Paste", systemImage: "accessibility")
             }
         }
-        .padding(20)
-        .frame(width: 420)
-        .onAppear {
-            accessibilityTrusted = AccessibilityService.isTrusted
-        }
-    }
-}
 
-private struct SettingsRow<Trailing: View>: View {
-    let title: LocalizedStringKey
-    let value: String
-    @ViewBuilder var trailing: Trailing
-
-    init(title: LocalizedStringKey, value: String, @ViewBuilder trailing: () -> Trailing) {
-        self.title = title
-        self.value = value
-        self.trailing = trailing()
-    }
-
-    init(title: LocalizedStringKey, value: String) where Trailing == EmptyView {
-        self.title = title
-        self.value = value
-        self.trailing = EmptyView()
-    }
-
-    var body: some View {
-        HStack(spacing: 12) {
-            Text(title)
-                .foregroundStyle(.secondary)
-            Spacer()
-            Text(value)
-                .fontWeight(.medium)
-                .lineLimit(1)
-            trailing
-        }
-        .font(.callout)
-        .padding(.horizontal, 14)
-        .frame(height: 44)
-    }
-}
-
-@MainActor
-final class SettingsWindowController {
-    private var window: NSWindow?
-
-    func show(appState: AppState) {
-        if let window {
-            window.makeKeyAndOrderFront(nil)
-            NSApp.activate(ignoringOtherApps: true)
-            return
+        Button {
+            appState.setMonitoringPaused(!appState.settings.isMonitoringPaused)
+        } label: {
+            Label(
+                appState.settings.isMonitoringPaused ? "Resume Clipboard Monitoring" : "Pause Clipboard Monitoring",
+                systemImage: appState.settings.isMonitoringPaused ? "play.fill" : "pause.fill"
+            )
         }
 
-        let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 420, height: 260),
-            styleMask: [.titled, .closable, .miniaturizable],
-            backing: .buffered,
-            defer: false
+        Menu {
+            Picker("Appearance", selection: panelDesignBinding) {
+                ForEach(PanelDesign.allCases) { design in
+                    Label(design.displayName, systemImage: design.symbolName)
+                        .tag(design)
+                }
+            }
+        } label: {
+            Label("Appearance", systemImage: appState.settings.panelDesign.symbolName)
+        }
+
+        Divider()
+
+        if appState.canUndoHistoryAction {
+            Button {
+                appState.undoLastHistoryAction()
+            } label: {
+                Label("Undo History Change", systemImage: "arrow.uturn.backward")
+            }
+            .keyboardShortcut("z", modifiers: .command)
+        }
+
+        Button {
+            appState.showSettings()
+        } label: {
+            Label("Settings", systemImage: "gearshape")
+        }
+        .keyboardShortcut(",", modifiers: .command)
+
+        Divider()
+
+        Button {
+            appState.quit()
+        } label: {
+            Label("Quit Clippa", systemImage: "power")
+        }
+        .keyboardShortcut("q", modifiers: .command)
+    }
+
+    private var historySummary: String {
+        let count = appState.store.items.count
+        return "\(count) \(String(localized: "Items")) · \(appState.settings.showPanelShortcut.displayString)"
+    }
+
+    private var panelDesignBinding: Binding<PanelDesign> {
+        Binding(
+            get: { appState.settings.panelDesign },
+            set: { appState.settings.panelDesign = $0 }
         )
-        window.title = String(localized: "Clippa Settings")
-        window.isReleasedWhenClosed = false
-        window.center()
-        window.contentView = NSHostingView(rootView: SettingsView(appState: appState))
-        self.window = window
-        window.makeKeyAndOrderFront(nil)
-        NSApp.activate(ignoringOtherApps: true)
     }
 }
 

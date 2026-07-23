@@ -59,17 +59,20 @@ You can also download `Clippa.app.zip` from the latest GitHub release, unzip it,
 ## How It Works
 
 - Runs quietly in the background as a menu-bar app.
-- Press `Command-Shift-V` while your cursor is in a text field.
+- Press `Command-Shift-V` anywhere to open clipboard history.
 - Use `Up` / `Down` to choose a clipboard item.
 - Press `Enter` or click an item to paste it.
+- Use the context menu to copy, pin, delete, open, or Quick Look an item.
+- Drag text, links, images, and files directly into other apps.
 - Press `Esc` or click outside the panel to close it.
 - Stores recent text, links, images, and file references locally on your Mac.
+- Supports configurable retention, history limits, excluded apps, monitoring pause, and Launch at Login.
 
 ## Privacy
 
 Clippa does not upload clipboard contents, does not use analytics, and does not require an account. Clipboard history is stored only on your Mac and encrypted locally with a per-user AES-GCM key file in Application Support. Clippa does not read or write Keychain items at startup, so locally signed reinstall builds do not trigger Keychain password prompts.
 
-Accessibility permission is only used to confirm there is an editable field under the cursor and to paste the selected clip into that frontmost app.
+Accessibility permission is only used to restore focus and paste the selected clip into the app that was active before Clippa opened. Without it, Clippa still copies the selected item to the system clipboard.
 
 ## Requirements
 
@@ -111,6 +114,6 @@ git pull origin main
 ## Production Notes
 
 - Bundle identifier: `com.ivandovhosheia.Clippa`
-- Version: `1.0.0`
+- Version: `1.0.6`
 - Release builds use hardened runtime.
 - Recent history is limited to 100 active items and stored only on this Mac.

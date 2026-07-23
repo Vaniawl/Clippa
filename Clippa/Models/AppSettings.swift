@@ -3,6 +3,74 @@ import Carbon.HIToolbox
 import Foundation
 import Observation
 
+enum HistoryRetention: String, Codable, CaseIterable, Identifiable, Sendable {
+    case oneDay
+    case oneWeek
+    case oneMonth
+    case forever
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .oneDay: String(localized: "1 Day")
+        case .oneWeek: String(localized: "1 Week")
+        case .oneMonth: String(localized: "1 Month")
+        case .forever: String(localized: "Forever")
+        }
+    }
+
+    var timeInterval: TimeInterval? {
+        switch self {
+        case .oneDay: 24 * 60 * 60
+        case .oneWeek: 7 * 24 * 60 * 60
+        case .oneMonth: 30 * 24 * 60 * 60
+        case .forever: nil
+        }
+    }
+}
+
+enum HistoryLimit: Int, Codable, CaseIterable, Identifiable, Sendable {
+    case fifty = 50
+    case oneHundred = 100
+    case twoHundredFifty = 250
+    case fiveHundred = 500
+
+    var id: Int { rawValue }
+    var displayName: String { "\(rawValue)" }
+}
+
+struct ClipboardHistoryPolicy: Equatable, Sendable {
+    var retention: HistoryRetention
+    var limit: HistoryLimit
+
+    static let `default` = ClipboardHistoryPolicy(retention: .oneWeek, limit: .oneHundred)
+}
+
+enum PanelDesign: String, Codable, CaseIterable, Identifiable, Sendable {
+    case glass
+    case focus
+    case compact
+
+    var id: String { rawValue }
+
+    var displayName: String {
+        switch self {
+        case .glass: String(localized: "Glass")
+        case .focus: String(localized: "Focus")
+        case .compact: String(localized: "Compact")
+        }
+    }
+
+    var symbolName: String {
+        switch self {
+        case .glass: "sparkles"
+        case .focus: "scope"
+        case .compact: "rectangle.compress.vertical"
+        }
+    }
+}
+
 struct HotKeyShortcut: Codable, Equatable, Sendable {
     var keyCode: UInt32
     var modifiers: UInt32
@@ -136,6 +204,22 @@ final class AppSettings {
     var showPanelShortcut: HotKeyShortcut {
         didSet { persist() }
     }
+    var panelDesign: PanelDesign {
+        didSet { persist() }
+    }
+    var isMonitoringPaused: Bool {
+        didSet { persist() }
+    }
+    var historyRetention: HistoryRetention {
+        didSet { persist() }
+    }
+    var historyLimit: HistoryLimit {
+        didSet { persist() }
+    }
+
+    var historyPolicy: ClipboardHistoryPolicy {
+        ClipboardHistoryPolicy(retention: historyRetention, limit: historyLimit)
+    }
 
     private let defaults: UserDefaults
     private let encoder = JSONEncoder()
@@ -145,6 +229,10 @@ final class AppSettings {
         self.excludedBundleIdentifiers = defaults.array(forKey: Keys.excludedBundleIdentifiers) as? [String] ?? PrivacyFilter.defaultExcludedBundleIdentifiers
         self.hasShownAccessibilityOnboarding = defaults.bool(forKey: Keys.hasShownAccessibilityOnboarding)
         self.showPanelShortcut = .defaultShowPanel
+        self.panelDesign = defaults.string(forKey: Keys.panelDesign).flatMap(PanelDesign.init(rawValue:)) ?? .glass
+        self.isMonitoringPaused = defaults.bool(forKey: Keys.isMonitoringPaused)
+        self.historyRetention = defaults.string(forKey: Keys.historyRetention).flatMap(HistoryRetention.init(rawValue:)) ?? .oneWeek
+        self.historyLimit = HistoryLimit(rawValue: defaults.integer(forKey: Keys.historyLimit)) ?? .oneHundred
     }
 
     func addExcludedBundleIdentifier(_ identifier: String) {
@@ -164,11 +252,19 @@ final class AppSettings {
         defaults.set(excludedBundleIdentifiers, forKey: Keys.excludedBundleIdentifiers)
         defaults.set(hasShownAccessibilityOnboarding, forKey: Keys.hasShownAccessibilityOnboarding)
         defaults.set(try? encoder.encode(showPanelShortcut), forKey: Keys.showPanelShortcut)
+        defaults.set(panelDesign.rawValue, forKey: Keys.panelDesign)
+        defaults.set(isMonitoringPaused, forKey: Keys.isMonitoringPaused)
+        defaults.set(historyRetention.rawValue, forKey: Keys.historyRetention)
+        defaults.set(historyLimit.rawValue, forKey: Keys.historyLimit)
     }
 
     private enum Keys {
         static let excludedBundleIdentifiers = "excludedBundleIdentifiers"
         static let hasShownAccessibilityOnboarding = "hasShownAccessibilityOnboarding"
         static let showPanelShortcut = "showPanelShortcut"
+        static let panelDesign = "panelDesign"
+        static let isMonitoringPaused = "isMonitoringPaused"
+        static let historyRetention = "historyRetention"
+        static let historyLimit = "historyLimit"
     }
 }

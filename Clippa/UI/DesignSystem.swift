@@ -1,15 +1,88 @@
 import AppKit
+import ImageIO
 import SwiftUI
 
 enum DesignSystem {
-    static let panelWidth: CGFloat = 540
-    static let panelHeight: CGFloat = 360
-    static let panelCornerRadius: CGFloat = 18
-    static let rowHeight: CGFloat = 48
+    static let panelWidth: CGFloat = 560
+    static let panelHeight: CGFloat = 430
+    static let panelCornerRadius: CGFloat = 22
+    static let rowHeight: CGFloat = 58
     static let controlHeight: CGFloat = 36
-    static let rowCornerRadius: CGFloat = 8
-    static let iconWellSize: CGFloat = 32
-    static let symbolButtonSize: CGFloat = 24
+    static let rowCornerRadius: CGFloat = 12
+    static let iconWellSize: CGFloat = 38
+    static let symbolButtonSize: CGFloat = 28
+    static let filterHeight: CGFloat = 30
+}
+
+struct PanelDesignMetrics {
+    let panelPadding: CGFloat
+    let panelCornerRadius: CGFloat
+    let contentSpacing: CGFloat
+    let headerHeight: CGFloat
+    let rowHeight: CGFloat
+    let rowCornerRadius: CGFloat
+    let rowSpacing: CGFloat
+    let iconWellSize: CGFloat
+    let thumbnailCornerRadius: CGFloat
+    let searchCornerRadius: CGFloat
+    let shadowOpacity: CGFloat
+    let shadowRadius: CGFloat
+    let shadowY: CGFloat
+}
+
+extension PanelDesign {
+    var metrics: PanelDesignMetrics {
+        switch self {
+        case .glass:
+            PanelDesignMetrics(
+                panelPadding: 12,
+                panelCornerRadius: DesignSystem.panelCornerRadius,
+                contentSpacing: 10,
+                headerHeight: 38,
+                rowHeight: DesignSystem.rowHeight,
+                rowCornerRadius: DesignSystem.rowCornerRadius,
+                rowSpacing: 10,
+                iconWellSize: DesignSystem.iconWellSize,
+                thumbnailCornerRadius: 8,
+                searchCornerRadius: 10,
+                shadowOpacity: 0.18,
+                shadowRadius: 28,
+                shadowY: 18
+            )
+        case .focus:
+            PanelDesignMetrics(
+                panelPadding: 14,
+                panelCornerRadius: 24,
+                contentSpacing: 12,
+                headerHeight: 42,
+                rowHeight: 62,
+                rowCornerRadius: 14,
+                rowSpacing: 11,
+                iconWellSize: 40,
+                thumbnailCornerRadius: 10,
+                searchCornerRadius: 12,
+                shadowOpacity: 0.20,
+                shadowRadius: 34,
+                shadowY: 20
+            )
+        case .compact:
+            PanelDesignMetrics(
+                panelPadding: 10,
+                panelCornerRadius: 16,
+                contentSpacing: 8,
+                headerHeight: 34,
+                rowHeight: 46,
+                rowCornerRadius: 8,
+                rowSpacing: 8,
+                iconWellSize: 30,
+                thumbnailCornerRadius: 6,
+                searchCornerRadius: 8,
+                shadowOpacity: 0.12,
+                shadowRadius: 18,
+                shadowY: 10
+            )
+        }
+    }
 }
 
 struct ClipboardThumbnailView: View {
@@ -17,6 +90,7 @@ struct ClipboardThumbnailView: View {
     var size: CGFloat
     var cornerRadius: CGFloat = 8
     var showsPin = false
+    @State private var image: NSImage?
 
     var body: some View {
         ZStack(alignment: .topTrailing) {
@@ -38,19 +112,26 @@ struct ClipboardThumbnailView: View {
             }
         }
         .accessibilityHidden(true)
+        .task(id: item.payloadHash) {
+            guard case .image(let data, _) = item.payload else {
+                image = nil
+                return
+            }
+            image = await ClipboardImageCache.image(for: item.payloadHash, data: data)
+        }
     }
 
     @ViewBuilder
     private var thumbnail: some View {
         switch item.payload {
-        case .image(let data, _):
-            if let image = ClipboardImageCache.image(for: item.payloadHash, data: data) {
+        case .image:
+            if let image {
                 Image(nsImage: image)
                     .resizable()
                     .scaledToFill()
                     .background(Color.secondary.opacity(0.08))
             } else {
-                fallbackIcon(symbol: "photo.badge.exclamationmark", color: .orange)
+                fallbackIcon(symbol: "photo", color: .secondary)
             }
         case .text:
             fallbackIcon(symbol: item.kind.symbolName, color: .secondary)
@@ -106,15 +187,27 @@ enum ClipboardImageCache {
         return cache
     }()
 
-    static func image(for key: String, data: Data) -> NSImage? {
+    static func image(for key: String, data: Data) async -> NSImage? {
         let cacheKey = key as NSString
         if let image = cache.object(forKey: cacheKey) {
             return image
         }
-        guard let image = NSImage(data: data) else {
+        let cgImage = await Task.detached(priority: .utility) {
+            guard let source = CGImageSourceCreateWithData(data as CFData, nil) else {
+                return nil as CGImage?
+            }
+            let options: [CFString: Any] = [
+                kCGImageSourceCreateThumbnailFromImageAlways: true,
+                kCGImageSourceCreateThumbnailWithTransform: true,
+                kCGImageSourceThumbnailMaxPixelSize: 256
+            ]
+            return CGImageSourceCreateThumbnailAtIndex(source, 0, options as CFDictionary)
+        }.value
+        guard let cgImage else {
             return nil
         }
-        cache.setObject(image, forKey: cacheKey, cost: data.count)
+        let image = NSImage(cgImage: cgImage, size: .zero)
+        cache.setObject(image, forKey: cacheKey, cost: min(data.count, 256 * 256 * 4))
         return image
     }
 }
@@ -138,11 +231,51 @@ enum ApplicationDisplayNameCache {
     }
 }
 
+struct ApplicationIconView: View {
+    let bundleIdentifier: String
+    let size: CGFloat
+
+    var body: some View {
+        Image(nsImage: ApplicationIconCache.icon(for: bundleIdentifier))
+            .resizable()
+            .scaledToFit()
+            .frame(width: size, height: size)
+            .accessibilityHidden(true)
+    }
+}
+
+@MainActor
+enum ApplicationIconCache {
+    private static let icons = NSCache<NSString, NSImage>()
+
+    static func icon(for bundleIdentifier: String) -> NSImage {
+        let key = bundleIdentifier as NSString
+        if let cached = icons.object(forKey: key) {
+            return cached
+        }
+        let icon: NSImage
+        if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleIdentifier) {
+            icon = NSWorkspace.shared.icon(forFile: url.path)
+        } else {
+            icon = NSImage(systemSymbolName: "app.dashed", accessibilityDescription: nil) ?? NSImage()
+        }
+        icons.setObject(icon, forKey: key)
+        return icon
+    }
+}
+
 @MainActor
 enum ClipboardFormatters {
     static let byteCount: ByteCountFormatter = {
         let formatter = ByteCountFormatter()
         formatter.countStyle = .file
+        return formatter
+    }()
+
+    static let relativeDateTime: RelativeDateTimeFormatter = {
+        let formatter = RelativeDateTimeFormatter()
+        formatter.dateTimeStyle = .named
+        formatter.unitsStyle = .short
         return formatter
     }()
 }
