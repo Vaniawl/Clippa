@@ -39,8 +39,8 @@ After it opens, grant Accessibility access when macOS asks. Clippa needs that pe
 Useful installer options:
 
 ```bash
-npx --yes github:Vaniawl/Clippa#main -- --no-open
-npx --yes github:Vaniawl/Clippa#main -- --install-dir ~/Applications
+npx --yes github:Vaniawl/Clippa#main --no-open
+npx --yes github:Vaniawl/Clippa#main --install-dir ~/Applications
 ```
 
 You can also download `Clippa.app.zip` from the latest GitHub release, unzip it, move `Clippa.app` to `/Applications`, and open it.
