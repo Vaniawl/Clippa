@@ -22,23 +22,34 @@
 
 ## Install Clippa
 
-Install the current GitHub build:
+Install from npm:
+
+```bash
+npx clippa
+```
+
+Or install the command globally:
+
+```bash
+npm install -g clippa
+clippa
+```
+
+GitHub install is also available:
 
 ```bash
 npx github:Vaniawl/Clippa
 ```
 
-After npm publish, the public install command will be:
-
-```bash
-npx clippa
-```
+Do not use `npx install clippa`: npm treats `install` as the package name in that command. The correct npx command is `npx clippa`.
 
 After it opens, grant Accessibility access when macOS asks. Clippa needs that permission only to paste the selected item into the app where your cursor is already active.
 
 Useful installer options:
 
 ```bash
+npx clippa -- --no-open
+npx clippa -- --install-dir ~/Applications
 npx github:Vaniawl/Clippa -- --no-open
 npx github:Vaniawl/Clippa -- --install-dir ~/Applications
 ```

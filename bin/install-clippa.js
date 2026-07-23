@@ -17,8 +17,9 @@ function usage() {
   console.log(`Install Clippa for macOS.
 
 Usage:
-  npx github:Vaniawl/Clippa
   npx clippa
+  npm install -g clippa && clippa
+  npx github:Vaniawl/Clippa
 
 Options:
   --install-dir <path>  Copy Clippa.app into a custom applications folder.
