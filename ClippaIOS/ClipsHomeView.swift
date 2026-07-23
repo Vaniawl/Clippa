@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct ClipsHomeView: View {
     let store: IOSClipStore
@@ -11,15 +12,20 @@ struct ClipsHomeView: View {
                 ClippaBackground()
                 ScrollView {
                     VStack(alignment: .leading, spacing: 18) {
-                        HeaderView()
-                        WorkflowCard()
+                        if store.clips.isEmpty {
+                            HeaderView()
+                            WorkflowCard()
+                        } else {
+                            CompactHeaderView(count: store.clips.count)
+                        }
                         SaveClipboardButton {
-                            store.saveCurrentPasteboard()
+                            saveCurrentClipboard()
                         }
                         FilterStrip(store: store)
                         ClipList(
                             clips: store.filteredClips(query: searchQuery),
                             store: store,
+                            onCopy: copy,
                             onPreview: { previewClip = $0 }
                         )
                     }
@@ -49,6 +55,19 @@ struct ClipsHomeView: View {
             }
         }
     }
+
+    private func saveCurrentClipboard() {
+        let didSave = store.saveCurrentPasteboard()
+        UINotificationFeedbackGenerator().notificationOccurred(didSave ? .success : .warning)
+    }
+
+    private func copy(_ clip: IOSClip) {
+        guard store.copy(clip) else {
+            UINotificationFeedbackGenerator().notificationOccurred(.error)
+            return
+        }
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+    }
 }
 
 private struct HeaderView: View {
@@ -68,6 +87,29 @@ private struct HeaderView: View {
                 .font(.callout)
                 .foregroundStyle(.secondary)
                 .lineSpacing(2)
+        }
+        .padding(.top, 8)
+    }
+}
+
+private struct CompactHeaderView: View {
+    let count: Int
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: "paperclip.circle.fill")
+                .font(.system(size: 36, weight: .semibold))
+                .foregroundStyle(.blue)
+                .accessibilityHidden(true)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Tap to copy.")
+                    .font(.title2.weight(.bold))
+                Text("\(count) saved \(count == 1 ? "clip" : "clips")")
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+            }
+            Spacer()
         }
         .padding(.top, 8)
     }
@@ -143,6 +185,7 @@ private struct SaveClipboardButton: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Save current clipboard")
+        .accessibilityIdentifier("saveCurrentClipboardButton")
     }
 }
 
@@ -168,6 +211,7 @@ private struct FilterStrip: View {
                             .foregroundStyle(store.selectedFilter == filter ? .blue : .secondary)
                     }
                     .buttonStyle(.plain)
+                    .accessibilityIdentifier("filter.\(filter.rawValue)")
                 }
             }
         }
@@ -177,6 +221,7 @@ private struct FilterStrip: View {
 private struct ClipList: View {
     let clips: [IOSClip]
     let store: IOSClipStore
+    let onCopy: (IOSClip) -> Void
     let onPreview: (IOSClip) -> Void
 
     var body: some View {
@@ -186,7 +231,7 @@ private struct ClipList: View {
             } else {
                 ForEach(clips) { clip in
                     ClipRow(clip: clip) {
-                        store.copy(clip)
+                        onCopy(clip)
                     } onPin: {
                         store.togglePin(clip)
                     } onDelete: {
@@ -265,6 +310,7 @@ private struct ClipRow: View {
         .accessibilityAction(named: "Copy", onCopy)
         .accessibilityAction(named: clip.isPinned ? "Unpin" : "Pin", onPin)
         .accessibilityAction(named: "Delete", onDelete)
+        .accessibilityIdentifier("clipRow.\(clip.id.uuidString)")
     }
 }
 
@@ -293,6 +339,7 @@ private struct ClipPreviewSheet: View {
 
                     Button {
                         store.copy(clip)
+                        UIImpactFeedbackGenerator(style: .light).impactOccurred()
                         dismiss()
                     } label: {
                         Label("Copy and return", systemImage: "doc.on.clipboard")
@@ -303,6 +350,7 @@ private struct ClipPreviewSheet: View {
                             .foregroundStyle(.white)
                     }
                     .buttonStyle(.plain)
+                    .accessibilityIdentifier("copyPreviewButton")
                 }
                 .padding(18)
             }
@@ -400,6 +448,7 @@ private struct EmptyClipsView: View {
             RoundedRectangle(cornerRadius: 22, style: .continuous)
                 .stroke(.black.opacity(0.06), lineWidth: 1)
         )
+        .accessibilityIdentifier("emptyClipsView")
     }
 }
 
@@ -419,6 +468,7 @@ private struct ToastView: View {
         .background(.ultraThinMaterial, in: Capsule())
         .overlay(Capsule().stroke(.white.opacity(0.35), lineWidth: 1))
         .shadow(color: .black.opacity(0.12), radius: 18, y: 8)
+        .accessibilityIdentifier("toast")
     }
 }
 

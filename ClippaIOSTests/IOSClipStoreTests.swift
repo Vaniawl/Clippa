@@ -93,6 +93,20 @@ final class IOSClipStoreTests: XCTestCase {
         XCTAssertNotNil(store.clips.first?.imageData)
     }
 
+    func testReplaceAllSeedsStableSampleClips() throws {
+        let defaults = try makeDefaults()
+        let store = IOSClipStore(defaults: defaults, pasteboard: MockPasteboard())
+
+        store.replaceAll(IOSClip.sampleClips)
+
+        XCTAssertEqual(store.clips.count, 3)
+        XCTAssertEqual(store.clips.first?.title, "Shipping address")
+        XCTAssertTrue(store.clips.first?.isPinned == true)
+
+        let reloaded = IOSClipStore(defaults: defaults, pasteboard: MockPasteboard())
+        XCTAssertEqual(reloaded.clips.map(\.id), IOSClip.sampleClips.map(\.id))
+    }
+
     private func makeDefaults() throws -> UserDefaults {
         let suite = "ClippaIOSTests.\(UUID().uuidString)"
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))

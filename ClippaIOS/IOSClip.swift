@@ -61,3 +61,33 @@ struct IOSClip: Identifiable, Codable, Equatable, Sendable {
         "\(title) \(detail) \(content ?? "")"
     }
 }
+
+extension IOSClip {
+    static let sampleClips: [IOSClip] = [
+        IOSClip(
+            id: UUID(uuidString: "11111111-1111-1111-1111-111111111111")!,
+            kind: .text,
+            title: "Shipping address",
+            detail: "123 Market Street, San Francisco",
+            content: "123 Market Street, San Francisco",
+            createdAt: Date(timeIntervalSince1970: 3),
+            isPinned: true
+        ),
+        IOSClip(
+            id: UUID(uuidString: "22222222-2222-2222-2222-222222222222")!,
+            kind: .link,
+            title: "github.com",
+            detail: "https://github.com/Vaniawl/Clippa",
+            content: "https://github.com/Vaniawl/Clippa",
+            createdAt: Date(timeIntervalSince1970: 2)
+        ),
+        IOSClip(
+            id: UUID(uuidString: "33333333-3333-3333-3333-333333333333")!,
+            kind: .text,
+            title: "Invoice note",
+            detail: "Thanks, I will send the invoice today.",
+            content: "Thanks, I will send the invoice today.",
+            createdAt: Date(timeIntervalSince1970: 1)
+        )
+    ]
+}

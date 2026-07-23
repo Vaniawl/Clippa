@@ -136,7 +136,7 @@ The current public release is `1.0.11`.
 | --- | --- |
 | GitHub Actions CI | Passing |
 | Local Swift tests | 30/30 passing |
-| Local iOS companion tests | 5/5 passing |
+| Local iOS companion tests | 6/6 passing |
 | Release build | Passing |
 | Smoke launch | Passing |
 | GitHub release | `v1.0.11` live |

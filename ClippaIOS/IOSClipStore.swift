@@ -162,6 +162,11 @@ final class IOSClipStore {
         lastCopyMessage = nil
     }
 
+    func replaceAll(_ clips: [IOSClip]) {
+        self.clips = Array(clips.prefix(maxClips))
+        persist()
+    }
+
     private func upsert(_ clip: IOSClip) {
         clips.removeAll { existing in
             existing.kind == clip.kind &&
