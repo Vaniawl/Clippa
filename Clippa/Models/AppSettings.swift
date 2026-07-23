@@ -235,15 +235,19 @@ final class AppSettings {
     }
 
     private static func migrateLegacyDefaultsIfNeeded(to defaults: UserDefaults) {
-        guard defaults.object(forKey: Keys.migratedLegacyBundleDefaults) == nil,
-              let legacyDefaults = UserDefaults(suiteName: legacyBundleIdentifier)
-        else {
+        guard defaults.object(forKey: Keys.migratedLegacyBundleDefaults) == nil else {
             return
         }
 
-        for key in Keys.persistedKeys where defaults.object(forKey: key) == nil {
-            if let value = legacyDefaults.object(forKey: key) {
-                defaults.set(value, forKey: key)
+        for legacyBundleIdentifier in legacyBundleIdentifiers {
+            guard let legacyDefaults = UserDefaults(suiteName: legacyBundleIdentifier) else {
+                continue
+            }
+
+            for key in Keys.persistedKeys where defaults.object(forKey: key) == nil {
+                if let value = legacyDefaults.object(forKey: key) {
+                    defaults.set(value, forKey: key)
+                }
             }
         }
         defaults.set(true, forKey: Keys.migratedLegacyBundleDefaults)
@@ -267,5 +271,8 @@ final class AppSettings {
         ]
     }
 
-    private static let legacyBundleIdentifier = "com.ivandovhosheia.Clippa"
+    private static let legacyBundleIdentifiers = [
+        "io.github.vaniawl.Clippa",
+        "com.ivandovhosheia.Clippa"
+    ]
 }

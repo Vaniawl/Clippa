@@ -114,7 +114,7 @@ git pull origin main
 
 ## Production Notes
 
-- Bundle identifier: `io.github.vaniawl.Clippa`
-- Version: `1.0.10`
+- Bundle identifier: `app.clippa.Clippa`
+- Version: `1.0.11`
 - Release builds use hardened runtime.
 - History retention and item limits are configurable; the default is 100 items for one week.
