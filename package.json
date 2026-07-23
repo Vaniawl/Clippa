@@ -1,11 +1,10 @@
 {
   "name": "clippa",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Installer for Clippa, a private macOS paste panel.",
   "bin": {
     "install-clippa": "bin/install-clippa.js",
-    "clippa": "bin/install-clippa.js",
-    "Clippa": "bin/install-clippa.js"
+    "clippa": "bin/install-clippa.js"
   },
   "scripts": {
     "release": "./scripts/release.sh",
