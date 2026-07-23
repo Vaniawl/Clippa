@@ -10,6 +10,7 @@
 
 <p align="center">
   <a href="https://github.com/Vaniawl/Clippa/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/Vaniawl/Clippa/ci.yml?branch=main&style=flat-square"></a>
+  <a href="https://www.npmjs.com/package/clippa"><img alt="npm" src="https://img.shields.io/npm/v/clippa?style=flat-square"></a>
   <a href="https://github.com/Vaniawl/Clippa/releases/latest"><img alt="Latest release" src="https://img.shields.io/github/v/release/Vaniawl/Clippa?style=flat-square"></a>
   <img alt="macOS 26+" src="https://img.shields.io/badge/macOS-26%2B-111111?style=flat-square">
   <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/license-MIT-087f78?style=flat-square"></a>
@@ -31,7 +32,13 @@
 
 ## Install Clippa
 
-Recommended:
+Install the latest release with npm:
+
+```bash
+npx --yes clippa
+```
+
+Or use Homebrew:
 
 ```bash
 brew tap Vaniawl/clippa
@@ -45,7 +52,7 @@ brew update
 brew upgrade clippa
 ```
 
-You can also install the current version directly from GitHub:
+You can also install the current `main` build directly from GitHub:
 
 ```bash
 npx --yes github:Vaniawl/Clippa#main
