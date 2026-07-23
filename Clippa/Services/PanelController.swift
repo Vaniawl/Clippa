@@ -14,10 +14,8 @@ final class AppState {
     let panelController = PanelController()
     let settingsWindowController = SettingsWindowController()
     let launchAtLoginController = LaunchAtLoginController()
-    let feedbackController = PasteFeedbackController()
     let previewController = ClipboardPreviewController()
     private var undoHistory: [[ClipboardItem]] = []
-    private var hasLoadedStore = false
 
     var isAutoPasteReady: Bool {
         AccessibilityService.isTrusted
@@ -41,10 +39,7 @@ final class AppState {
     func start() {
         Task {
             await store.load()
-            hasLoadedStore = true
-            if !settings.isMonitoringPaused {
-                monitor.start()
-            }
+            monitor.start()
         }
         registerShowPanelShortcut()
         if !settings.hasShownAccessibilityOnboarding && !AccessibilityService.isTrusted {
@@ -76,15 +71,6 @@ final class AppState {
         settingsWindowController.show(appState: self)
     }
 
-    func setMonitoringPaused(_ isPaused: Bool) {
-        settings.isMonitoringPaused = isPaused
-        if isPaused {
-            monitor.stop()
-        } else if hasLoadedStore {
-            monitor.start()
-        }
-    }
-
     func setHistoryRetention(_ retention: HistoryRetention) {
         settings.historyRetention = retention
         recordUndo(store.updatePolicy(settings.historyPolicy))
@@ -98,11 +84,6 @@ final class AppState {
     func copy(_ item: ClipboardItem) {
         pasteService.copyPayload(item.payload)
         store.use(item)
-        feedbackController.show(
-            message: String(localized: "Copied to Clipboard"),
-            systemImage: "doc.on.doc.fill",
-            tint: .accentColor
-        )
     }
 
     func preview(_ item: ClipboardItem) {
@@ -136,23 +117,16 @@ final class AppState {
             return
         }
         recordUndo([deleted])
-        feedbackController.show(
-            message: String(localized: "Item Deleted"),
-            systemImage: "trash",
-            tint: .red
-        )
     }
 
     func clearUnpinnedHistory() {
         let removed = store.clearUnpinned()
         recordUndo(removed)
-        showClearFeedback(for: removed)
     }
 
     func clearAllHistory() {
         let removed = store.clearAll()
         recordUndo(removed)
-        showClearFeedback(for: removed)
     }
 
     func undoLastHistoryAction() {
@@ -161,11 +135,6 @@ final class AppState {
             return
         }
         store.restore(items)
-        feedbackController.show(
-            message: String(localized: "History Restored"),
-            systemImage: "arrow.uturn.backward",
-            tint: .accentColor
-        )
     }
 
     func performPanelAction(_ action: PanelKeyAction) {
@@ -174,6 +143,10 @@ final class AppState {
             store.selectNext()
         case .selectPrevious:
             store.selectPrevious()
+        case .selectNextFilter:
+            store.selectAdjacentFilter(offset: 1)
+        case .selectPreviousFilter:
+            store.selectAdjacentFilter(offset: -1)
         case .paste:
             pasteSelectedItem()
         case .copy:
@@ -201,27 +174,7 @@ final class AppState {
         store.use(item)
         panelController.close()
         try? await Task.sleep(for: .milliseconds(35))
-        let outcome = await pasteService.paste(item, into: target)
-        switch outcome {
-        case .pasted:
-            feedbackController.show(
-                message: String(localized: "Pasted"),
-                systemImage: "checkmark.circle.fill",
-                tint: .green
-            )
-        case .copiedOnlyRequiresAccessibility:
-            feedbackController.show(
-                message: String(localized: "Copied — Allow Accessibility to Auto-Paste"),
-                systemImage: "accessibility",
-                tint: .orange
-            )
-        case .copiedOnlyPasteUnavailable:
-            feedbackController.show(
-                message: String(localized: "Copied to Clipboard"),
-                systemImage: "doc.on.doc.fill",
-                tint: .accentColor
-            )
-        }
+        _ = await pasteService.paste(item, into: target)
     }
 
     private func withSelectedItem(_ action: (ClipboardItem) -> Void) {
@@ -241,17 +194,6 @@ final class AppState {
         if undoHistory.count > 10 {
             undoHistory.removeFirst(undoHistory.count - 10)
         }
-    }
-
-    private func showClearFeedback(for items: [ClipboardItem]) {
-        guard !items.isEmpty else {
-            return
-        }
-        feedbackController.show(
-            message: String(localized: "History Cleared"),
-            systemImage: "trash",
-            tint: .red
-        )
     }
 
     func quit() {
@@ -300,7 +242,6 @@ final class PanelController {
 
         let content = PanelView(
             store: appState.store,
-            settings: appState.settings,
             onPasteSelected: { [weak appState] in appState?.pasteSelectedItem() },
             onCopy: { [weak appState] item in appState?.copy(item) },
             onPreview: { [weak appState] item in appState?.preview(item) },
@@ -376,6 +317,10 @@ final class PanelController {
         }
 
         switch event.keyCode {
+        case UInt16(kVK_RightArrow):
+            return .selectNextFilter
+        case UInt16(kVK_LeftArrow):
+            return .selectPreviousFilter
         case UInt16(kVK_DownArrow):
             return .selectNext
         case UInt16(kVK_UpArrow):
@@ -419,6 +364,8 @@ final class PanelController {
 enum PanelKeyAction: Sendable {
     case selectNext
     case selectPrevious
+    case selectNextFilter
+    case selectPreviousFilter
     case paste
     case copy
     case preview

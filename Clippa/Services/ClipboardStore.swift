@@ -136,6 +136,15 @@ final class ClipboardStore {
         moveSelection(offset: -1)
     }
 
+    func selectAdjacentFilter(offset: Int) {
+        let filters = ClipboardFilter.allCases
+        guard let currentIndex = filters.firstIndex(of: selectedFilter) else {
+            selectedFilter = .all
+            return
+        }
+        selectedFilter = filters[(currentIndex + offset + filters.count) % filters.count]
+    }
+
     func select(_ item: ClipboardItem) {
         selectedItemID = item.id
     }

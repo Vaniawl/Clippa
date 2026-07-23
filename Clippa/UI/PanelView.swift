@@ -3,7 +3,6 @@ import SwiftUI
 
 struct PanelView: View {
     @Bindable var store: ClipboardStore
-    @Bindable var settings: AppSettings
     var onPasteSelected: @MainActor () -> Void
     var onCopy: @MainActor (ClipboardItem) -> Void
     var onPreview: @MainActor (ClipboardItem) -> Void
@@ -15,8 +14,7 @@ struct PanelView: View {
     @Environment(\.colorSchemeContrast) private var contrast
     @FocusState private var isSearchFocused: Bool
 
-    private var design: PanelDesign { settings.panelDesign }
-    private var metrics: PanelDesignMetrics { design.metrics }
+    private let metrics = DesignSystem.panelMetrics
 
     var body: some View {
         VStack(spacing: metrics.contentSpacing) {
@@ -48,14 +46,12 @@ struct PanelView: View {
 
     private var headerRow: some View {
         HStack(spacing: 10) {
-            ZStack {
-                Circle()
-                    .fill(Color.accentColor.opacity(0.16))
-                Image(systemName: "paperclip")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundStyle(Color.accentColor)
-            }
-            .frame(width: 36, height: 36)
+            Image(nsImage: NSApp.applicationIconImage)
+                .resizable()
+                .interpolation(.high)
+                .antialiased(true)
+                .frame(width: 36, height: 36)
+                .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 2) {
                 Text("Clippa")
@@ -67,23 +63,12 @@ struct PanelView: View {
 
             Spacer(minLength: 0)
 
-            if settings.isMonitoringPaused {
-                StatusBadge(
-                    title: String(localized: "Paused"),
-                    systemImage: "pause.fill",
-                    design: design
-                )
-            }
-
             if store.pinnedItemCount > 0 {
                 StatusBadge(
                     title: "\(store.pinnedItemCount)",
-                    systemImage: "pin.fill",
-                    design: design
+                    systemImage: "pin.fill"
                 )
             }
-
-            PanelDesignMenu(selection: $settings.panelDesign)
         }
         .frame(height: metrics.headerHeight)
     }
@@ -182,7 +167,6 @@ struct PanelView: View {
                                 item: item,
                                 isSelected: item.id == store.selectedItemID,
                                 contrast: contrast,
-                                design: design,
                                 metrics: metrics,
                                 reduceMotion: reduceMotion,
                                 onPaste: {
@@ -235,46 +219,28 @@ struct PanelView: View {
 
     @ViewBuilder
     private var panelBackground: some View {
-        if design == .compact {
-            Rectangle()
-                .fill(Color(nsColor: .windowBackgroundColor))
-        } else if #available(macOS 26.0, *), !reduceTransparency {
+        if #available(macOS 26.0, *), !reduceTransparency {
             Rectangle()
                 .fill(.clear)
                 .glassEffect(.regular, in: .rect(cornerRadius: metrics.panelCornerRadius))
         } else {
             Rectangle()
-                .fill(design == .focus ? .ultraThinMaterial : .regularMaterial)
+                .fill(.regularMaterial)
         }
     }
 
     private var panelStroke: Color {
-        switch design {
-        case .glass:
-            Color.primary.opacity(0.08)
-        case .focus:
-            Color.accentColor.opacity(0.18)
-        case .compact:
-            Color.primary.opacity(0.12)
-        }
+        Color.primary.opacity(0.08)
     }
 
     private var searchBackground: some ShapeStyle {
-        switch design {
-        case .glass:
-            AnyShapeStyle(.thinMaterial)
-        case .focus:
-            AnyShapeStyle(Color.accentColor.opacity(0.08))
-        case .compact:
-            AnyShapeStyle(Color.secondary.opacity(0.07))
-        }
+        AnyShapeStyle(.thinMaterial)
     }
 }
 
 private struct StatusBadge: View {
     let title: String
     let systemImage: String
-    let design: PanelDesign
 
     var body: some View {
         Label(title, systemImage: systemImage)
@@ -283,33 +249,8 @@ private struct StatusBadge: View {
             .foregroundStyle(Color.accentColor)
             .padding(.horizontal, 9)
             .frame(height: 26)
-            .background(Color.accentColor.opacity(design == .focus ? 0.18 : 0.12), in: .capsule)
+            .background(Color.accentColor.opacity(0.12), in: .capsule)
             .accessibilityElement(children: .combine)
-    }
-}
-
-private struct PanelDesignMenu: View {
-    @Binding var selection: PanelDesign
-
-    var body: some View {
-        Menu {
-            Picker("Appearance", selection: $selection) {
-                ForEach(PanelDesign.allCases) { design in
-                    Label(design.displayName, systemImage: design.symbolName)
-                        .tag(design)
-                }
-            }
-        } label: {
-            Image(systemName: selection.symbolName)
-                .font(.system(size: 13, weight: .semibold))
-                .frame(width: DesignSystem.symbolButtonSize, height: DesignSystem.symbolButtonSize)
-                .foregroundStyle(.secondary)
-                .background(Color.secondary.opacity(0.08), in: .circle)
-        }
-        .menuStyle(.button)
-        .buttonStyle(.plain)
-        .accessibilityLabel(Text("Appearance"))
-        .help("Appearance")
     }
 }
 
@@ -401,8 +342,7 @@ private struct ClipboardRow: View {
     let item: ClipboardItem
     let isSelected: Bool
     let contrast: ColorSchemeContrast
-    let design: PanelDesign
-    let metrics: PanelDesignMetrics
+    let metrics: PanelMetrics
     let reduceMotion: Bool
     let onPaste: @MainActor () -> Void
     let onCopy: @MainActor () -> Void
@@ -414,13 +354,6 @@ private struct ClipboardRow: View {
 
     var body: some View {
         HStack(spacing: metrics.rowSpacing) {
-            if design == .focus {
-                Capsule()
-                    .fill(isSelected ? Color.accentColor : Color.clear)
-                    .frame(width: 3, height: metrics.rowHeight - 18)
-                    .accessibilityHidden(true)
-            }
-
             rowContent
 
             rowActions
@@ -507,9 +440,9 @@ private struct ClipboardRow: View {
                 showsPin: item.isPinned
             )
 
-            VStack(alignment: .leading, spacing: design == .compact ? 2 : 4) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(rowTitle)
-                    .font(design == .compact ? .caption.weight(.medium) : .subheadline.weight(.medium))
+                    .font(.subheadline.weight(.medium))
                     .lineLimit(1)
                     .foregroundStyle(.primary)
 
@@ -577,7 +510,7 @@ private struct ClipboardRow: View {
                 .fill(selectedFill)
         } else if isHovering {
             RoundedRectangle(cornerRadius: metrics.rowCornerRadius)
-                .fill(Color.secondary.opacity(design == .compact ? 0.06 : 0.08))
+                .fill(Color.secondary.opacity(0.08))
         } else {
             RoundedRectangle(cornerRadius: metrics.rowCornerRadius)
                 .fill(idleFill)
@@ -586,32 +519,18 @@ private struct ClipboardRow: View {
 
     private var selectedFill: Color {
         let baseOpacity = contrast == .increased ? 0.30 : 0.15
-        switch design {
-        case .glass:
-            return Color.accentColor.opacity(baseOpacity)
-        case .focus:
-            return Color.accentColor.opacity(contrast == .increased ? 0.22 : 0.10)
-        case .compact:
-            return Color.accentColor.opacity(contrast == .increased ? 0.26 : 0.12)
-        }
+        return Color.accentColor.opacity(baseOpacity)
     }
 
     private var idleFill: Color {
-        switch design {
-        case .glass:
-            return Color.primary.opacity(0.025)
-        case .focus:
-            return Color.clear
-        case .compact:
-            return Color.secondary.opacity(0.035)
-        }
+        Color.primary.opacity(0.025)
     }
 
     private var rowStroke: Color {
         if isSelected {
-            return Color.accentColor.opacity(design == .focus ? 0.32 : 0.26)
+            return Color.accentColor.opacity(0.26)
         }
-        return design == .compact ? Color.primary.opacity(0.06) : Color.primary.opacity(0.05)
+        return Color.primary.opacity(0.05)
     }
 }
 

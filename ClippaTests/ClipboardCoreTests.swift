@@ -283,46 +283,37 @@ final class ClipboardCoreTests: XCTestCase {
         defaults.removePersistentDomain(forName: suiteName)
     }
 
-    func testPanelDesignPersists() throws {
-        let suiteName = "ClippaTests.panelDesign.\(UUID().uuidString)"
-        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
-        defaults.removePersistentDomain(forName: suiteName)
-
-        var settings = AppSettings(defaults: defaults)
-        XCTAssertEqual(settings.panelDesign, .glass)
-
-        settings.panelDesign = .compact
-        settings = AppSettings(defaults: defaults)
-        XCTAssertEqual(settings.panelDesign, .compact)
-
-        settings.panelDesign = .focus
-        settings = AppSettings(defaults: defaults)
-        XCTAssertEqual(settings.panelDesign, .focus)
-
-        defaults.removePersistentDomain(forName: suiteName)
-    }
-
-    func testHistoryAndMonitoringSettingsPersist() throws {
+    func testHistorySettingsPersist() throws {
         let suiteName = "ClippaTests.historySettings.\(UUID().uuidString)"
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
         defaults.removePersistentDomain(forName: suiteName)
 
         var settings = AppSettings(defaults: defaults)
         XCTAssertEqual(settings.historyPolicy, .default)
-        XCTAssertFalse(settings.isMonitoringPaused)
 
         settings.historyRetention = .oneMonth
         settings.historyLimit = .fiveHundred
-        settings.isMonitoringPaused = true
 
         settings = AppSettings(defaults: defaults)
         XCTAssertEqual(
             settings.historyPolicy,
             ClipboardHistoryPolicy(retention: .oneMonth, limit: .fiveHundred)
         )
-        XCTAssertTrue(settings.isMonitoringPaused)
 
         defaults.removePersistentDomain(forName: suiteName)
+    }
+
+    @MainActor
+    func testFilterSelectionWrapsWithHorizontalNavigation() {
+        let store = ClipboardStore()
+
+        XCTAssertEqual(store.selectedFilter, .all)
+        store.selectAdjacentFilter(offset: -1)
+        XCTAssertEqual(store.selectedFilter, .files)
+        store.selectAdjacentFilter(offset: 1)
+        XCTAssertEqual(store.selectedFilter, .all)
+        store.selectAdjacentFilter(offset: 1)
+        XCTAssertEqual(store.selectedFilter, .pinned)
     }
 
     func testPanelPositionStaysInsideVisibleFrameAtEdges() {

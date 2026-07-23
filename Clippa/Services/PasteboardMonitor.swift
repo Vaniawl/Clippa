@@ -40,10 +40,6 @@ final class PasteboardMonitor {
     }
 
     private func poll() async {
-        guard !settings.isMonitoringPaused else {
-            lastChangeCount = pasteboard.changeCount
-            return
-        }
         let current = pasteboard.changeCount
         guard current != lastChangeCount else {
             return

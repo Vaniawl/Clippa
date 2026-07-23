@@ -16,41 +16,14 @@ private struct MenuBarContentView: View {
     @Bindable var appState: AppState
 
     var body: some View {
-        if appState.settings.isMonitoringPaused {
-            Label("Monitoring Paused", systemImage: "pause.circle.fill")
-        } else {
-            Text(historySummary)
-        }
-
         if !appState.isAutoPasteReady {
             Button {
                 AccessibilityService.openSystemSettings()
             } label: {
                 Label("Enable Auto-Paste", systemImage: "accessibility")
             }
+            Divider()
         }
-
-        Button {
-            appState.setMonitoringPaused(!appState.settings.isMonitoringPaused)
-        } label: {
-            Label(
-                appState.settings.isMonitoringPaused ? "Resume Clipboard Monitoring" : "Pause Clipboard Monitoring",
-                systemImage: appState.settings.isMonitoringPaused ? "play.fill" : "pause.fill"
-            )
-        }
-
-        Menu {
-            Picker("Appearance", selection: panelDesignBinding) {
-                ForEach(PanelDesign.allCases) { design in
-                    Label(design.displayName, systemImage: design.symbolName)
-                        .tag(design)
-                }
-            }
-        } label: {
-            Label("Appearance", systemImage: appState.settings.panelDesign.symbolName)
-        }
-
-        Divider()
 
         if appState.canUndoHistoryAction {
             Button {
@@ -59,6 +32,7 @@ private struct MenuBarContentView: View {
                 Label("Undo History Change", systemImage: "arrow.uturn.backward")
             }
             .keyboardShortcut("z", modifiers: .command)
+            Divider()
         }
 
         Button {
@@ -76,18 +50,6 @@ private struct MenuBarContentView: View {
             Label("Quit Clippa", systemImage: "power")
         }
         .keyboardShortcut("q", modifiers: .command)
-    }
-
-    private var historySummary: String {
-        let count = appState.store.items.count
-        return "\(count) \(String(localized: "Items")) · \(appState.settings.showPanelShortcut.displayString)"
-    }
-
-    private var panelDesignBinding: Binding<PanelDesign> {
-        Binding(
-            get: { appState.settings.panelDesign },
-            set: { appState.settings.panelDesign = $0 }
-        )
     }
 }
 

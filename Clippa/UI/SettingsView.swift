@@ -20,11 +20,6 @@ struct SettingsView: View {
                 .tabItem {
                     Label("Privacy", systemImage: "hand.raised")
                 }
-
-            AppearanceSettingsView(settings: appState.settings)
-                .tabItem {
-                    Label("Appearance", systemImage: "paintbrush")
-                }
         }
         .padding(20)
         .frame(width: 580, height: 440)
@@ -38,7 +33,6 @@ private struct GeneralSettingsView: View {
     var body: some View {
         Form {
             Section {
-                Toggle("Monitor Clipboard", isOn: monitoringBinding)
                 Toggle("Launch at Login", isOn: launchAtLoginBinding)
 
                 LabeledContent("Shortcut") {
@@ -90,13 +84,6 @@ private struct GeneralSettingsView: View {
             accessibilityTrusted = AccessibilityService.isTrusted
             appState.launchAtLoginController.refresh()
         }
-    }
-
-    private var monitoringBinding: Binding<Bool> {
-        Binding(
-            get: { !appState.settings.isMonitoringPaused },
-            set: { appState.setMonitoringPaused(!$0) }
-        )
     }
 
     private var launchAtLoginBinding: Binding<Bool> {
@@ -338,95 +325,6 @@ private struct ExcludedApplicationRow: View {
             return NSImage(systemSymbolName: "app.dashed", accessibilityDescription: nil) ?? NSImage()
         }
         return NSWorkspace.shared.icon(forFile: applicationURL.path)
-    }
-}
-
-private struct AppearanceSettingsView: View {
-    @Bindable var settings: AppSettings
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            Picker("Appearance", selection: designBinding) {
-                ForEach(PanelDesign.allCases) { design in
-                    Label(design.displayName, systemImage: design.symbolName)
-                        .tag(design)
-                }
-            }
-            .pickerStyle(.segmented)
-
-            AppearancePreview(design: settings.panelDesign)
-
-            Text(appearanceDescription)
-                .font(.callout)
-                .foregroundStyle(.secondary)
-
-            Spacer()
-        }
-    }
-
-    private var designBinding: Binding<PanelDesign> {
-        Binding(
-            get: { settings.panelDesign },
-            set: { settings.panelDesign = $0 }
-        )
-    }
-
-    private var appearanceDescription: String {
-        switch settings.panelDesign {
-        case .glass: String(localized: "A translucent, native macOS surface with balanced spacing.")
-        case .focus: String(localized: "More breathing room and a stronger selection indicator.")
-        case .compact: String(localized: "Higher information density for larger clipboard histories.")
-        }
-    }
-}
-
-private struct AppearancePreview: View {
-    let design: PanelDesign
-
-    var body: some View {
-        VStack(spacing: design == .compact ? 5 : 8) {
-            HStack {
-                Label("Clippa", systemImage: "paperclip")
-                    .font(.headline)
-                Spacer()
-                Image(systemName: design.symbolName)
-                    .foregroundStyle(.secondary)
-            }
-
-            ForEach(0..<3, id: \.self) { index in
-                HStack(spacing: 10) {
-                    RoundedRectangle(cornerRadius: 6)
-                        .fill(index == 0 ? Color.accentColor.opacity(0.18) : Color.secondary.opacity(0.10))
-                        .frame(width: 30, height: 30)
-                        .overlay {
-                            Image(systemName: ["text.alignleft", "link", "photo"][index])
-                                .foregroundStyle(index == 0 ? Color.accentColor : Color.secondary)
-                        }
-                    VStack(alignment: .leading, spacing: 3) {
-                        RoundedRectangle(cornerRadius: 2)
-                            .fill(Color.primary.opacity(0.60))
-                            .frame(width: CGFloat(150 - index * 18), height: 5)
-                        RoundedRectangle(cornerRadius: 2)
-                            .fill(Color.secondary.opacity(0.25))
-                            .frame(width: CGFloat(90 + index * 12), height: 4)
-                    }
-                    Spacer()
-                }
-                .padding(.horizontal, 8)
-                .frame(height: design == .compact ? 40 : 48)
-                .background(
-                    index == 0 ? Color.accentColor.opacity(0.09) : Color.secondary.opacity(0.025),
-                    in: .rect(cornerRadius: design.metrics.rowCornerRadius)
-                )
-            }
-        }
-        .padding(design.metrics.panelPadding)
-        .background(.regularMaterial, in: .rect(cornerRadius: design.metrics.panelCornerRadius))
-        .overlay {
-            RoundedRectangle(cornerRadius: design.metrics.panelCornerRadius)
-                .strokeBorder(Color.primary.opacity(0.09))
-        }
-        .frame(maxWidth: .infinity)
     }
 }
 

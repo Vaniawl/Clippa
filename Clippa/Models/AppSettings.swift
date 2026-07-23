@@ -47,30 +47,6 @@ struct ClipboardHistoryPolicy: Equatable, Sendable {
     static let `default` = ClipboardHistoryPolicy(retention: .oneWeek, limit: .oneHundred)
 }
 
-enum PanelDesign: String, Codable, CaseIterable, Identifiable, Sendable {
-    case glass
-    case focus
-    case compact
-
-    var id: String { rawValue }
-
-    var displayName: String {
-        switch self {
-        case .glass: String(localized: "Glass")
-        case .focus: String(localized: "Focus")
-        case .compact: String(localized: "Compact")
-        }
-    }
-
-    var symbolName: String {
-        switch self {
-        case .glass: "sparkles"
-        case .focus: "scope"
-        case .compact: "rectangle.compress.vertical"
-        }
-    }
-}
-
 struct HotKeyShortcut: Codable, Equatable, Sendable {
     var keyCode: UInt32
     var modifiers: UInt32
@@ -204,12 +180,6 @@ final class AppSettings {
     var showPanelShortcut: HotKeyShortcut {
         didSet { persist() }
     }
-    var panelDesign: PanelDesign {
-        didSet { persist() }
-    }
-    var isMonitoringPaused: Bool {
-        didSet { persist() }
-    }
     var historyRetention: HistoryRetention {
         didSet { persist() }
     }
@@ -229,8 +199,6 @@ final class AppSettings {
         self.excludedBundleIdentifiers = defaults.array(forKey: Keys.excludedBundleIdentifiers) as? [String] ?? PrivacyFilter.defaultExcludedBundleIdentifiers
         self.hasShownAccessibilityOnboarding = defaults.bool(forKey: Keys.hasShownAccessibilityOnboarding)
         self.showPanelShortcut = .defaultShowPanel
-        self.panelDesign = defaults.string(forKey: Keys.panelDesign).flatMap(PanelDesign.init(rawValue:)) ?? .glass
-        self.isMonitoringPaused = defaults.bool(forKey: Keys.isMonitoringPaused)
         self.historyRetention = defaults.string(forKey: Keys.historyRetention).flatMap(HistoryRetention.init(rawValue:)) ?? .oneWeek
         self.historyLimit = HistoryLimit(rawValue: defaults.integer(forKey: Keys.historyLimit)) ?? .oneHundred
     }
@@ -252,8 +220,6 @@ final class AppSettings {
         defaults.set(excludedBundleIdentifiers, forKey: Keys.excludedBundleIdentifiers)
         defaults.set(hasShownAccessibilityOnboarding, forKey: Keys.hasShownAccessibilityOnboarding)
         defaults.set(try? encoder.encode(showPanelShortcut), forKey: Keys.showPanelShortcut)
-        defaults.set(panelDesign.rawValue, forKey: Keys.panelDesign)
-        defaults.set(isMonitoringPaused, forKey: Keys.isMonitoringPaused)
         defaults.set(historyRetention.rawValue, forKey: Keys.historyRetention)
         defaults.set(historyLimit.rawValue, forKey: Keys.historyLimit)
     }
@@ -262,8 +228,6 @@ final class AppSettings {
         static let excludedBundleIdentifiers = "excludedBundleIdentifiers"
         static let hasShownAccessibilityOnboarding = "hasShownAccessibilityOnboarding"
         static let showPanelShortcut = "showPanelShortcut"
-        static let panelDesign = "panelDesign"
-        static let isMonitoringPaused = "isMonitoringPaused"
         static let historyRetention = "historyRetention"
         static let historyLimit = "historyLimit"
     }

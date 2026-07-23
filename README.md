@@ -61,12 +61,13 @@ You can also download `Clippa.app.zip` from the latest GitHub release, unzip it,
 - Runs quietly in the background as a menu-bar app.
 - Press `Command-Shift-V` anywhere to open clipboard history.
 - Use `Up` / `Down` to choose a clipboard item.
+- Use `Left` / `Right` to switch between clipboard filters.
 - Press `Enter` or click an item to paste it.
 - Use the context menu to copy, pin, delete, open, or Quick Look an item.
 - Drag text, links, images, and files directly into other apps.
 - Press `Esc` or click outside the panel to close it.
 - Stores recent text, links, images, and file references locally on your Mac.
-- Supports configurable retention, history limits, excluded apps, monitoring pause, and Launch at Login.
+- Supports configurable retention, history limits, excluded apps, and Launch at Login.
 
 ## Privacy
 

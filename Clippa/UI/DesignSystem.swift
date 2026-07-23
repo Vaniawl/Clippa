@@ -12,9 +12,24 @@ enum DesignSystem {
     static let iconWellSize: CGFloat = 38
     static let symbolButtonSize: CGFloat = 28
     static let filterHeight: CGFloat = 30
+    static let panelMetrics = PanelMetrics(
+        panelPadding: 12,
+        panelCornerRadius: panelCornerRadius,
+        contentSpacing: 10,
+        headerHeight: 38,
+        rowHeight: rowHeight,
+        rowCornerRadius: rowCornerRadius,
+        rowSpacing: 10,
+        iconWellSize: iconWellSize,
+        thumbnailCornerRadius: 8,
+        searchCornerRadius: 10,
+        shadowOpacity: 0.18,
+        shadowRadius: 28,
+        shadowY: 18
+    )
 }
 
-struct PanelDesignMetrics {
+struct PanelMetrics {
     let panelPadding: CGFloat
     let panelCornerRadius: CGFloat
     let contentSpacing: CGFloat
@@ -28,61 +43,6 @@ struct PanelDesignMetrics {
     let shadowOpacity: CGFloat
     let shadowRadius: CGFloat
     let shadowY: CGFloat
-}
-
-extension PanelDesign {
-    var metrics: PanelDesignMetrics {
-        switch self {
-        case .glass:
-            PanelDesignMetrics(
-                panelPadding: 12,
-                panelCornerRadius: DesignSystem.panelCornerRadius,
-                contentSpacing: 10,
-                headerHeight: 38,
-                rowHeight: DesignSystem.rowHeight,
-                rowCornerRadius: DesignSystem.rowCornerRadius,
-                rowSpacing: 10,
-                iconWellSize: DesignSystem.iconWellSize,
-                thumbnailCornerRadius: 8,
-                searchCornerRadius: 10,
-                shadowOpacity: 0.18,
-                shadowRadius: 28,
-                shadowY: 18
-            )
-        case .focus:
-            PanelDesignMetrics(
-                panelPadding: 14,
-                panelCornerRadius: 24,
-                contentSpacing: 12,
-                headerHeight: 42,
-                rowHeight: 62,
-                rowCornerRadius: 14,
-                rowSpacing: 11,
-                iconWellSize: 40,
-                thumbnailCornerRadius: 10,
-                searchCornerRadius: 12,
-                shadowOpacity: 0.20,
-                shadowRadius: 34,
-                shadowY: 20
-            )
-        case .compact:
-            PanelDesignMetrics(
-                panelPadding: 10,
-                panelCornerRadius: 16,
-                contentSpacing: 8,
-                headerHeight: 34,
-                rowHeight: 46,
-                rowCornerRadius: 8,
-                rowSpacing: 8,
-                iconWellSize: 30,
-                thumbnailCornerRadius: 6,
-                searchCornerRadius: 8,
-                shadowOpacity: 0.12,
-                shadowRadius: 18,
-                shadowY: 10
-            )
-        }
-    }
 }
 
 struct ClipboardThumbnailView: View {
