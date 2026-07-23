@@ -5,7 +5,7 @@
 <h1 align="center">Clippa</h1>
 
 <p align="center">
-  A small, private macOS clipboard app built around one shortcut: press Command-Shift-W, choose a clip, paste.
+  A small, private macOS clipboard app built around one shortcut: press Command-Shift-V, choose a clip, paste.
 </p>
 
 <p align="center">
@@ -59,7 +59,7 @@ You can also download `Clippa.app.zip` from the latest GitHub release, unzip it,
 ## How It Works
 
 - Runs quietly in the background as a menu-bar app.
-- Press `Command-Shift-W` while your cursor is in a text field.
+- Press `Command-Shift-V` while your cursor is in a text field.
 - Use `Up` / `Down` to choose a clipboard item.
 - Press `Enter` or click an item to paste it.
 - Press `Esc` or click outside the panel to close it.

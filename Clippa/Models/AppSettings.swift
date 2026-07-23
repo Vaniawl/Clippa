@@ -7,7 +7,7 @@ struct HotKeyShortcut: Codable, Equatable, Sendable {
     var keyCode: UInt32
     var modifiers: UInt32
 
-    static let defaultShowPanel = HotKeyShortcut(keyCode: UInt32(kVK_ANSI_W), modifiers: UInt32(cmdKey | shiftKey))
+    static let defaultShowPanel = HotKeyShortcut(keyCode: UInt32(kVK_ANSI_V), modifiers: UInt32(cmdKey | shiftKey))
 
     var displayString: String {
         var result = ""

@@ -83,7 +83,7 @@ final class AppState {
         let target = target
         store.use(item)
         panelController.close()
-        try? await Task.sleep(for: .milliseconds(80))
+        try? await Task.sleep(for: .milliseconds(35))
         let outcome = await pasteService.paste(item, into: target)
         switch outcome {
         case .pasted:

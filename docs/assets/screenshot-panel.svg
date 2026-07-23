@@ -35,5 +35,5 @@
   <path d="M414 595h18l8 8v20h-26v-28z" stroke="#FFD479" stroke-width="4" stroke-linejoin="round"/>
   <text x="464" y="598" fill="#F5F8F6" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="21" font-weight="720">invoice.pdf</text>
   <text x="464" y="623" fill="#98A4A0" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="15" font-weight="610">File / Finder</text>
-  <text x="380" y="724" fill="#75817D" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="18" font-weight="650">Command-Shift-W opens Clippa. Enter or click pastes the selected item.</text>
+  <text x="380" y="724" fill="#75817D" font-family="-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif" font-size="18" font-weight="650">Command-Shift-V opens Clippa. Enter or click pastes the selected item.</text>
 </svg>
