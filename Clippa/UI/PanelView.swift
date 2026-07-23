@@ -91,7 +91,7 @@ struct PanelView: View {
                         return
                     }
                     animate {
-                        proxy.scrollTo(selectedID, anchor: .center)
+                        proxy.scrollTo(selectedID)
                     }
                 }
                 .animation(reduceMotion ? nil : .snappy(duration: 0.16), value: store.visibleItemsRevision)
