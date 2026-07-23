@@ -32,14 +32,14 @@ Recommended:
 
 ```bash
 brew tap Vaniawl/clippa
-brew install --cask clippa
+brew install clippa
 ```
 
 Update later with:
 
 ```bash
 brew update
-brew upgrade --cask clippa
+brew upgrade clippa
 ```
 
 You can also install the current version directly from GitHub:
