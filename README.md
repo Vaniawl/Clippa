@@ -103,6 +103,17 @@ Useful details:
 - Context menu supports copy, pin, delete, open, and Quick Look.
 - History retention, item limits, excluded apps, and Launch at Login are configurable.
 
+## iPhone Companion
+
+The repo also includes an early `Clippa iOS` target. It is a separate iPhone companion app, shaped around iOS clipboard limits:
+
+- Open Clippa on iPhone.
+- Tap **Save current clipboard** to store the text, link, or image that is currently copied.
+- Tap any saved clip to copy it back to the system clipboard.
+- Return to the previous app and paste normally.
+
+iOS does not allow third-party apps to monitor the clipboard in the background, show a global floating paste window, or paste directly into other apps. This companion app keeps the flow explicit and local.
+
 ## Privacy
 
 Clippa does not upload clipboard contents, does not use analytics, and does not require an account.
