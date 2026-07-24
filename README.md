@@ -109,13 +109,14 @@ Useful details:
 
 ## iPhone Companion
 
-The repo also includes an early `Clippa iOS` target. It is a separate iPhone companion app, shaped around iOS clipboard limits:
+The repo also includes a `Clippa iOS` target. It is a separate iPhone companion app, shaped around iOS clipboard limits:
 
 - Open Clippa on iPhone.
 - Tap **Save current clipboard** to store the text, link, or image that is currently copied.
 - Tap any saved clip to copy it back to the system clipboard.
+- Use search, filters, swipe actions, pinned clips, preview, and local settings from the iPhone app.
 - Return to the previous app and paste normally.
-- Use Shortcuts or Siri actions to save the current clipboard or open Clippa.
+- Use Shortcuts or Siri actions to save the current clipboard, copy the latest saved clip, or open Clippa.
 
 iOS does not allow third-party apps to monitor the clipboard in the background, show a global floating paste window, or paste directly into other apps. This companion app keeps the flow explicit and local.
 
@@ -141,7 +142,7 @@ The current public release is `1.0.13`.
 | --- | --- |
 | GitHub Actions CI | Passing |
 | Local Swift tests | 34/34 passing |
-| Local iOS companion tests | 6/6 passing |
+| Local iOS companion tests | 8/8 passing |
 | Release build | Passing |
 | Smoke launch | Passing |
 | GitHub release | `v1.0.13` live |

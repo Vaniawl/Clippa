@@ -37,7 +37,7 @@ final class IOSClipStore {
     }
 
     func filteredClips(query: String) -> [IOSClip] {
-        let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        let parsedQuery = IOSClipSearchQuery(query)
         return clips
             .filter { clip in
                 switch selectedFilter {
@@ -49,7 +49,7 @@ final class IOSClipStore {
                 }
             }
             .filter { clip in
-                trimmedQuery.isEmpty || clip.searchText.localizedCaseInsensitiveContains(trimmedQuery)
+                parsedQuery.matches(clip)
             }
             .sorted { left, right in
                 if left.isPinned != right.isPinned {
@@ -57,6 +57,20 @@ final class IOSClipStore {
                 }
                 return left.createdAt > right.createdAt
             }
+    }
+
+    var pinnedCount: Int {
+        clips.filter(\.isPinned).count
+    }
+
+    var unpinnedCount: Int {
+        clips.count - pinnedCount
+    }
+
+    var mostRecentClip: IOSClip? {
+        clips.max { left, right in
+            left.createdAt < right.createdAt
+        }
     }
 
     @discardableResult
@@ -160,6 +174,18 @@ final class IOSClipStore {
         persist()
     }
 
+    func clearUnpinned() {
+        clips.removeAll { !$0.isPinned }
+        persist()
+        lastCopyMessage = "Cleared unpinned clips."
+    }
+
+    func clearAll() {
+        clips.removeAll()
+        persist()
+        lastCopyMessage = "Cleared history."
+    }
+
     func clearMessage() {
         lastCopyMessage = nil
     }
@@ -170,14 +196,18 @@ final class IOSClipStore {
     }
 
     private func upsert(_ clip: IOSClip) {
-        clips.removeAll { existing in
-            existing.kind == clip.kind &&
-            existing.content == clip.content &&
-            existing.imageData == clip.imageData
+        var savedClip = clip
+        if let existing = clips.first(where: { $0.matchesPayload(of: clip) }) {
+            savedClip.id = existing.id
+            savedClip.isPinned = existing.isPinned
+            savedClip.lastCopiedAt = existing.lastCopiedAt
         }
-        clips.insert(clip, at: 0)
+        clips.removeAll { $0.matchesPayload(of: clip) }
+        clips.insert(savedClip, at: 0)
         if clips.count > maxClips {
-            clips = Array(clips.prefix(maxClips))
+            let pinned = clips.filter(\.isPinned)
+            let unpinnedSlots = max(0, maxClips - pinned.count)
+            clips = pinned + clips.filter { !$0.isPinned }.prefix(unpinnedSlots)
         }
         persist()
     }
@@ -187,6 +217,60 @@ final class IOSClipStore {
             return
         }
         defaults.set(data, forKey: clipsKey)
+    }
+}
+
+private struct IOSClipSearchQuery {
+    var terms: [String] = []
+    var kind: IOSClipKind?
+    var pinned: Bool?
+
+    init(_ rawValue: String) {
+        for token in rawValue.split(whereSeparator: \.isWhitespace).map(String.init) {
+            let lowercased = token.lowercased()
+            if let value = lowercased.value(afterPrefix: "kind:") ?? lowercased.value(afterPrefix: "type:") {
+                kind = IOSClipKind(searchToken: value)
+            } else if let value = lowercased.value(afterPrefix: "is:") {
+                pinned = value == "pinned" ? true : value == "unpinned" ? false : pinned
+            } else if lowercased == "pinned" {
+                pinned = true
+            } else {
+                terms.append(token)
+            }
+        }
+    }
+
+    func matches(_ clip: IOSClip) -> Bool {
+        if let kind, clip.kind != kind {
+            return false
+        }
+        if let pinned, clip.isPinned != pinned {
+            return false
+        }
+        return terms.allSatisfy { clip.searchText.localizedCaseInsensitiveContains($0) }
+    }
+}
+
+private extension IOSClip {
+    func matchesPayload(of other: IOSClip) -> Bool {
+        kind == other.kind &&
+        content == other.content &&
+        imageData == other.imageData
+    }
+}
+
+private extension IOSClipKind {
+    init?(searchToken: String) {
+        switch searchToken {
+        case "text", "txt":
+            self = .text
+        case "link", "links", "url":
+            self = .link
+        case "image", "images", "photo":
+            self = .image
+        default:
+            return nil
+        }
     }
 }
 
@@ -221,6 +305,13 @@ enum IOSClipFilter: String, CaseIterable, Identifiable {
 }
 
 private extension String {
+    func value(afterPrefix prefix: String) -> String? {
+        guard hasPrefix(prefix) else {
+            return nil
+        }
+        return String(dropFirst(prefix.count))
+    }
+
     func previewLine(limit: Int) -> String {
         let collapsed = split(whereSeparator: \.isNewline).joined(separator: " ")
         let trimmed = collapsed.trimmingCharacters(in: .whitespacesAndNewlines)

@@ -4,43 +4,106 @@ import UIKit
 struct ClipsHomeView: View {
     let store: IOSClipStore
     @State private var searchQuery = ""
-    @State private var previewClip: IOSClip?
+    @State private var sheet: IOSSheetDestination?
+
+    private var visibleClips: [IOSClip] {
+        store.filteredClips(query: searchQuery)
+    }
 
     var body: some View {
         NavigationStack {
-            ZStack(alignment: .bottom) {
+            ZStack {
                 ClippaBackground()
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 18) {
-                        if store.clips.isEmpty {
-                            HeaderView()
-                            WorkflowCard()
-                        } else {
-                            CompactHeaderView(count: store.clips.count)
-                        }
+                List {
+                    Section {
+                        HeaderSummaryView(
+                            clipCount: store.clips.count,
+                            pinnedCount: store.pinnedCount
+                        )
+                        .listRowInsets(.init(top: 8, leading: 18, bottom: 8, trailing: 18))
+
                         SaveClipboardButton {
                             saveCurrentClipboard()
                         }
-                        FilterStrip(store: store)
-                        ClipList(
-                            clips: store.filteredClips(query: searchQuery),
-                            store: store,
-                            onCopy: copy,
-                            onPreview: { previewClip = $0 }
-                        )
+                        .listRowInsets(.init(top: 8, leading: 18, bottom: 8, trailing: 18))
+
+                        if !store.clips.isEmpty {
+                            FilterStrip(store: store)
+                                .listRowInsets(.init(top: 8, leading: 18, bottom: 8, trailing: 0))
+                        }
                     }
-                    .padding(.horizontal, 18)
-                    .padding(.top, 18)
-                    .padding(.bottom, 96)
+                    .listRowSeparator(.hidden)
+                    .listRowBackground(Color.clear)
+
+                    Section {
+                        if visibleClips.isEmpty {
+                            EmptyClipsView(hasClips: !store.clips.isEmpty)
+                                .listRowInsets(.init(top: 8, leading: 18, bottom: 8, trailing: 18))
+                                .listRowSeparator(.hidden)
+                                .listRowBackground(Color.clear)
+                        } else {
+                            ForEach(visibleClips) { clip in
+                                ClipRow(
+                                    clip: clip,
+                                    onCopy: { copy(clip) },
+                                    onPin: { togglePin(clip) },
+                                    onDelete: { delete(clip) },
+                                    onPreview: { sheet = .preview(clip) }
+                                )
+                                .listRowInsets(.init(top: 5, leading: 18, bottom: 5, trailing: 18))
+                                .listRowSeparator(.hidden)
+                                .listRowBackground(Color.clear)
+                                .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                                    Button(role: .destructive) {
+                                        delete(clip)
+                                    } label: {
+                                        Label("Delete", systemImage: "trash")
+                                    }
+                                }
+                                .swipeActions(edge: .leading, allowsFullSwipe: false) {
+                                    Button {
+                                        togglePin(clip)
+                                    } label: {
+                                        Label(clip.isPinned ? "Unpin" : "Pin", systemImage: clip.isPinned ? "pin.slash" : "pin")
+                                    }
+                                    .tint(.blue)
+
+                                    Button {
+                                        copy(clip)
+                                    } label: {
+                                        Label("Copy", systemImage: "doc.on.clipboard")
+                                    }
+                                    .tint(.green)
+                                }
+                            }
+                        }
+                    }
                 }
-                .searchable(text: $searchQuery, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search clips")
+                .listStyle(.plain)
+                .scrollContentBackground(.hidden)
+                .searchable(
+                    text: $searchQuery,
+                    placement: .navigationBarDrawer(displayMode: .always),
+                    prompt: "Search clips"
+                )
                 .navigationTitle("Clippa")
                 .navigationBarTitleDisplayMode(.inline)
-
+                .toolbar {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button {
+                            sheet = .settings
+                        } label: {
+                            Image(systemName: "gearshape")
+                        }
+                        .accessibilityLabel("Settings")
+                    }
+                }
+            }
+            .safeAreaInset(edge: .bottom) {
                 if let message = store.lastCopyMessage {
                     ToastView(message: message)
                         .padding(.horizontal, 18)
-                        .padding(.bottom, 18)
+                        .padding(.bottom, 10)
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                         .task(id: message) {
                             try? await Task.sleep(for: .seconds(2))
@@ -49,9 +112,15 @@ struct ClipsHomeView: View {
                 }
             }
             .animation(.snappy(duration: 0.22), value: store.lastCopyMessage)
-            .sheet(item: $previewClip) { clip in
-                ClipPreviewSheet(clip: clip, store: store)
-                    .presentationDetents([.medium, .large])
+            .sheet(item: $sheet) { destination in
+                switch destination {
+                case .preview(let clip):
+                    ClipPreviewSheet(clip: clip, store: store)
+                        .presentationDetents([.medium, .large])
+                case .settings:
+                    IOSSettingsSheet(store: store)
+                        .presentationDetents([.medium, .large])
+                }
             }
         }
     }
@@ -68,90 +137,100 @@ struct ClipsHomeView: View {
         }
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
     }
-}
 
-private struct HeaderView: View {
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Image(systemName: "paperclip.circle.fill")
-                .font(.system(size: 46, weight: .semibold))
-                .foregroundStyle(.blue)
-                .accessibilityHidden(true)
-
-            Text("Clipboard you control.")
-                .font(.system(.largeTitle, design: .rounded, weight: .bold))
-                .foregroundStyle(.primary)
-                .fixedSize(horizontal: false, vertical: true)
-
-            Text("Save what is currently copied, tap any clip later, then return to the previous app and paste.")
-                .font(.callout)
-                .foregroundStyle(.secondary)
-                .lineSpacing(2)
+    private func togglePin(_ clip: IOSClip) {
+        withAnimation(.snappy(duration: 0.2)) {
+            store.togglePin(clip)
         }
-        .padding(.top, 8)
+        UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
+    }
+
+    private func delete(_ clip: IOSClip) {
+        withAnimation(.snappy(duration: 0.2)) {
+            store.delete(clip)
+        }
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
     }
 }
 
-private struct CompactHeaderView: View {
-    let count: Int
+private enum IOSSheetDestination: Identifiable, Hashable {
+    case preview(IOSClip)
+    case settings
+
+    var id: String {
+        switch self {
+        case .preview(let clip):
+            "preview-\(clip.id.uuidString)"
+        case .settings:
+            "settings"
+        }
+    }
+}
+
+private struct HeaderSummaryView: View {
+    let clipCount: Int
+    let pinnedCount: Int
 
     var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "paperclip.circle.fill")
-                .font(.system(size: 36, weight: .semibold))
-                .foregroundStyle(.blue)
-                .accessibilityHidden(true)
+        VStack(alignment: .leading, spacing: 14) {
+            HStack(spacing: 12) {
+                Image(systemName: "paperclip.circle.fill")
+                    .font(.system(size: 38, weight: .semibold))
+                    .foregroundStyle(.blue)
+                    .accessibilityHidden(true)
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text("Tap to copy.")
-                    .font(.title2.weight(.bold))
-                Text("\(count) saved \(count == 1 ? "clip" : "clips")")
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Clippa")
+                        .font(.title2.weight(.bold))
+                    Text(summary)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
             }
-            Spacer()
-        }
-        .padding(.top, 8)
-    }
-}
 
-private struct WorkflowCard: View {
-    var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            WorkflowStep(number: "1", title: "Copy", detail: "Copy text, a link, or an image in another app.")
-            WorkflowStep(number: "2", title: "Save", detail: "Open Clippa and save the current clipboard.")
-            WorkflowStep(number: "3", title: "Paste", detail: "Tap a saved clip, go back, and paste normally.")
-        }
-        .padding(14)
-        .background(.background.opacity(0.82), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(.black.opacity(0.06), lineWidth: 1)
-        )
-    }
-}
-
-private struct WorkflowStep: View {
-    let number: String
-    let title: String
-    let detail: String
-
-    var body: some View {
-        HStack(alignment: .top, spacing: 11) {
-            Text(number)
-                .font(.caption.weight(.bold))
-                .foregroundStyle(.blue)
-                .frame(width: 24, height: 24)
-                .background(.blue.opacity(0.11), in: Circle())
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.subheadline.weight(.semibold))
-                Text(detail)
-                    .font(.caption)
+            if clipCount == 0 {
+                Text("Save the current iPhone clipboard, tap a saved item to copy it, then return to the previous app and paste.")
+                    .font(.callout)
                     .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            } else {
+                HStack(spacing: 8) {
+                    MetricPill(value: "\(clipCount)", label: clipCount == 1 ? "clip" : "clips", systemImage: "tray.full")
+                    MetricPill(value: "\(pinnedCount)", label: "pinned", systemImage: "pin")
+                }
             }
         }
+        .padding(.top, 4)
+    }
+
+    private var summary: String {
+        if clipCount == 0 {
+            return "Private clipboard shelf"
+        }
+        return "Tap any item to copy"
+    }
+}
+
+private struct MetricPill: View {
+    let value: String
+    let label: String
+    let systemImage: String
+
+    var body: some View {
+        Label {
+            Text(value)
+                .font(.subheadline.weight(.bold)) +
+            Text(" \(label)")
+                .font(.subheadline)
+        } icon: {
+            Image(systemName: systemImage)
+                .font(.caption.weight(.semibold))
+        }
+        .foregroundStyle(.secondary)
+        .padding(.horizontal, 10)
+        .frame(height: 32)
+        .background(Color(.secondarySystemGroupedBackground), in: Capsule())
     }
 }
 
@@ -169,7 +248,7 @@ private struct SaveClipboardButton: View {
                 VStack(alignment: .leading, spacing: 3) {
                     Text("Save current clipboard")
                         .font(.headline)
-                    Text("Uses the clipboard only when you tap this button.")
+                    Text("Only reads the clipboard when you tap.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                 }
@@ -197,7 +276,9 @@ private struct FilterStrip: View {
             HStack(spacing: 8) {
                 ForEach(IOSClipFilter.allCases) { filter in
                     Button {
-                        store.selectedFilter = filter
+                        withAnimation(.snappy(duration: 0.2)) {
+                            store.selectedFilter = filter
+                        }
                     } label: {
                         Label(filter.title, systemImage: filter.symbolName)
                             .font(.subheadline.weight(.semibold))
@@ -205,7 +286,7 @@ private struct FilterStrip: View {
                             .padding(.horizontal, 12)
                             .frame(height: 36)
                             .background(
-                                store.selectedFilter == filter ? Color.blue.opacity(0.14) : Color(.secondarySystemBackground),
+                                store.selectedFilter == filter ? Color.blue.opacity(0.14) : Color(.secondarySystemGroupedBackground),
                                 in: Capsule()
                             )
                             .foregroundStyle(store.selectedFilter == filter ? .blue : .secondary)
@@ -214,33 +295,7 @@ private struct FilterStrip: View {
                     .accessibilityIdentifier("filter.\(filter.rawValue)")
                 }
             }
-        }
-    }
-}
-
-private struct ClipList: View {
-    let clips: [IOSClip]
-    let store: IOSClipStore
-    let onCopy: (IOSClip) -> Void
-    let onPreview: (IOSClip) -> Void
-
-    var body: some View {
-        VStack(spacing: 10) {
-            if clips.isEmpty {
-                EmptyClipsView()
-            } else {
-                ForEach(clips) { clip in
-                    ClipRow(clip: clip) {
-                        onCopy(clip)
-                    } onPin: {
-                        store.togglePin(clip)
-                    } onDelete: {
-                        store.delete(clip)
-                    } onPreview: {
-                        onPreview(clip)
-                    }
-                }
-            }
+            .padding(.trailing, 18)
         }
     }
 }
@@ -255,6 +310,7 @@ private struct ClipRow: View {
     var body: some View {
         HStack(spacing: 13) {
             ClipIcon(clip: clip)
+
             VStack(alignment: .leading, spacing: 5) {
                 HStack(spacing: 6) {
                     Text(clip.title)
@@ -272,7 +328,9 @@ private struct ClipRow: View {
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
             }
+
             Spacer(minLength: 12)
+
             Button(action: onPreview) {
                 Image(systemName: "info.circle")
                     .font(.system(size: 18, weight: .semibold))
@@ -284,12 +342,12 @@ private struct ClipRow: View {
             .accessibilityLabel("Preview clip")
         }
         .padding(14)
-        .background(.background, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .background(.background, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
         .overlay(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
+            RoundedRectangle(cornerRadius: 16, style: .continuous)
                 .stroke(.black.opacity(0.06), lineWidth: 1)
         )
-        .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .contentShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .onTapGesture(perform: onCopy)
         .contextMenu {
             Button(action: onCopy) {
@@ -342,7 +400,7 @@ private struct ClipPreviewSheet: View {
                         UIImpactFeedbackGenerator(style: .light).impactOccurred()
                         dismiss()
                     } label: {
-                        Label("Copy and return", systemImage: "doc.on.clipboard")
+                        Label("Copy", systemImage: "doc.on.clipboard")
                             .font(.headline)
                             .frame(maxWidth: .infinity)
                             .frame(height: 50)
@@ -357,12 +415,124 @@ private struct ClipPreviewSheet: View {
             .navigationTitle("Preview")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
+                ToolbarItem(placement: .topBarLeading) {
+                    if let content = clip.content {
+                        ShareLink(item: content) {
+                            Image(systemName: "square.and.arrow.up")
+                        }
+                        .accessibilityLabel("Share clip")
+                    }
+                }
                 ToolbarItem(placement: .topBarTrailing) {
                     Button("Done") {
                         dismiss()
                     }
                 }
             }
+        }
+    }
+}
+
+private struct IOSSettingsSheet: View {
+    let store: IOSClipStore
+    @Environment(\.dismiss) private var dismiss
+    @State private var pendingClear: IOSClearScope?
+
+    var body: some View {
+        NavigationStack {
+            List {
+                Section("Privacy") {
+                    Label("Saved locally on this iPhone", systemImage: "iphone")
+                    Label("No account and no cloud sync", systemImage: "icloud.slash")
+                    Label("Clipboard is read only when you save", systemImage: "hand.tap")
+                }
+
+                Section("History") {
+                    LabeledContent("Saved clips", value: "\(store.clips.count)")
+                    LabeledContent("Pinned", value: "\(store.pinnedCount)")
+                    LabeledContent("Limit", value: "200")
+
+                    if store.unpinnedCount > 0 {
+                        Button(role: .destructive) {
+                            pendingClear = .unpinned
+                        } label: {
+                            Label("Clear Unpinned", systemImage: "tray")
+                        }
+                    }
+
+                    if !store.clips.isEmpty {
+                        Button(role: .destructive) {
+                            pendingClear = .all
+                        } label: {
+                            Label("Clear All History", systemImage: "trash")
+                        }
+                    }
+                }
+
+                Section("Tips") {
+                    Text("Use Shortcuts to save the current clipboard or copy your latest Clippa item without opening the app.")
+                        .foregroundStyle(.secondary)
+                }
+            }
+            .navigationTitle("Settings")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                }
+            }
+            .confirmationDialog(
+                pendingClear?.title ?? "",
+                isPresented: Binding(
+                    get: { pendingClear != nil },
+                    set: { isPresented in
+                        if !isPresented {
+                            pendingClear = nil
+                        }
+                    }
+                ),
+                titleVisibility: .visible
+            ) {
+                if let pendingClear {
+                    Button(pendingClear.actionTitle, role: .destructive) {
+                        switch pendingClear {
+                        case .unpinned:
+                            store.clearUnpinned()
+                        case .all:
+                            store.clearAll()
+                        }
+                        self.pendingClear = nil
+                    }
+                }
+                Button("Cancel", role: .cancel) {
+                    pendingClear = nil
+                }
+            }
+        }
+    }
+}
+
+private enum IOSClearScope {
+    case unpinned
+    case all
+
+    var title: String {
+        switch self {
+        case .unpinned:
+            "Clear unpinned clips?"
+        case .all:
+            "Clear all Clippa history?"
+        }
+    }
+
+    var actionTitle: String {
+        switch self {
+        case .unpinned:
+            "Clear Unpinned"
+        case .all:
+            "Clear All"
         }
     }
 }
@@ -428,14 +598,16 @@ private struct ClipIcon: View {
 }
 
 private struct EmptyClipsView: View {
+    let hasClips: Bool
+
     var body: some View {
         VStack(spacing: 12) {
-            Image(systemName: "tray")
+            Image(systemName: hasClips ? "magnifyingglass" : "tray")
                 .font(.system(size: 34, weight: .semibold))
                 .foregroundStyle(.secondary)
-            Text("No clips yet")
+            Text(hasClips ? "No matching clips" : "No clips yet")
                 .font(.headline)
-            Text("Copy something in another app, open Clippa, and tap Save current clipboard.")
+            Text(hasClips ? "Try another search or filter." : "Copy something in another app, open Clippa, and tap Save current clipboard.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)
@@ -486,8 +658,14 @@ private struct ClippaBackground: View {
     }
 }
 
-#Preview {
-    let store = IOSClipStore(defaults: .init(suiteName: "ClippaIOSPreview")!)
-    store.saveCurrentPasteboard()
+#Preview("With Clips") {
+    let store = IOSClipStore(defaults: .init(suiteName: "ClippaIOSPreview.withClips")!)
+    store.replaceAll(IOSClip.sampleClips)
+    return ClipsHomeView(store: store)
+}
+
+#Preview("Empty") {
+    let store = IOSClipStore(defaults: .init(suiteName: "ClippaIOSPreview.empty")!)
+    store.replaceAll([])
     return ClipsHomeView(store: store)
 }

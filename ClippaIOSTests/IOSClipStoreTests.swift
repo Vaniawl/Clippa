@@ -64,6 +64,30 @@ final class IOSClipStoreTests: XCTestCase {
         XCTAssertFalse(store.clips.contains { $0.id == textClip.id })
     }
 
+    func testSearchTokensAndPinnedDuplicatePreservesPin() throws {
+        let defaults = try makeDefaults()
+        let pasteboard = MockPasteboard()
+        let store = IOSClipStore(defaults: defaults, pasteboard: pasteboard)
+
+        pasteboard.string = "boarding pass"
+        XCTAssertTrue(store.saveCurrentPasteboard())
+        let textClip = try XCTUnwrap(store.clips.first)
+        store.togglePin(textClip)
+
+        pasteboard.string = "https://example.com/ticket?utm_campaign=test&id=42"
+        XCTAssertTrue(store.saveCurrentPasteboard())
+
+        store.selectedFilter = .all
+        XCTAssertEqual(store.filteredClips(query: "kind:link ticket").first?.kind, .link)
+        XCTAssertEqual(store.filteredClips(query: "is:pinned boarding").first?.id, textClip.id)
+
+        pasteboard.string = "boarding pass"
+        XCTAssertTrue(store.saveCurrentPasteboard())
+
+        XCTAssertEqual(store.clips.count, 2)
+        XCTAssertTrue(store.clips.first { $0.id == textClip.id }?.isPinned == true)
+    }
+
     func testCopyWritesSelectedClipBackToPasteboard() throws {
         let defaults = try makeDefaults()
         let pasteboard = MockPasteboard()
@@ -77,6 +101,31 @@ final class IOSClipStoreTests: XCTestCase {
         XCTAssertTrue(store.copy(clip))
         XCTAssertEqual(pasteboard.string, "copy me")
         XCTAssertNotNil(store.clips.first?.lastCopiedAt)
+    }
+
+    func testMostRecentAndClearActions() throws {
+        let defaults = try makeDefaults()
+        let pasteboard = MockPasteboard()
+        let store = IOSClipStore(defaults: defaults, pasteboard: pasteboard)
+
+        pasteboard.string = "first"
+        XCTAssertTrue(store.saveCurrentPasteboard())
+        let first = try XCTUnwrap(store.clips.first)
+        store.togglePin(first)
+
+        pasteboard.string = "second"
+        XCTAssertTrue(store.saveCurrentPasteboard())
+
+        XCTAssertEqual(store.mostRecentClip?.content, "second")
+        XCTAssertEqual(store.pinnedCount, 1)
+        XCTAssertEqual(store.unpinnedCount, 1)
+
+        store.clearUnpinned()
+        XCTAssertEqual(store.clips.map(\.content), ["first"])
+        XCTAssertEqual(store.pinnedCount, 1)
+
+        store.clearAll()
+        XCTAssertTrue(store.clips.isEmpty)
     }
 
     func testSaveImageFromPasteboard() throws {

@@ -24,7 +24,7 @@ enum IOSClipKind: String, Codable, CaseIterable, Identifiable, Sendable {
     }
 }
 
-struct IOSClip: Identifiable, Codable, Equatable, Sendable {
+struct IOSClip: Identifiable, Codable, Equatable, Hashable, Sendable {
     var id: UUID
     var kind: IOSClipKind
     var title: String

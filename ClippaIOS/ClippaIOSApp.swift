@@ -43,6 +43,22 @@ struct OpenClippaIntent: AppIntent {
     }
 }
 
+struct CopyLatestClipIntent: AppIntent {
+    static let title: LocalizedStringResource = "Copy Latest Clip"
+    static let description = IntentDescription("Copy the latest saved Clippa item back to the iPhone clipboard.")
+    static let openAppWhenRun = false
+
+    @MainActor
+    func perform() async throws -> some IntentResult & ProvidesDialog {
+        let store = IOSClipStore()
+        guard let clip = store.mostRecentClip else {
+            return .result(dialog: "No saved clips yet.")
+        }
+        let didCopy = store.copy(clip)
+        return .result(dialog: didCopy ? "Copied latest Clippa item." : "Could not copy that item.")
+    }
+}
+
 struct ClippaShortcuts: AppShortcutsProvider {
     static var appShortcuts: [AppShortcut] {
         AppShortcut(
@@ -53,6 +69,16 @@ struct ClippaShortcuts: AppShortcutsProvider {
             ],
             shortTitle: "Save Clipboard",
             systemImageName: "tray.and.arrow.down"
+        )
+
+        AppShortcut(
+            intent: CopyLatestClipIntent(),
+            phrases: [
+                "Copy latest clip from \(.applicationName)",
+                "Copy last item from \(.applicationName)"
+            ],
+            shortTitle: "Copy Latest",
+            systemImageName: "doc.on.clipboard"
         )
 
         AppShortcut(
