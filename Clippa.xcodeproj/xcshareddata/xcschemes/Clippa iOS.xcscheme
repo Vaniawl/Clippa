@@ -29,6 +29,13 @@
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "YES"
       shouldAutocreateTestPlan = "YES">
+      <EnvironmentVariables>
+         <EnvironmentVariable
+            key = "CLIPPA_DISABLE_AUTOMATIC_CLIPBOARD_CAPTURE"
+            value = "1"
+            isEnabled = "YES">
+         </EnvironmentVariable>
+      </EnvironmentVariables>
       <Testables>
          <TestableReference
             skipped = "NO"

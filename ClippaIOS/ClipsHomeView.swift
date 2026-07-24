@@ -171,6 +171,7 @@ struct ClipsHomeView: View {
 
 private enum IOSRuntimeEnvironment {
     static var isRunningUnitTests: Bool {
+        ProcessInfo.processInfo.environment["CLIPPA_DISABLE_AUTOMATIC_CLIPBOARD_CAPTURE"] == "1" ||
         ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
     }
 }
