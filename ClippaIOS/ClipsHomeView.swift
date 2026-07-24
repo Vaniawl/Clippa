@@ -137,6 +137,9 @@ struct ClipsHomeView: View {
     }
 
     private func captureClipboardIfNeeded(showMessage: Bool) {
+        guard !IOSRuntimeEnvironment.isRunningUnitTests else {
+            return
+        }
         let result = store.captureCurrentPasteboardIfNeeded(showMessage: showMessage)
         if result.didSave {
             UIImpactFeedbackGenerator(style: .soft).impactOccurred()
@@ -163,6 +166,12 @@ struct ClipsHomeView: View {
             store.delete(clip)
         }
         UIImpactFeedbackGenerator(style: .light).impactOccurred()
+    }
+}
+
+private enum IOSRuntimeEnvironment {
+    static var isRunningUnitTests: Bool {
+        ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
     }
 }
 
