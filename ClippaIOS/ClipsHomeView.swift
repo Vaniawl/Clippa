@@ -3,6 +3,7 @@ import UIKit
 
 struct ClipsHomeView: View {
     let store: IOSClipStore
+    @Environment(\.scenePhase) private var scenePhase
     @State private var searchQuery = ""
     @State private var sheet: IOSSheetDestination?
 
@@ -20,11 +21,6 @@ struct ClipsHomeView: View {
                             clipCount: store.clips.count,
                             pinnedCount: store.pinnedCount
                         )
-                        .listRowInsets(.init(top: 8, leading: 18, bottom: 8, trailing: 18))
-
-                        SaveClipboardButton {
-                            saveCurrentClipboard()
-                        }
                         .listRowInsets(.init(top: 8, leading: 18, bottom: 8, trailing: 18))
 
                         if !store.clips.isEmpty {
@@ -112,6 +108,21 @@ struct ClipsHomeView: View {
                 }
             }
             .animation(.snappy(duration: 0.22), value: store.lastCopyMessage)
+            .onAppear {
+                captureClipboardIfNeeded(showMessage: false)
+            }
+            .onChange(of: scenePhase) { _, phase in
+                if phase == .active {
+                    captureClipboardIfNeeded(showMessage: false)
+                }
+            }
+            .task(id: scenePhase) {
+                guard scenePhase == .active else { return }
+                while !Task.isCancelled {
+                    try? await Task.sleep(for: .milliseconds(900))
+                    captureClipboardIfNeeded(showMessage: false)
+                }
+            }
             .sheet(item: $sheet) { destination in
                 switch destination {
                 case .preview(let clip):
@@ -125,9 +136,11 @@ struct ClipsHomeView: View {
         }
     }
 
-    private func saveCurrentClipboard() {
-        let didSave = store.saveCurrentPasteboard()
-        UINotificationFeedbackGenerator().notificationOccurred(didSave ? .success : .warning)
+    private func captureClipboardIfNeeded(showMessage: Bool) {
+        let result = store.captureCurrentPasteboardIfNeeded(showMessage: showMessage)
+        if result.didSave {
+            UIImpactFeedbackGenerator(style: .soft).impactOccurred()
+        }
     }
 
     private func copy(_ clip: IOSClip) {
@@ -190,7 +203,7 @@ private struct HeaderSummaryView: View {
             }
 
             if clipCount == 0 {
-                Text("Save the current iPhone clipboard, tap a saved item to copy it, then return to the previous app and paste.")
+                Text("Copy something in another app, return here, and Clippa keeps it ready.")
                     .font(.callout)
                     .foregroundStyle(.secondary)
                     .fixedSize(horizontal: false, vertical: true)
@@ -206,9 +219,9 @@ private struct HeaderSummaryView: View {
 
     private var summary: String {
         if clipCount == 0 {
-            return "Private clipboard shelf"
+            return "Private clipboard history"
         }
-        return "Tap any item to copy"
+        return "Ready when you return"
     }
 }
 
@@ -231,40 +244,6 @@ private struct MetricPill: View {
         .padding(.horizontal, 10)
         .frame(height: 32)
         .background(Color(.secondarySystemGroupedBackground), in: Capsule())
-    }
-}
-
-private struct SaveClipboardButton: View {
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            HStack(spacing: 14) {
-                Image(systemName: "plus")
-                    .font(.system(size: 18, weight: .bold))
-                    .frame(width: 38, height: 38)
-                    .background(.blue.opacity(0.12), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
-
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("Save current clipboard")
-                        .font(.headline)
-                    Text("Only reads the clipboard when you tap.")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                Spacer()
-            }
-            .foregroundStyle(.primary)
-            .padding(14)
-            .background(.background, in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .stroke(.black.opacity(0.06), lineWidth: 1)
-            )
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel("Save current clipboard")
-        .accessibilityIdentifier("saveCurrentClipboardButton")
     }
 }
 
@@ -444,7 +423,7 @@ private struct IOSSettingsSheet: View {
                 Section("Privacy") {
                     Label("Saved locally on this iPhone", systemImage: "iphone")
                     Label("No account and no cloud sync", systemImage: "icloud.slash")
-                    Label("Clipboard is read only when you save", systemImage: "hand.tap")
+                    Label("New copies appear when Clippa is active", systemImage: "checkmark.shield")
                 }
 
                 Section("History") {
@@ -470,7 +449,7 @@ private struct IOSSettingsSheet: View {
                 }
 
                 Section("Tips") {
-                    Text("Use Shortcuts to save the current clipboard or copy your latest Clippa item without opening the app.")
+                    Text("Shortcuts can still save the current clipboard or copy your latest Clippa item.")
                         .foregroundStyle(.secondary)
                 }
             }
@@ -607,7 +586,7 @@ private struct EmptyClipsView: View {
                 .foregroundStyle(.secondary)
             Text(hasClips ? "No matching clips" : "No clips yet")
                 .font(.headline)
-            Text(hasClips ? "Try another search or filter." : "Copy something in another app, open Clippa, and tap Save current clipboard.")
+            Text(hasClips ? "Try another search or filter." : "Copy something in another app, then open Clippa.")
                 .font(.subheadline)
                 .foregroundStyle(.secondary)
                 .multilineTextAlignment(.center)

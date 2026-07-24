@@ -103,6 +103,39 @@ final class IOSClipStoreTests: XCTestCase {
         XCTAssertNotNil(store.clips.first?.lastCopiedAt)
     }
 
+    func testAutomaticCaptureOnlySavesWhenPasteboardChanges() throws {
+        let defaults = try makeDefaults()
+        let pasteboard = MockPasteboard()
+        let store = IOSClipStore(defaults: defaults, pasteboard: pasteboard)
+
+        pasteboard.string = "first automatic clip"
+        XCTAssertEqual(store.captureCurrentPasteboardIfNeeded(), .saved(.text))
+        XCTAssertEqual(store.clips.map(\.content), ["first automatic clip"])
+
+        XCTAssertEqual(store.captureCurrentPasteboardIfNeeded(), .unchanged)
+        XCTAssertEqual(store.clips.count, 1)
+
+        pasteboard.string = "second automatic clip"
+        XCTAssertEqual(store.captureCurrentPasteboardIfNeeded(), .saved(.text))
+        XCTAssertEqual(store.clips.map(\.content), ["second automatic clip", "first automatic clip"])
+    }
+
+    func testAutomaticCaptureSkipsClippaOwnPasteboardWrites() throws {
+        let defaults = try makeDefaults()
+        let pasteboard = MockPasteboard()
+        pasteboard.string = "copy me"
+        let store = IOSClipStore(defaults: defaults, pasteboard: pasteboard)
+        XCTAssertTrue(store.saveCurrentPasteboard())
+        let clip = try XCTUnwrap(store.clips.first)
+
+        XCTAssertTrue(store.copy(clip))
+        XCTAssertEqual(store.captureCurrentPasteboardIfNeeded(), .unchanged)
+
+        pasteboard.string = "copy me"
+        XCTAssertEqual(store.captureCurrentPasteboardIfNeeded(), .ownWrite)
+        XCTAssertEqual(store.clips.count, 1)
+    }
+
     func testMostRecentAndClearActions() throws {
         let defaults = try makeDefaults()
         let pasteboard = MockPasteboard()
@@ -170,7 +203,17 @@ final class IOSClipStoreTests: XCTestCase {
 
 @MainActor
 private final class MockPasteboard: IOSPasteboard {
-    var string: String?
-    var url: URL?
-    var image: UIImage?
+    var string: String? {
+        didSet { changeCount += 1 }
+    }
+
+    var url: URL? {
+        didSet { changeCount += 1 }
+    }
+
+    var image: UIImage? {
+        didSet { changeCount += 1 }
+    }
+
+    private(set) var changeCount = 0
 }

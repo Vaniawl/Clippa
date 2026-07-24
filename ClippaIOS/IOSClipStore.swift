@@ -7,6 +7,7 @@ protocol IOSPasteboard: AnyObject {
     var string: String? { get set }
     var url: URL? { get set }
     var image: UIImage? { get set }
+    var changeCount: Int { get }
 }
 
 extension UIPasteboard: IOSPasteboard {}
@@ -24,6 +25,8 @@ final class IOSClipStore {
     private let decoder = JSONDecoder()
     private let clipsKey = "clippa.ios.clips"
     private let maxClips = 200
+    private var lastObservedPasteboardChangeCount: Int?
+    private var lastWrittenPasteboardSignature: IOSClipSignature?
 
     init(defaults: UserDefaults = .standard, pasteboard: IOSPasteboard = UIPasteboard.general) {
         self.defaults = defaults
@@ -75,62 +78,21 @@ final class IOSClipStore {
 
     @discardableResult
     func saveCurrentPasteboard() -> Bool {
-        if let image = pasteboard.image,
-           let data = image.pngData() {
-            upsert(
-                IOSClip(
-                    kind: .image,
-                    title: "Clipboard image",
-                    detail: "\(Int(image.size.width)) x \(Int(image.size.height))",
-                    imageData: data
-                )
-            )
-            lastCopyMessage = "Saved current image."
-            return true
-        }
+        let result = captureCurrentPasteboard(showMessage: true, skipOwnWrites: false)
+        return result.didSave
+    }
 
-        if let url = pasteboard.url {
-            let cleanedURL = IOSClipboardContentCleaner.removingTrackingParameters(from: url) ?? url
-            upsert(
-                IOSClip(
-                    kind: .link,
-                    title: cleanedURL.host(percentEncoded: false) ?? cleanedURL.absoluteString,
-                    detail: cleanedURL.absoluteString,
-                    content: cleanedURL.absoluteString
-                )
-            )
-            lastCopyMessage = "Saved current link."
-            return true
+    @discardableResult
+    func captureCurrentPasteboardIfNeeded(showMessage: Bool = false) -> IOSPasteboardCaptureResult {
+        let currentChangeCount = pasteboard.changeCount
+        if lastObservedPasteboardChangeCount == currentChangeCount {
+            return .unchanged
         }
-
-        if let text = pasteboard.string?.trimmingCharacters(in: .whitespacesAndNewlines),
-           !text.isEmpty {
-            if let url = URL(string: text), url.scheme?.hasPrefix("http") == true {
-                let cleanedURL = IOSClipboardContentCleaner.removingTrackingParameters(from: url) ?? url
-                upsert(
-                    IOSClip(
-                        kind: .link,
-                        title: cleanedURL.host(percentEncoded: false) ?? cleanedURL.absoluteString.previewLine(limit: 64),
-                        detail: cleanedURL.absoluteString,
-                        content: cleanedURL.absoluteString
-                    )
-                )
-            } else {
-                upsert(
-                    IOSClip(
-                        kind: .text,
-                        title: text.previewLine(limit: 72),
-                        detail: text.previewLine(limit: 140),
-                        content: text
-                    )
-                )
-            }
-            lastCopyMessage = "Saved current text."
-            return true
-        }
-
-        lastCopyMessage = "Clipboard is empty."
-        return false
+        return captureCurrentPasteboard(
+            changeCount: currentChangeCount,
+            showMessage: showMessage,
+            skipOwnWrites: true
+        )
     }
 
     @discardableResult
@@ -153,6 +115,8 @@ final class IOSClipStore {
             pasteboard.image = image
         }
 
+        lastWrittenPasteboardSignature = IOSClipSignature(clip)
+        lastObservedPasteboardChangeCount = pasteboard.changeCount
         if let index = clips.firstIndex(where: { $0.id == clip.id }) {
             clips[index].lastCopiedAt = Date()
         }
@@ -212,11 +176,107 @@ final class IOSClipStore {
         persist()
     }
 
+    private func captureCurrentPasteboard(
+        changeCount: Int? = nil,
+        showMessage: Bool,
+        skipOwnWrites: Bool
+    ) -> IOSPasteboardCaptureResult {
+        let observedChangeCount = changeCount ?? pasteboard.changeCount
+        lastObservedPasteboardChangeCount = observedChangeCount
+        guard let clip = currentPasteboardClip() else {
+            if showMessage {
+                lastCopyMessage = "Clipboard is empty."
+            }
+            return .empty
+        }
+
+        let signature = IOSClipSignature(clip)
+        if skipOwnWrites, signature == lastWrittenPasteboardSignature {
+            return .ownWrite
+        }
+
+        upsert(clip)
+        if showMessage {
+            lastCopyMessage = "Saved current \(clip.kind.toastName)."
+        }
+        return .saved(clip.kind)
+    }
+
+    private func currentPasteboardClip() -> IOSClip? {
+        if let image = pasteboard.image,
+           let data = image.pngData() {
+            return IOSClip(
+                kind: .image,
+                title: "Clipboard image",
+                detail: "\(Int(image.size.width)) x \(Int(image.size.height))",
+                imageData: data
+            )
+        }
+
+        if let url = pasteboard.url {
+            let cleanedURL = IOSClipboardContentCleaner.removingTrackingParameters(from: url) ?? url
+            return IOSClip(
+                kind: .link,
+                title: cleanedURL.host(percentEncoded: false) ?? cleanedURL.absoluteString,
+                detail: cleanedURL.absoluteString,
+                content: cleanedURL.absoluteString
+            )
+        }
+
+        if let text = pasteboard.string?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !text.isEmpty {
+            if let url = URL(string: text), url.scheme?.hasPrefix("http") == true {
+                let cleanedURL = IOSClipboardContentCleaner.removingTrackingParameters(from: url) ?? url
+                return IOSClip(
+                    kind: .link,
+                    title: cleanedURL.host(percentEncoded: false) ?? cleanedURL.absoluteString.previewLine(limit: 64),
+                    detail: cleanedURL.absoluteString,
+                    content: cleanedURL.absoluteString
+                )
+            }
+
+            return IOSClip(
+                kind: .text,
+                title: text.previewLine(limit: 72),
+                detail: text.previewLine(limit: 140),
+                content: text
+            )
+        }
+
+        return nil
+    }
+
     private func persist() {
         guard let data = try? encoder.encode(clips) else {
             return
         }
         defaults.set(data, forKey: clipsKey)
+    }
+}
+
+enum IOSPasteboardCaptureResult: Equatable {
+    case saved(IOSClipKind)
+    case unchanged
+    case ownWrite
+    case empty
+
+    var didSave: Bool {
+        if case .saved = self {
+            return true
+        }
+        return false
+    }
+}
+
+private struct IOSClipSignature: Equatable {
+    let kind: IOSClipKind
+    let content: String?
+    let imageData: Data?
+
+    init(_ clip: IOSClip) {
+        self.kind = clip.kind
+        self.content = clip.content
+        self.imageData = clip.imageData
     }
 }
 
@@ -260,6 +320,14 @@ private extension IOSClip {
 }
 
 private extension IOSClipKind {
+    var toastName: String {
+        switch self {
+        case .text: "text"
+        case .link: "link"
+        case .image: "image"
+        }
+    }
+
     init?(searchToken: String) {
         switch searchToken {
         case "text", "txt":
