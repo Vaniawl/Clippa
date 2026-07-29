@@ -17,7 +17,6 @@ final class AppState {
     let launchAtLoginController = LaunchAtLoginController()
     let previewController = ClipboardPreviewController()
     let pasteFailureController = PasteFailureController()
-    let operationFailureController = OperationFailureController()
     private var undoHistory: [[ClipboardItem]] = []
     private(set) var isAutoPasteReady = AccessibilityService.isTrusted
 
@@ -59,11 +58,6 @@ final class AppState {
         }
     }
 
-    func setShowPanelShortcut(_ shortcut: HotKeyShortcut) {
-        settings.showPanelShortcut = shortcut
-        registerShowPanelShortcut()
-    }
-
     func togglePanelFromShortcut() {
         panelController.toggle(appState: self, requiresEditableTarget: false)
     }
@@ -77,65 +71,27 @@ final class AppState {
         }
     }
 
-    func pasteSelectedItemAsPlainText() {
-        guard let id = store.selectedItemID,
-              let item = store.visibleItems.first(where: { $0.id == id })
-        else {
-            return
-        }
-        Task {
-            await pasteAsPlainText(item)
-        }
-    }
-
     func showSettings() {
         settingsWindowController.show(appState: self)
     }
 
     func setHistoryRetention(_ retention: HistoryRetention) {
         settings.historyRetention = retention
-        recordUndo(
-            store.updatePolicy(settings.historyPolicy),
-            message: String(localized: "History updated")
-        )
+        recordUndo(store.updatePolicy(settings.historyPolicy))
     }
 
     func setHistoryLimit(_ limit: HistoryLimit) {
         settings.historyLimit = limit
-        recordUndo(
-            store.updatePolicy(settings.historyPolicy),
-            message: String(localized: "History updated")
-        )
-    }
-
-    func setHistoryDiskBudget(_ budget: HistoryDiskBudget) {
-        settings.historyDiskBudget = budget
-        recordUndo(
-            store.updatePolicy(settings.historyPolicy),
-            message: String(localized: "History updated")
-        )
+        recordUndo(store.updatePolicy(settings.historyPolicy))
     }
 
     func copy(_ item: ClipboardItem) {
-        Task {
-            do {
-                let resolved = try await store.resolvedItem(item)
-                pasteService.copyPayload(resolved.payload)
-                store.use(item)
-            } catch {
-                store.reportStorageFailure(String(localized: "Copying the image"))
-            }
-        }
+        pasteService.copyPayload(item.payload)
+        store.use(item)
     }
 
     func preview(_ item: ClipboardItem) {
-        Task {
-            do {
-                previewController.show(try await store.resolvedItem(item))
-            } catch {
-                store.reportStorageFailure(String(localized: "Opening Quick Look"))
-            }
-        }
+        previewController.show(item)
     }
 
     func open(_ item: ClipboardItem) {
@@ -149,10 +105,7 @@ final class AppState {
             url = nil
         }
         guard let url else {
-            operationFailureController.show(
-                title: String(localized: "Item Unavailable"),
-                message: String(localized: "The original file is no longer available.")
-            )
+            NSSound.beep()
             return
         }
         panelController.close()
@@ -160,26 +113,22 @@ final class AppState {
     }
 
     func extractText(_ item: ClipboardItem) {
+        guard case .image(let data, _) = item.payload else {
+            NSSound.beep()
+            return
+        }
         Task {
-            do {
-                let data = try await store.imageData(for: item.payload)
-                let text = await ImageTextExtractor.recognizeText(in: data)
-                guard !text.isEmpty else {
-                    operationFailureController.show(
-                        title: String(localized: "No Text Found"),
-                        message: String(localized: "Clippa could not recognize text in this image.")
-                    )
-                    return
-                }
-                store.add(
-                    payload: .text(text),
-                    sourceBundleIdentifier: Bundle.main.bundleIdentifier,
-                    date: Date()
-                )
-                store.selectedFilter = .text
-            } catch {
-                store.reportStorageFailure(String(localized: "Extracting text"))
+            let text = await ImageTextExtractor.recognizeText(in: data)
+            guard !text.isEmpty else {
+                NSSound.beep()
+                return
             }
+            store.add(
+                payload: .text(text),
+                sourceBundleIdentifier: Bundle.main.bundleIdentifier,
+                date: Date()
+            )
+            store.selectedFilter = .text
         }
     }
 
@@ -191,17 +140,17 @@ final class AppState {
         guard let deleted = store.delete(item) else {
             return
         }
-        recordUndo([deleted], message: String(localized: "Clip deleted"))
+        recordUndo([deleted])
     }
 
     func clearUnpinnedHistory() {
         let removed = store.clearUnpinned()
-        recordUndo(removed, message: String(localized: "Unpinned history cleared"))
+        recordUndo(removed)
     }
 
     func clearAllHistory() {
         let removed = store.clearAll()
-        recordUndo(removed, message: String(localized: "History cleared"))
+        recordUndo(removed)
     }
 
     func exportPinnedClips() {
@@ -212,16 +161,10 @@ final class AppState {
         guard panel.runModal() == .OK, let url = panel.url else {
             return
         }
-        Task {
-            do {
-                try await store.exportResolvedPinnedData().write(to: url, options: .atomic)
-            } catch {
-                store.reportStorageFailure(String(localized: "Exporting pinned clips"))
-                operationFailureController.show(
-                    title: String(localized: "Export Failed"),
-                    message: String(localized: "The pinned clip archive could not be written.")
-                )
-            }
+        do {
+            try store.exportPinnedData().write(to: url, options: .atomic)
+        } catch {
+            NSSound.beep()
         }
     }
 
@@ -237,10 +180,7 @@ final class AppState {
         do {
             _ = try store.importPinnedData(Data(contentsOf: url))
         } catch {
-            operationFailureController.show(
-                title: String(localized: "Import Failed"),
-                message: String(localized: "The selected file is not a supported Clippa pinned archive.")
-            )
+            NSSound.beep()
         }
     }
 
@@ -250,7 +190,6 @@ final class AppState {
             return
         }
         store.restore(items)
-        store.dismissUndoMessage()
     }
 
     func performPanelAction(_ action: PanelKeyAction) {
@@ -265,8 +204,6 @@ final class AppState {
             store.selectAdjacentFilter(offset: -1)
         case .paste:
             pasteSelectedItem()
-        case .pastePlainText:
-            pasteSelectedItemAsPlainText()
         case .copy:
             withSelectedItem(copy)
         case .preview:
@@ -289,38 +226,11 @@ final class AppState {
 
     func paste(_ item: ClipboardItem, into target: PasteTarget?) async {
         let target = target
-        let resolved: ClipboardItem
-        do {
-            resolved = try await store.resolvedItem(item)
-        } catch {
-            store.reportStorageFailure(String(localized: "Pasting the image"))
-            return
-        }
         store.use(item)
         panelController.close()
         try? await Task.sleep(for: .milliseconds(35))
         let outcome = await pasteService.paste(
-            resolved,
-            into: target,
-            addTrailingSpace: settings.addSpaceAfterPaste
-        )
-        guard outcome != .pasted else {
-            return
-        }
-        pasteFailureController.show(requiresAccessibility: outcome == .copiedOnlyRequiresAccessibility)
-    }
-
-    func pasteAsPlainText(_ item: ClipboardItem) async {
-        guard let text = item.payload.plainTextValue else {
-            NSSound.beep()
-            return
-        }
-        let target = panelController.pasteTarget
-        store.use(item)
-        panelController.close()
-        try? await Task.sleep(for: .milliseconds(35))
-        let outcome = await pasteService.pastePlainText(
-            text,
+            item,
             into: target,
             addTrailingSpace: settings.addSpaceAfterPaste
         )
@@ -339,7 +249,7 @@ final class AppState {
         action(item)
     }
 
-    private func recordUndo(_ items: [ClipboardItem], message: String) {
+    private func recordUndo(_ items: [ClipboardItem]) {
         guard !items.isEmpty else {
             return
         }
@@ -347,13 +257,13 @@ final class AppState {
         if undoHistory.count > 10 {
             undoHistory.removeFirst(undoHistory.count - 10)
         }
-        if panelController.isVisible {
-            store.showUndoMessage(message)
-        }
     }
 
     func quit() {
-        NSApp.terminate(nil)
+        Task {
+            await store.flushPendingSave()
+            NSApp.terminate(nil)
+        }
     }
 }
 
@@ -388,29 +298,20 @@ final class PanelController {
             pasteTarget = PasteTarget(application: frontmostApplication, focusedElement: focusedElement)
         }
         appState.store.searchQuery = ""
+        appState.store.selectedFilter = .all
         if let first = appState.store.visibleItems.first {
             appState.store.select(first)
         }
 
         let content = PanelView(
             store: appState.store,
-            pasteDestination: pasteTarget?.application.map {
-                PanelPasteDestination(
-                    applicationName: $0.localizedName ?? String(localized: "Previous Application"),
-                    bundleIdentifier: $0.bundleIdentifier
-                )
-            },
             onPasteSelected: { [weak appState] in appState?.pasteSelectedItem() },
-            onPasteAsPlainText: { [weak appState] item in
-                Task { await appState?.pasteAsPlainText(item) }
-            },
             onCopy: { [weak appState] item in appState?.copy(item) },
             onPreview: { [weak appState] item in appState?.preview(item) },
             onOpen: { [weak appState] item in appState?.open(item) },
             onExtractText: { [weak appState] item in appState?.extractText(item) },
             onTogglePin: { [weak appState] item in appState?.togglePin(item) },
-            onDelete: { [weak appState] item in appState?.delete(item) },
-            onUndo: { [weak appState] in appState?.undoLastHistoryAction() }
+            onDelete: { [weak appState] item in appState?.delete(item) }
         )
         let hostingView = NSHostingView(rootView: content)
         let size = NSSize(width: DesignSystem.panelWidth, height: DesignSystem.panelHeight)
@@ -464,8 +365,6 @@ final class PanelController {
         let modifiers = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
         if modifiers == .command {
             switch event.keyCode {
-            case UInt16(kVK_Return), UInt16(kVK_ANSI_KeypadEnter):
-                return .pastePlainText
             case UInt16(kVK_ANSI_C):
                 return .copy
             case UInt16(kVK_ANSI_Y):
@@ -532,7 +431,6 @@ enum PanelKeyAction: Sendable, Equatable {
     case selectNextFilter
     case selectPreviousFilter
     case paste
-    case pastePlainText
     case copy
     case preview
     case togglePin

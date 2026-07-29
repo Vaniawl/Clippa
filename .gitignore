@@ -5,12 +5,3 @@ DerivedData/
 build/
 *.moved-aside
 *.xcresult
-__pycache__/
-*.pyc
-
-# agent framework
-agent-framework/runs/
-.claude/settings.local.json
-.kimi-code/local.toml
-.env
-*.bak-pre-framework

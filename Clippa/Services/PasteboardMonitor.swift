@@ -67,21 +67,18 @@ final class PasteboardMonitor {
 
     private func readPayload(from pasteboard: NSPasteboard) -> ClipboardPayload? {
         if let objects = pasteboard.readObjects(forClasses: [NSURL.self], options: [.urlReadingFileURLsOnly: true]) as? [NSURL], !objects.isEmpty {
-            let urls = objects.prefix(ClipboardPayloadLimits.maximumFileCount).map { $0 as URL }
+            let urls = objects.map { $0 as URL }
             return .files(urls.map { url in
                 let bookmark = try? url.bookmarkData(options: .minimalBookmark, includingResourceValuesForKeys: nil, relativeTo: nil)
                 return FileReference(url: url, bookmarkData: bookmark)
             })
         }
 
-        if let image = NSImage(pasteboard: pasteboard),
-           let data = image.tiffRepresentation,
-           data.count <= ClipboardPayloadLimits.maximumImageByteCount {
+        if let image = NSImage(pasteboard: pasteboard), let data = image.tiffRepresentation {
             return .image(data: data, uti: UTType.tiff.identifier)
         }
 
-        if let string = pasteboard.string(forType: .string),
-           string.utf8.count <= ClipboardPayloadLimits.maximumTextByteCount {
+        if let string = pasteboard.string(forType: .string) {
             if let url = URL(string: string), let scheme = url.scheme, !scheme.isEmpty {
                 return .url(url)
             }

@@ -9,9 +9,9 @@ enum IOSClipKind: String, Codable, CaseIterable, Identifiable, Sendable {
 
     var title: String {
         switch self {
-        case .text: String(localized: "Text")
-        case .link: String(localized: "Link")
-        case .image: String(localized: "Image")
+        case .text: "Text"
+        case .link: "Link"
+        case .image: "Image"
         }
     }
 

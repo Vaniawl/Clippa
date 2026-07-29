@@ -47,7 +47,6 @@ struct PanelMetrics {
 
 struct ClipboardThumbnailView: View {
     let item: ClipboardItem
-    let loadImageData: @MainActor (ClipboardPayload) async throws -> Data
     var size: CGFloat
     var cornerRadius: CGFloat = 8
     var showsPin = false
@@ -74,17 +73,7 @@ struct ClipboardThumbnailView: View {
         }
         .accessibilityHidden(true)
         .task(id: item.payloadHash) {
-            let data: Data
-            switch item.payload {
-            case .image(let inlineData, _):
-                data = inlineData
-            case .storedImage:
-                guard let storedData = try? await loadImageData(item.payload) else {
-                    image = nil
-                    return
-                }
-                data = storedData
-            default:
+            guard case .image(let data, _) = item.payload else {
                 image = nil
                 return
             }
@@ -95,7 +84,7 @@ struct ClipboardThumbnailView: View {
     @ViewBuilder
     private var thumbnail: some View {
         switch item.payload {
-        case .image, .storedImage:
+        case .image:
             if let image {
                 Image(nsImage: image)
                     .resizable()

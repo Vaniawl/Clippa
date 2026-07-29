@@ -6,7 +6,7 @@
 
 <p align="center">
   <strong>Private clipboard history for macOS.</strong><br>
-  Open with <code>Command-Shift-V</code> (or your chosen shortcut), pick an item, press <code>Return</code>, and keep working.
+  Open with <code>Command-Shift-V</code>, pick an item, press <code>Return</code>, and keep working.
 </p>
 
 <p align="center">
@@ -84,37 +84,28 @@ You can also download `Clippa.app.zip` from the latest GitHub release, unzip it,
 
 ## What It Does
 
-Clippa runs quietly in the menu bar. Press `Command-Shift-V` in any app, select a clipboard
-item with the keyboard or a single click, then press `Return` or double-click to paste it
-back into the destination shown in the panel header.
+Clippa runs quietly in the menu bar. Press `Command-Shift-V` in any app, select a clipboard item with the keyboard or mouse, then press `Return` or click to paste it back into the app you were using.
 
 Core workflow:
 
 - `Command-Shift-V` opens clipboard history.
-- The global shortcut can be recorded in Settings; registration status and a menu-bar
-  Open History fallback are always visible.
 - `Up` / `Down` selects items.
 - `Left` / `Right` switches filters.
-- `Return` or double-click pastes the selected item.
-- `Command-Return` pastes text or links as plain text.
+- `Return` or click pastes the selected item.
 - `Esc` closes the panel.
 
 Useful details:
 
 - Keeps recent text, links, images, and file references.
 - Newest copied item stays at the top.
-- Pinned items remain visible at the top of All and in their dedicated filter.
-- A compact footer keeps the primary keyboard commands visible.
-- Delete and clear actions show a five-second Undo banner; `Command-Z` remains available
-  after the banner closes.
+- Pinned items stay available separately.
 - Optional trailing space for pasted text and links.
 - Context menu supports copy, pin, delete, open, Quick Look, and image text extraction.
 - Search supports plain text plus tokens such as `kind:text`, `type:link`, `from:safari`, `is:pinned`, `today`, and `yesterday`.
-- The search help button lists tokens and the plain-text paste shortcut in context.
 - History saving can be paused temporarily from the menu bar or Privacy settings.
 - Link tracking cleanup removes common `utm_*`, `fbclid`, `gclid`, and similar parameters.
 - Pinned clips can be exported and imported as local JSON.
-- History retention, item limits, on-disk budget, excluded apps, and Launch at Login are configurable.
+- History retention, item limits, excluded apps, and Launch at Login are configurable.
 
 ## iPhone Companion
 
@@ -136,8 +127,7 @@ Clippa does not upload clipboard contents, does not use analytics, and does not 
 Privacy behavior:
 
 - Clipboard history stays on your Mac.
-- Stored macOS history is encrypted locally with AES-GCM; its 256-bit key is stored in
-  Keychain, separately from the encrypted manifest and image blobs.
+- Stored history is encrypted locally with AES-GCM.
 - No telemetry, advertising SDKs, account system, or cloud clipboard database.
 - Common password managers are excluded by default.
 - Additional apps can be added to the excluded-apps list.
@@ -151,11 +141,10 @@ The current public release is `1.0.13`.
 | Check | Status |
 | --- | --- |
 | GitHub Actions CI | Passing |
-| Local Swift tests | 43/43 passing |
-| Local iOS companion tests | 13/13 passing |
-| Unsigned Release build | Passing |
-| Developer ID + notarization | Prepared; credentials-dependent and not run in this checkout |
-| Gatekeeper assessment of current 1.0.13 ZIP | Fails (legacy ad-hoc artifact; replacement release required) |
+| Local Swift tests | 34/34 passing |
+| Local iOS companion tests | 8/8 passing |
+| Release build | Passing |
+| Smoke launch | Passing |
 | GitHub release | `v1.0.13` live |
 | npm package | `clippa@1.0.13` prepared; publish requires npm 2FA |
 | Homebrew cask | `clippa 1.0.13` |
@@ -181,9 +170,6 @@ git clone https://github.com/Vaniawl/Clippa.git
 cd Clippa
 xcodebuild -project Clippa.xcodeproj -scheme Clippa -destination 'platform=macOS' test
 xcodebuild -project Clippa.xcodeproj -scheme 'Clippa iOS' -destination 'platform=iOS Simulator,name=iPhone 17 Pro' CODE_SIGNING_ALLOWED=NO test
-DEVELOPER_ID_APPLICATION="Developer ID Application: …" \
-APPLE_TEAM_ID="…" \
-APPLE_NOTARY_KEYCHAIN_PROFILE="clippa-notary" \
 SMOKE_LAUNCH=1 ./scripts/release.sh
 ```
 
@@ -205,7 +191,5 @@ git pull origin main
 
 - Bundle identifier: `app.clippa.Clippa`
 - Version: `1.0.13`
-- Production release packaging fails closed unless Developer ID signing and notarization
-  credentials are supplied. It verifies the hardened runtime, notarizes, staples,
-  assesses with Gatekeeper, reopens the final ZIP, and writes a SHA-256 checksum.
+- Release builds use hardened runtime.
 - History retention and item limits are configurable; the default is 100 items for one week.

@@ -219,16 +219,8 @@ private struct HeaderSummaryView: View {
                     .fixedSize(horizontal: false, vertical: true)
             } else {
                 HStack(spacing: 8) {
-                    MetricPill(
-                        value: "\(clipCount)",
-                        label: clipCount == 1 ? String(localized: "clip") : String(localized: "clips"),
-                        systemImage: "tray.full"
-                    )
-                    MetricPill(
-                        value: "\(pinnedCount)",
-                        label: String(localized: "pinned"),
-                        systemImage: "pin"
-                    )
+                    MetricPill(value: "\(clipCount)", label: clipCount == 1 ? "clip" : "clips", systemImage: "tray.full")
+                    MetricPill(value: "\(pinnedCount)", label: "pinned", systemImage: "pin")
                 }
             }
         }
@@ -237,9 +229,9 @@ private struct HeaderSummaryView: View {
 
     private var summary: String {
         if clipCount == 0 {
-            return String(localized: "Private clipboard history")
+            return "Private clipboard history"
         }
-        return String(localized: "Ready when you return")
+        return "Ready when you return"
     }
 }
 
@@ -518,18 +510,18 @@ private enum IOSClearScope {
     var title: String {
         switch self {
         case .unpinned:
-            String(localized: "Clear unpinned clips?")
+            "Clear unpinned clips?"
         case .all:
-            String(localized: "Clear all Clippa history?")
+            "Clear all Clippa history?"
         }
     }
 
     var actionTitle: String {
         switch self {
         case .unpinned:
-            String(localized: "Clear Unpinned")
+            "Clear Unpinned"
         case .all:
-            String(localized: "Clear All")
+            "Clear All"
         }
     }
 }

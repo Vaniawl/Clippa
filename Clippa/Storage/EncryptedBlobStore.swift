@@ -15,19 +15,18 @@ actor EncryptedBlobStore {
     }
 
     func save(_ data: Data, filename: String) async throws -> String {
-        let url = try url(for: filename)
         try FileManager.default.createDirectory(at: folderURL, withIntermediateDirectories: true)
         let keyData = try await keyStore.loadOrCreateKey()
         let sealed = try AES.GCM.seal(data, using: SymmetricKey(data: keyData))
         guard let combined = sealed.combined else {
             throw EncryptedBlobStoreError.missingCombinedRepresentation
         }
-        try combined.write(to: url, options: .atomic)
+        try combined.write(to: folderURL.appendingPathComponent(filename), options: .atomic)
         return filename
     }
 
     func load(filename: String) async throws -> Data? {
-        let url = try url(for: filename)
+        let url = folderURL.appendingPathComponent(filename)
         guard FileManager.default.fileExists(atPath: url.path) else {
             return nil
         }
@@ -35,10 +34,6 @@ actor EncryptedBlobStore {
         let combined = try Data(contentsOf: url)
         let box = try AES.GCM.SealedBox(combined: combined)
         return try AES.GCM.open(box, using: SymmetricKey(data: keyData))
-    }
-
-    func contains(filename: String) throws -> Bool {
-        FileManager.default.fileExists(atPath: try url(for: filename).path)
     }
 
     func removeAll(except filenamesToKeep: Set<String>) throws {
@@ -50,20 +45,8 @@ actor EncryptedBlobStore {
             try? FileManager.default.removeItem(at: file)
         }
     }
-
-    private func url(for filename: String) throws -> URL {
-        guard !filename.isEmpty,
-              filename == URL(fileURLWithPath: filename).lastPathComponent,
-              !filename.contains("/"),
-              !filename.contains("\\")
-        else {
-            throw EncryptedBlobStoreError.invalidFilename
-        }
-        return folderURL.appendingPathComponent(filename, isDirectory: false)
-    }
 }
 
 enum EncryptedBlobStoreError: Error {
     case missingCombinedRepresentation
-    case invalidFilename
 }

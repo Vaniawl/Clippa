@@ -18,34 +18,24 @@ final class IOSClipStore {
     private(set) var clips: [IOSClip]
     var selectedFilter: IOSClipFilter = .all
     var lastCopyMessage: String?
-    private(set) var storageMessage: String?
 
     private let defaults: UserDefaults
     private let pasteboard: IOSPasteboard
-    private let persistence: IOSClipPersistence
+    private let encoder = JSONEncoder()
+    private let decoder = JSONDecoder()
     private let clipsKey = "clippa.ios.clips"
     private let maxClips = 200
-    private let maxImageByteCount = 25 * 1024 * 1024
     private var lastObservedPasteboardChangeCount: Int?
     private var lastWrittenPasteboardSignature: IOSClipSignature?
 
-    init(
-        defaults: UserDefaults = .standard,
-        pasteboard: IOSPasteboard = UIPasteboard.general,
-        storageDirectoryURL: URL? = nil
-    ) {
+    init(defaults: UserDefaults = .standard, pasteboard: IOSPasteboard = UIPasteboard.general) {
         self.defaults = defaults
         self.pasteboard = pasteboard
-        self.persistence = IOSClipPersistence(
-            rootURL: storageDirectoryURL ?? Self.defaultStorageDirectory(for: defaults)
-        )
-
-        let loadResult = persistence.load(legacyArchive: defaults.data(forKey: clipsKey))
-        self.clips = loadResult.clips
-        self.storageMessage = loadResult.message
-        self.lastCopyMessage = loadResult.message
-        if loadResult.didMigrateLegacyArchive {
-            defaults.removeObject(forKey: clipsKey)
+        if let data = defaults.data(forKey: clipsKey),
+           let decoded = try? decoder.decode([IOSClip].self, from: data) {
+            self.clips = decoded
+        } else {
+            self.clips = []
         }
     }
 
@@ -131,7 +121,7 @@ final class IOSClipStore {
             clips[index].lastCopiedAt = Date()
         }
         persist()
-        lastCopyMessage = String(localized: "Copied. Go back and paste.")
+        lastCopyMessage = "Copied. Go back and paste."
         return true
     }
 
@@ -151,13 +141,13 @@ final class IOSClipStore {
     func clearUnpinned() {
         clips.removeAll { !$0.isPinned }
         persist()
-        lastCopyMessage = String(localized: "Cleared unpinned clips.")
+        lastCopyMessage = "Cleared unpinned clips."
     }
 
     func clearAll() {
         clips.removeAll()
         persist()
-        lastCopyMessage = String(localized: "Cleared history.")
+        lastCopyMessage = "Cleared history."
     }
 
     func clearMessage() {
@@ -195,7 +185,7 @@ final class IOSClipStore {
         lastObservedPasteboardChangeCount = observedChangeCount
         guard let clip = currentPasteboardClip() else {
             if showMessage {
-                lastCopyMessage = String(localized: "Clipboard is empty.")
+                lastCopyMessage = "Clipboard is empty."
             }
             return .empty
         }
@@ -207,7 +197,7 @@ final class IOSClipStore {
 
         upsert(clip)
         if showMessage {
-            lastCopyMessage = String(localized: "Saved current \(clip.kind.toastName).")
+            lastCopyMessage = "Saved current \(clip.kind.toastName)."
         }
         return .saved(clip.kind)
     }
@@ -215,13 +205,9 @@ final class IOSClipStore {
     private func currentPasteboardClip() -> IOSClip? {
         if let image = pasteboard.image,
            let data = image.pngData() {
-            guard data.count <= maxImageByteCount else {
-                lastCopyMessage = String(localized: "That image is too large to save.")
-                return nil
-            }
             return IOSClip(
                 kind: .image,
-                title: String(localized: "Clipboard image"),
+                title: "Clipboard image",
                 detail: "\(Int(image.size.width)) x \(Int(image.size.height))",
                 imageData: data
             )
@@ -261,245 +247,10 @@ final class IOSClipStore {
     }
 
     private func persist() {
-        let snapshot = clips
-        persistence.scheduleSave(snapshot) { [weak self] result in
-            Task { @MainActor [weak self] in
-                guard let self else {
-                    return
-                }
-                switch result {
-                case .success:
-                    break
-                case .failure:
-                    self.storageMessage = String(localized: "Clippa could not save the latest history changes.")
-                    self.lastCopyMessage = self.storageMessage
-                }
-            }
+        guard let data = try? encoder.encode(clips) else {
+            return
         }
-    }
-
-    func flushPersistence() async {
-        await persistence.flush()
-    }
-
-    private static func defaultStorageDirectory(for defaults: UserDefaults) -> URL {
-        if defaults === UserDefaults.standard {
-            let base = FileManager.default.urls(
-                for: .applicationSupportDirectory,
-                in: .userDomainMask
-            ).first ?? FileManager.default.temporaryDirectory
-            return base.appendingPathComponent("Clippa", isDirectory: true)
-                .appendingPathComponent("iOSHistory", isDirectory: true)
-        }
-        let identifierKey = "clippa.ios.test-storage-identifier"
-        let identifier: String
-        if let existing = defaults.string(forKey: identifierKey) {
-            identifier = existing
-        } else {
-            identifier = UUID().uuidString
-            defaults.set(identifier, forKey: identifierKey)
-        }
-        return FileManager.default.temporaryDirectory
-            .appendingPathComponent("ClippaIOSTests-\(identifier)", isDirectory: true)
-    }
-}
-
-private final class IOSClipPersistence: @unchecked Sendable {
-    struct LoadResult {
-        var clips: [IOSClip]
-        var message: String?
-        var didMigrateLegacyArchive: Bool
-    }
-
-    enum PersistenceError: Error, Sendable {
-        case missingImageData(UUID)
-    }
-
-    private static let queue = DispatchQueue(label: "app.clippa.ios-history", qos: .utility)
-    private let rootURL: URL
-    private let manifestURL: URL
-    private let imagesURL: URL
-    private let encoder = JSONEncoder()
-    private let decoder = JSONDecoder()
-
-    init(rootURL: URL) {
-        self.rootURL = rootURL
-        self.manifestURL = rootURL.appendingPathComponent("clips.json")
-        self.imagesURL = rootURL.appendingPathComponent("Images", isDirectory: true)
-        encoder.dateEncodingStrategy = .iso8601
-        decoder.dateDecodingStrategy = .iso8601
-    }
-
-    func load(legacyArchive: Data?) -> LoadResult {
-        Self.queue.sync {
-            if FileManager.default.fileExists(atPath: manifestURL.path) {
-                return loadManifest()
-            }
-            guard let legacyArchive else {
-                return LoadResult(clips: [], message: nil, didMigrateLegacyArchive: false)
-            }
-            do {
-                let clips = try JSONDecoder().decode([IOSClip].self, from: legacyArchive)
-                try save(clips)
-                return LoadResult(clips: clips, message: nil, didMigrateLegacyArchive: true)
-            } catch {
-                return LoadResult(
-                    clips: [],
-                    message: String(localized: "The previous iPhone history could not be migrated and was left untouched."),
-                    didMigrateLegacyArchive: false
-                )
-            }
-        }
-    }
-
-    func scheduleSave(
-        _ clips: [IOSClip],
-        completion: @escaping @Sendable (Result<Void, PersistenceError>) -> Void
-    ) {
-        Self.queue.async { [self] in
-            do {
-                try save(clips)
-                completion(.success(()))
-            } catch let error as PersistenceError {
-                completion(.failure(error))
-            } catch {
-                completion(.failure(.missingImageData(UUID())))
-            }
-        }
-    }
-
-    func flush() async {
-        await withCheckedContinuation { continuation in
-            Self.queue.async {
-                continuation.resume()
-            }
-        }
-    }
-
-    private func loadManifest() -> LoadResult {
-        do {
-            let data = try Data(contentsOf: manifestURL)
-            let records = try decoder.decode([IOSClipDiskRecord].self, from: data)
-            var missingImageCount = 0
-            let clips = records.compactMap { record -> IOSClip? in
-                if let imageFilename = record.imageFilename {
-                    guard Self.isSafeFilename(imageFilename) else {
-                        missingImageCount += 1
-                        return nil
-                    }
-                    let imageURL = imagesURL.appendingPathComponent(imageFilename)
-                    guard let imageData = try? Data(contentsOf: imageURL) else {
-                        missingImageCount += 1
-                        return nil
-                    }
-                    return record.materialize(imageData: imageData)
-                }
-                return record.materialize(imageData: nil)
-            }
-            let message = missingImageCount == 0
-                ? nil
-                : String(localized: "\(missingImageCount) image clip(s) were skipped because their files were missing.")
-            return LoadResult(clips: clips, message: message, didMigrateLegacyArchive: false)
-        } catch {
-            let isolatedURL = rootURL.appendingPathComponent(
-                "clips-corrupt-\(Int(Date().timeIntervalSince1970)).json"
-            )
-            try? FileManager.default.moveItem(at: manifestURL, to: isolatedURL)
-            return LoadResult(
-                clips: [],
-                message: String(localized: "The iPhone history manifest was damaged and has been isolated."),
-                didMigrateLegacyArchive: false
-            )
-        }
-    }
-
-    private func save(_ clips: [IOSClip]) throws {
-        try FileManager.default.createDirectory(
-            at: imagesURL,
-            withIntermediateDirectories: true,
-            attributes: [.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication]
-        )
-
-        var activeImageFilenames: Set<String> = []
-        let records = try clips.map { clip -> IOSClipDiskRecord in
-            guard clip.kind == .image else {
-                return IOSClipDiskRecord(clip: clip, imageFilename: nil)
-            }
-            guard let imageData = clip.imageData else {
-                throw PersistenceError.missingImageData(clip.id)
-            }
-            let filename = "image-\(clip.id.uuidString).png"
-            let imageURL = imagesURL.appendingPathComponent(filename)
-            if !FileManager.default.fileExists(atPath: imageURL.path) {
-                try imageData.write(to: imageURL, options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication])
-            }
-            activeImageFilenames.insert(filename)
-            return IOSClipDiskRecord(clip: clip, imageFilename: filename)
-        }
-
-        let encoded = try encoder.encode(records)
-        try FileManager.default.createDirectory(
-            at: rootURL,
-            withIntermediateDirectories: true,
-            attributes: [.protectionKey: FileProtectionType.completeUntilFirstUserAuthentication]
-        )
-        try encoded.write(
-            to: manifestURL,
-            options: [.atomic, .completeFileProtectionUntilFirstUserAuthentication]
-        )
-
-        let existingImages = try FileManager.default.contentsOfDirectory(
-            at: imagesURL,
-            includingPropertiesForKeys: nil
-        )
-        for url in existingImages where !activeImageFilenames.contains(url.lastPathComponent) {
-            try? FileManager.default.removeItem(at: url)
-        }
-    }
-
-    private static func isSafeFilename(_ filename: String) -> Bool {
-        !filename.isEmpty &&
-        filename == URL(fileURLWithPath: filename).lastPathComponent &&
-        !filename.contains("/") &&
-        !filename.contains("\\")
-    }
-}
-
-private struct IOSClipDiskRecord: Codable, Sendable {
-    var id: UUID
-    var kind: IOSClipKind
-    var title: String
-    var detail: String
-    var content: String?
-    var imageFilename: String?
-    var createdAt: Date
-    var lastCopiedAt: Date?
-    var isPinned: Bool
-
-    init(clip: IOSClip, imageFilename: String?) {
-        id = clip.id
-        kind = clip.kind
-        title = clip.title
-        detail = clip.detail
-        content = clip.content
-        self.imageFilename = imageFilename
-        createdAt = clip.createdAt
-        lastCopiedAt = clip.lastCopiedAt
-        isPinned = clip.isPinned
-    }
-
-    func materialize(imageData: Data?) -> IOSClip {
-        IOSClip(
-            id: id,
-            kind: kind,
-            title: title,
-            detail: detail,
-            content: content,
-            imageData: imageData,
-            createdAt: createdAt,
-            lastCopiedAt: lastCopiedAt,
-            isPinned: isPinned
-        )
+        defaults.set(data, forKey: clipsKey)
     }
 }
 
@@ -571,9 +322,9 @@ private extension IOSClip {
 private extension IOSClipKind {
     var toastName: String {
         switch self {
-        case .text: String(localized: "text")
-        case .link: String(localized: "link")
-        case .image: String(localized: "image")
+        case .text: "text"
+        case .link: "link"
+        case .image: "image"
         }
     }
 
@@ -602,11 +353,11 @@ enum IOSClipFilter: String, CaseIterable, Identifiable {
 
     var title: String {
         switch self {
-        case .all: String(localized: "All")
-        case .pinned: String(localized: "Pinned")
-        case .text: String(localized: "Text")
-        case .link: String(localized: "Links")
-        case .image: String(localized: "Images")
+        case .all: "All"
+        case .pinned: "Pinned"
+        case .text: "Text"
+        case .link: "Links"
+        case .image: "Images"
         }
     }
 

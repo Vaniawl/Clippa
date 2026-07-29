@@ -38,11 +38,8 @@ jobs:
             -destination 'platform=macOS' \
             test
 
-      - name: Check extracted localization coverage
-        run: ./scripts/check-localization-usage.sh
-
   release:
-    name: Release Build Validation
+    name: Release Package
     needs: test
     runs-on: macos-26
     timeout-minutes: 15
@@ -53,18 +50,16 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v7
 
-      - name: Validate release script
-        run: bash -n ./scripts/release.sh
+      - name: Build and verify release archive
+        run: SKIP_TEST=1 ./scripts/release.sh
 
-      - name: Build unsigned Release configuration
-        run: |
-          xcodebuild \
-            -project Clippa.xcodeproj \
-            -scheme Clippa \
-            -configuration Release \
-            -destination 'platform=macOS' \
-            CODE_SIGNING_ALLOWED=NO \
-            build
+      - name: Upload verified archive
+        uses: actions/upload-artifact@v7
+        with:
+          name: Clippa-${{ github.sha }}
+          path: outputs/Clippa.app.zip
+          if-no-files-found: error
+          retention-days: 7
 
   ios:
     name: iOS Companion Build

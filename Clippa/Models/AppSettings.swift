@@ -40,27 +40,11 @@ enum HistoryLimit: Int, Codable, CaseIterable, Identifiable, Sendable {
     var displayName: String { "\(rawValue)" }
 }
 
-enum HistoryDiskBudget: Int, Codable, CaseIterable, Identifiable, Sendable {
-    case oneHundredMegabytes = 100
-    case twoHundredFiftyMegabytes = 250
-    case fiveHundredMegabytes = 500
-    case oneGigabyte = 1_000
-
-    var id: Int { rawValue }
-    var displayName: String { "\(rawValue) MB" }
-    var byteCount: Int { rawValue * 1_000_000 }
-}
-
 struct ClipboardHistoryPolicy: Equatable, Sendable {
     var retention: HistoryRetention
     var limit: HistoryLimit
-    var diskBudget: HistoryDiskBudget = .twoHundredFiftyMegabytes
 
-    static let `default` = ClipboardHistoryPolicy(
-        retention: .oneWeek,
-        limit: .oneHundred,
-        diskBudget: .twoHundredFiftyMegabytes
-    )
+    static let `default` = ClipboardHistoryPolicy(retention: .oneWeek, limit: .oneHundred)
 }
 
 struct HotKeyShortcut: Codable, Equatable, Sendable {
@@ -214,16 +198,9 @@ final class AppSettings {
     var historyLimit: HistoryLimit {
         didSet { persist() }
     }
-    var historyDiskBudget: HistoryDiskBudget {
-        didSet { persist() }
-    }
 
     var historyPolicy: ClipboardHistoryPolicy {
-        ClipboardHistoryPolicy(
-            retention: historyRetention,
-            limit: historyLimit,
-            diskBudget: historyDiskBudget
-        )
+        ClipboardHistoryPolicy(retention: historyRetention, limit: historyLimit)
     }
 
     private let defaults: UserDefaults
@@ -236,9 +213,7 @@ final class AppSettings {
         }
         self.excludedBundleIdentifiers = defaults.array(forKey: Keys.excludedBundleIdentifiers) as? [String] ?? PrivacyFilter.defaultExcludedBundleIdentifiers
         self.hasShownAccessibilityOnboarding = defaults.bool(forKey: Keys.hasShownAccessibilityOnboarding)
-        self.showPanelShortcut = defaults.data(forKey: Keys.showPanelShortcut)
-            .flatMap { try? JSONDecoder().decode(HotKeyShortcut.self, from: $0) }
-            ?? .defaultShowPanel
+        self.showPanelShortcut = .defaultShowPanel
         self.addSpaceAfterPaste = defaults.object(forKey: Keys.addSpaceAfterPaste) == nil
             ? true
             : defaults.bool(forKey: Keys.addSpaceAfterPaste)
@@ -249,9 +224,6 @@ final class AppSettings {
         self.pauseCaptureUntil = defaults.object(forKey: Keys.pauseCaptureUntil) as? Date
         self.historyRetention = defaults.string(forKey: Keys.historyRetention).flatMap(HistoryRetention.init(rawValue:)) ?? .oneWeek
         self.historyLimit = HistoryLimit(rawValue: defaults.integer(forKey: Keys.historyLimit)) ?? .oneHundred
-        self.historyDiskBudget = HistoryDiskBudget(
-            rawValue: defaults.integer(forKey: Keys.historyDiskBudget)
-        ) ?? .twoHundredFiftyMegabytes
     }
 
     var isCapturePaused: Bool {
@@ -303,7 +275,6 @@ final class AppSettings {
         }
         defaults.set(historyRetention.rawValue, forKey: Keys.historyRetention)
         defaults.set(historyLimit.rawValue, forKey: Keys.historyLimit)
-        defaults.set(historyDiskBudget.rawValue, forKey: Keys.historyDiskBudget)
     }
 
     private static func migrateLegacyDefaultsIfNeeded(to defaults: UserDefaults) {
@@ -335,7 +306,6 @@ final class AppSettings {
         static let pauseCaptureUntil = "pauseCaptureUntil"
         static let historyRetention = "historyRetention"
         static let historyLimit = "historyLimit"
-        static let historyDiskBudget = "historyDiskBudget"
         static let migratedLegacyBundleDefaults = "migratedLegacyBundleDefaults"
         static let persistedKeys = [
             excludedBundleIdentifiers,
@@ -346,8 +316,7 @@ final class AppSettings {
             removeTrackingParametersFromLinks,
             pauseCaptureUntil,
             historyRetention,
-            historyLimit,
-            historyDiskBudget
+            historyLimit
         ]
     }
 

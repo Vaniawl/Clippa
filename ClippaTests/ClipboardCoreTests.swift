@@ -2,7 +2,6 @@ import AppKit
 import Carbon.HIToolbox
 import CryptoKit
 import ImageIO
-import SwiftUI
 import XCTest
 @testable import Clippa
 
@@ -42,7 +41,7 @@ final class ClipboardCoreTests: XCTestCase {
         )
     }
 
-    func testPinnedItemsAppearFirstInAllAndRemainVisibleInKindFilters() {
+    func testPinnedItemsOnlyAppearInPinnedFilterAndHistoryStaysNewestFirst() {
         let store = ClipboardStore()
         let now = Date()
         store.add(payload: .text("old"), sourceBundleIdentifier: nil, date: now.addingTimeInterval(-1))
@@ -51,8 +50,8 @@ final class ClipboardCoreTests: XCTestCase {
         store.togglePinSelected()
 
         XCTAssertEqual(store.items.first?.preview, "new")
-        XCTAssertEqual(store.filteredItems(query: "", filter: .all).map(\.preview), ["old", "new"])
-        XCTAssertEqual(store.filteredItems(query: "", filter: .text).map(\.preview), ["new", "old"])
+        XCTAssertEqual(store.filteredItems(query: "", filter: .all).map(\.preview), ["new"])
+        XCTAssertEqual(store.filteredItems(query: "", filter: .text).map(\.preview), ["new"])
         XCTAssertEqual(store.filteredItems(query: "", filter: .pinned).map(\.preview), ["old"])
     }
 
@@ -66,12 +65,12 @@ final class ClipboardCoreTests: XCTestCase {
 
         store.select(second)
         store.togglePin(first)
-        XCTAssertEqual(store.selectedItemID, first.id)
+        XCTAssertEqual(store.selectedItemID, second.id)
         XCTAssertTrue(store.items.first { $0.id == first.id }?.isPinned == true)
 
         store.delete(second)
         XCTAssertNil(store.items.first { $0.id == second.id })
-        XCTAssertEqual(store.selectedItemID, first.id)
+        XCTAssertNil(store.selectedItemID)
 
         store.selectedFilter = .pinned
         XCTAssertEqual(store.selectedItemID, first.id)
@@ -178,8 +177,8 @@ final class ClipboardCoreTests: XCTestCase {
         XCTAssertEqual(store.filteredItems(query: "", filter: .url).first?.kind, .url)
         XCTAssertEqual(store.filteredItems(query: "", filter: .files).first?.kind, .files)
         XCTAssertEqual(store.filteredItems(query: "", filter: .pinned).first?.preview, "alpha note")
-        XCTAssertEqual(store.filteredItems(query: "alpha", filter: .all).first?.preview, "alpha note")
-        XCTAssertEqual(store.filteredItems(query: "alpha", filter: .text).first?.preview, "alpha note")
+        XCTAssertTrue(store.filteredItems(query: "alpha", filter: .all).isEmpty)
+        XCTAssertTrue(store.filteredItems(query: "alpha", filter: .text).isEmpty)
     }
 
     func testAdvancedSearchTokens() {
@@ -250,8 +249,8 @@ final class ClipboardCoreTests: XCTestCase {
         let revisionBeforePin = store.visibleItemsRevision
         store.togglePin(store.items.first!)
         XCTAssertEqual(store.pinnedItemCount, 1)
-        XCTAssertEqual(store.visibleItems.map(\.preview), ["alpha"])
-        XCTAssertEqual(store.visibleItemsRevision, revisionBeforePin)
+        XCTAssertTrue(store.visibleItems.isEmpty)
+        XCTAssertGreaterThan(store.visibleItemsRevision, revisionBeforePin)
     }
 
     func testImageMetadataUsesImagePropertiesWithoutViewDecode() throws {
@@ -270,56 +269,6 @@ final class ClipboardCoreTests: XCTestCase {
         let image = try XCTUnwrap(loadedImage)
 
         XCTAssertLessThanOrEqual(max(image.size.width, image.size.height), 256)
-    }
-
-    func testPanelScreenshotFixtureRendersAtReferenceSize() throws {
-        let store = ClipboardStore(persistenceEnabled: false)
-        store.add(payload: .text("Screenshot fixture"), sourceBundleIdentifier: "com.apple.Notes")
-        store.add(
-            payload: .url(URL(string: "https://clippa.app/reference")!),
-            sourceBundleIdentifier: "com.apple.Safari"
-        )
-        if let link = store.items.first(where: { $0.kind == .url }) {
-            store.togglePin(link)
-        }
-        store.showUndoMessage(String(localized: "Clip deleted"))
-        let view = PanelView(
-            store: store,
-            pasteDestination: PanelPasteDestination(
-                applicationName: "Notes",
-                bundleIdentifier: "com.apple.Notes"
-            ),
-            onPasteSelected: {},
-            onPasteAsPlainText: { _ in },
-            onCopy: { _ in },
-            onPreview: { _ in },
-            onOpen: { _ in },
-            onExtractText: { _ in },
-            onTogglePin: { _ in },
-            onDelete: { _ in },
-            onUndo: {}
-        )
-        let hostingView = NSHostingView(rootView: view)
-        hostingView.frame = NSRect(
-            origin: .zero,
-            size: NSSize(width: DesignSystem.panelWidth, height: DesignSystem.panelHeight)
-        )
-        hostingView.layoutSubtreeIfNeeded()
-        let bitmap = try XCTUnwrap(hostingView.bitmapImageRepForCachingDisplay(in: hostingView.bounds))
-        hostingView.cacheDisplay(in: hostingView.bounds, to: bitmap)
-        let pngData = try XCTUnwrap(bitmap.representation(using: .png, properties: [:]))
-
-        XCTAssertEqual(hostingView.bounds.width, DesignSystem.panelWidth)
-        XCTAssertEqual(hostingView.bounds.height, DesignSystem.panelHeight)
-        XCTAssertEqual(
-            bitmap.pixelsWide * Int(DesignSystem.panelHeight),
-            bitmap.pixelsHigh * Int(DesignSystem.panelWidth)
-        )
-        XCTAssertGreaterThan(pngData.count, 10_000)
-        let attachment = XCTAttachment(data: pngData, uniformTypeIdentifier: "public.png")
-        attachment.name = "Clippa Panel Reference"
-        attachment.lifetime = .keepAlways
-        add(attachment)
     }
 
     func testPrivacyMarkersAndExcludedBundleIDs() {
@@ -343,168 +292,35 @@ final class ClipboardCoreTests: XCTestCase {
         XCTAssertEqual(opened, payload)
     }
 
-    func testKeyStoreMigratesExistingLocalKeyAfterKeychainVerification() async throws {
+    func testKeyStoreUsesExistingLocalKeyWithoutKeychainPrompt() async throws {
         let folder = FileManager.default.temporaryDirectory
             .appendingPathComponent("ClippaTests.\(UUID().uuidString)", isDirectory: true)
         let keyURL = folder.appendingPathComponent("history.key")
-        let backupURL = folder.appendingPathComponent("history.key.legacy-backup")
         try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
         let key = Data(repeating: 7, count: 32)
         try key.write(to: keyURL)
-        let keychain = TestHistoryKeychain()
 
-        let store = LocalHistoryKeyStore(
-            fallbackURL: keyURL,
-            legacyBackupURL: backupURL,
-            keychain: keychain
-        )
+        let store = LocalHistoryKeyStore(fallbackURL: keyURL)
         let loaded = try await store.loadOrCreateKey()
 
         XCTAssertEqual(loaded, key)
-        XCTAssertEqual(try keychain.load(), key)
-        XCTAssertFalse(FileManager.default.fileExists(atPath: keyURL.path))
-        XCTAssertEqual(try Data(contentsOf: backupURL), key)
         try? FileManager.default.removeItem(at: folder)
     }
 
-    func testKeyStoreCreatesAndVerifiesKeychainKeyWithoutLocalKeyFile() async throws {
+    func testKeyStoreCreatesLocalKeyFile() async throws {
         let folder = FileManager.default.temporaryDirectory
             .appendingPathComponent("ClippaTests.\(UUID().uuidString)", isDirectory: true)
         let keyURL = folder.appendingPathComponent("history.key")
-        let keychain = TestHistoryKeychain()
 
-        let store = LocalHistoryKeyStore(fallbackURL: keyURL, keychain: keychain)
+        let store = LocalHistoryKeyStore(fallbackURL: keyURL)
         let key = try await store.loadOrCreateKey()
+        let saved = try Data(contentsOf: keyURL)
+        let attributes = try FileManager.default.attributesOfItem(atPath: keyURL.path)
 
         XCTAssertEqual(key.count, 32)
-        XCTAssertEqual(try keychain.load(), key)
-        XCTAssertFalse(FileManager.default.fileExists(atPath: keyURL.path))
+        XCTAssertEqual(saved, key)
+        XCTAssertEqual(attributes[.posixPermissions] as? Int, 0o600)
         try? FileManager.default.removeItem(at: folder)
-    }
-
-    func testKeyStoreKeepsLegacyKeyWhenKeychainVerificationFails() async throws {
-        let folder = FileManager.default.temporaryDirectory
-            .appendingPathComponent("ClippaTests.\(UUID().uuidString)", isDirectory: true)
-        let keyURL = folder.appendingPathComponent("history.key")
-        try FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
-        let key = Data(repeating: 9, count: 32)
-        try key.write(to: keyURL)
-        let keychain = TestHistoryKeychain(dropsWrites: true)
-        let store = LocalHistoryKeyStore(fallbackURL: keyURL, keychain: keychain)
-
-        do {
-            _ = try await store.loadOrCreateKey()
-            XCTFail("Expected Keychain verification to fail.")
-        } catch {
-            XCTAssertEqual(error as? LocalHistoryKeyStoreError, .keychainVerificationFailed)
-        }
-        XCTAssertEqual(try Data(contentsOf: keyURL), key)
-        try? FileManager.default.removeItem(at: folder)
-    }
-
-    func testEncryptedHistoryLoadsImageLazilyAndDoesNotRewriteUnchangedBlob() async throws {
-        let fixture = try HistoryStoreFixture()
-        let data = try makePNGData(width: 4, height: 3)
-        let item = ClipboardItem(payload: .image(data: data, uti: "public.png"))
-
-        try await fixture.store.save(StoredClipboardSnapshot(items: [item]))
-        let blobURL = try XCTUnwrap(
-            try FileManager.default.contentsOfDirectory(
-                at: fixture.blobFolderURL,
-                includingPropertiesForKeys: [.contentModificationDateKey]
-            ).first
-        )
-        let initialDate = try blobURL.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate
-
-        let loaded = try await fixture.store.load()
-        guard case .storedImage = try XCTUnwrap(loaded.items.first).payload else {
-            return XCTFail("Expected image bytes to remain on disk until requested.")
-        }
-        let resolvedData = try await fixture.store.loadImageData(for: loaded.items[0].payload)
-        XCTAssertEqual(resolvedData, data)
-
-        try await Task.sleep(for: .milliseconds(20))
-        try await fixture.store.save(loaded)
-        let finalDate = try blobURL.resourceValues(forKeys: [.contentModificationDateKey]).contentModificationDate
-        XCTAssertEqual(finalDate, initialDate)
-        fixture.remove()
-    }
-
-    func testMissingImageBlobSkipsOnlyAffectedHistoryItem() async throws {
-        let fixture = try HistoryStoreFixture()
-        let image = ClipboardItem(payload: .image(data: Data([1, 2, 3]), uti: "public.data"))
-        let text = ClipboardItem(payload: .text("still available"))
-        try await fixture.store.save(StoredClipboardSnapshot(items: [image, text]))
-
-        for url in try FileManager.default.contentsOfDirectory(
-            at: fixture.blobFolderURL,
-            includingPropertiesForKeys: nil
-        ) {
-            try FileManager.default.removeItem(at: url)
-        }
-
-        let loaded = try await fixture.store.load()
-        XCTAssertEqual(loaded.items.map(\.preview), ["still available"])
-        let recoveryMessage = await fixture.store.recoveryMessage()
-        XCTAssertNotNil(recoveryMessage)
-        fixture.remove()
-    }
-
-    func testFailedManifestCommitDoesNotCleanExistingBlobs() async throws {
-        let fixture = try HistoryStoreFixture(manifestIsDirectory: true)
-        try FileManager.default.createDirectory(at: fixture.blobFolderURL, withIntermediateDirectories: true)
-        let orphanURL = fixture.blobFolderURL.appendingPathComponent("orphan.blob")
-        try Data("recoverable".utf8).write(to: orphanURL)
-        let snapshot = StoredClipboardSnapshot(items: [
-            ClipboardItem(payload: .image(data: Data([4, 5, 6]), uti: nil))
-        ])
-
-        do {
-            try await fixture.store.save(snapshot)
-            XCTFail("Expected writing a manifest over a directory to fail.")
-        } catch {
-            XCTAssertTrue(FileManager.default.fileExists(atPath: orphanURL.path))
-        }
-        fixture.remove()
-    }
-
-    func testOlderSaveGenerationCannotOverwriteNewerSnapshot() async throws {
-        let fixture = try HistoryStoreFixture()
-        let newer = StoredClipboardSnapshot(items: [ClipboardItem(payload: .text("newer"))])
-        let older = StoredClipboardSnapshot(items: [ClipboardItem(payload: .text("older"))])
-
-        try await fixture.store.save(newer, generation: 2)
-        try await fixture.store.save(older, generation: 1)
-
-        let loadedPreviews = try await fixture.store.load().items.map(\.preview)
-        XCTAssertEqual(loadedPreviews, ["newer"])
-        fixture.remove()
-    }
-
-    func testPinnedImportRebuildsUntrustedDerivedMetadata() throws {
-        let store = ClipboardStore(persistenceEnabled: false)
-        let forged = ClipboardItem(
-            id: UUID(),
-            kind: .image,
-            createdAt: .distantPast,
-            lastUsedAt: .distantPast,
-            preview: "forged preview",
-            payload: .text("trusted payload"),
-            payloadHash: "forged hash",
-            isPinned: false,
-            sourceBundleIdentifier: "example.source"
-        )
-        let encoder = JSONEncoder()
-        encoder.dateEncodingStrategy = .iso8601
-        let archive = TestPinnedClipboardArchive(items: [forged])
-
-        _ = try store.importPinnedData(encoder.encode(archive))
-
-        let imported = try XCTUnwrap(store.items.first)
-        XCTAssertEqual(imported.kind, .text)
-        XCTAssertEqual(imported.preview, "trusted payload")
-        XCTAssertEqual(imported.payloadHash, ClipboardPayload.text("trusted payload").stableHash)
-        XCTAssertTrue(imported.isPinned)
     }
 
     func testWrongKeyFailsAESGCMOpen() throws {
@@ -514,7 +330,7 @@ final class ClipboardCoreTests: XCTestCase {
         XCTAssertThrowsError(try AES.GCM.open(AES.GCM.SealedBox(combined: combined), using: SymmetricKey(size: .bits256)))
     }
 
-    func testShowPanelShortcutDefaultsAndPersists() throws {
+    func testShowPanelShortcutIsAlwaysCommandShiftV() throws {
         let suiteName = "ClippaTests.shortcuts.\(UUID().uuidString)"
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
         defaults.removePersistentDomain(forName: suiteName)
@@ -525,7 +341,7 @@ final class ClipboardCoreTests: XCTestCase {
         settings.showPanelShortcut = HotKeyShortcut(keyCode: UInt32(kVK_ANSI_B), modifiers: UInt32(controlKey | optionKey))
 
         settings = AppSettings(defaults: defaults)
-        XCTAssertEqual(settings.showPanelShortcut.displayString, "⌃⌥B")
+        XCTAssertEqual(settings.showPanelShortcut.displayString, "⇧⌘V")
 
         defaults.removePersistentDomain(forName: suiteName)
     }
@@ -540,60 +356,14 @@ final class ClipboardCoreTests: XCTestCase {
 
         settings.historyRetention = .oneMonth
         settings.historyLimit = .fiveHundred
-        settings.historyDiskBudget = .oneGigabyte
 
         settings = AppSettings(defaults: defaults)
         XCTAssertEqual(
             settings.historyPolicy,
-            ClipboardHistoryPolicy(
-                retention: .oneMonth,
-                limit: .fiveHundred,
-                diskBudget: .oneGigabyte
-            )
+            ClipboardHistoryPolicy(retention: .oneMonth, limit: .fiveHundred)
         )
 
         defaults.removePersistentDomain(forName: suiteName)
-    }
-
-    func testDiskBudgetEvictsOldestUnpinnedPayloadsButKeepsPinnedItems() {
-        let store = ClipboardStore(
-            policy: ClipboardHistoryPolicy(
-                retention: .forever,
-                limit: .fiveHundred,
-                diskBudget: .oneHundredMegabytes
-            ),
-            persistenceEnabled: false
-        )
-        let largeMetadata = ClipboardImageMetadata(
-            widthPixels: 8_000,
-            heightPixels: 8_000,
-            byteCount: 60_000_000,
-            uti: "public.png"
-        )
-        let oldLargeImage = ClipboardItem(
-            payload: .storedImage(
-                filename: "old.blob",
-                uti: "public.png",
-                metadata: largeMetadata,
-                payloadHash: "old"
-            ),
-            createdAt: Date(timeIntervalSince1970: 1)
-        )
-        let pinnedLargeImage = ClipboardItem(
-            payload: .storedImage(
-                filename: "pinned.blob",
-                uti: "public.png",
-                metadata: largeMetadata,
-                payloadHash: "pinned"
-            ),
-            createdAt: Date(timeIntervalSince1970: 2),
-            isPinned: true
-        )
-
-        store.restore([oldLargeImage, pinnedLargeImage])
-
-        XCTAssertTrue(store.items.contains { $0.id == pinnedLargeImage.id })
-        XCTAssertFalse(store.items.contains { $0.id == oldLargeImage.id })
     }
 
     func testSpaceAfterPasteSettingDefaultsOnAndPersists() throws {
@@ -691,25 +461,6 @@ final class ClipboardCoreTests: XCTestCase {
         XCTAssertEqual(PanelController.action(for: event), .togglePin)
     }
 
-    func testCommandReturnMapsToPasteAsPlainText() throws {
-        let event = try XCTUnwrap(
-            NSEvent.keyEvent(
-                with: .keyDown,
-                location: .zero,
-                modifierFlags: .command,
-                timestamp: 0,
-                windowNumber: 0,
-                context: nil,
-                characters: "\r",
-                charactersIgnoringModifiers: "\r",
-                isARepeat: false,
-                keyCode: UInt16(kVK_Return)
-            )
-        )
-
-        XCTAssertEqual(PanelController.action(for: event), .pastePlainText)
-    }
-
     func testPanelPositionStaysInsideVisibleFrameAtEdges() {
         let screen = TestScreen(frame: NSRect(x: 0, y: 0, width: 800, height: 600), visibleFrame: NSRect(x: 0, y: 25, width: 800, height: 550))
         let size = NSSize(width: 500, height: 292)
@@ -763,66 +514,6 @@ private func makePNGData(width: Int, height: Int) throws -> Data {
         throw XCTSkip("Could not finalize PNG data.")
     }
     return data as Data
-}
-
-private final class TestHistoryKeychain: HistoryKeychain, @unchecked Sendable {
-    private let lock = NSLock()
-    private var data: Data?
-    private let dropsWrites: Bool
-
-    init(data: Data? = nil, dropsWrites: Bool = false) {
-        self.data = data
-        self.dropsWrites = dropsWrites
-    }
-
-    func load() throws -> Data? {
-        lock.withLock { data }
-    }
-
-    func save(_ data: Data) throws {
-        guard !dropsWrites else {
-            return
-        }
-        lock.withLock {
-            self.data = data
-        }
-    }
-}
-
-private struct HistoryStoreFixture {
-    let rootURL: URL
-    let blobFolderURL: URL
-    let store: EncryptedHistoryStore
-
-    init(manifestIsDirectory: Bool = false) throws {
-        rootURL = FileManager.default.temporaryDirectory
-            .appendingPathComponent("ClippaHistoryTests.\(UUID().uuidString)", isDirectory: true)
-        blobFolderURL = rootURL.appendingPathComponent("BinaryPayloads", isDirectory: true)
-        let manifestURL = rootURL.appendingPathComponent("history.aesgcm")
-        let keyURL = rootURL.appendingPathComponent("history.key")
-        let keyStore = LocalHistoryKeyStore(
-            fallbackURL: keyURL,
-            keychain: TestHistoryKeychain()
-        )
-        store = EncryptedHistoryStore(
-            fileURL: manifestURL,
-            keyStore: keyStore,
-            blobFolderURL: blobFolderURL
-        )
-        if manifestIsDirectory {
-            try FileManager.default.createDirectory(at: manifestURL, withIntermediateDirectories: true)
-        }
-    }
-
-    func remove() {
-        try? FileManager.default.removeItem(at: rootURL)
-    }
-}
-
-private struct TestPinnedClipboardArchive: Codable {
-    var version = 1
-    var exportedAt = Date()
-    var items: [ClipboardItem]
 }
 
 private final class TestScreen: NSScreen {
