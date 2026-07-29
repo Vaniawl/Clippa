@@ -1,4 +1,5 @@
 import AppKit
+import Carbon.HIToolbox
 import SwiftUI
 import UniformTypeIdentifiers
 
@@ -37,8 +38,29 @@ private struct GeneralSettingsView: View {
                 Toggle("Launch at Login", isOn: launchAtLoginBinding)
 
                 LabeledContent("Shortcut") {
-                    Text(appState.settings.showPanelShortcut.displayString)
-                        .font(.body.monospaced())
+                    HStack(spacing: 8) {
+                        ShortcutRecorder(
+                            shortcut: Binding(
+                                get: { appState.settings.showPanelShortcut },
+                                set: { appState.setShowPanelShortcut($0) }
+                            )
+                        )
+
+                        Button("Reset") {
+                            appState.setShowPanelShortcut(.defaultShowPanel)
+                        }
+                        .disabled(appState.settings.showPanelShortcut == .defaultShowPanel)
+                    }
+                }
+
+                LabeledContent("Shortcut Status") {
+                    Label(
+                        appState.hotKeyService.registrationStatus,
+                        systemImage: appState.hotKeyService.isRegistered
+                            ? "checkmark.circle.fill"
+                            : "exclamationmark.triangle.fill"
+                    )
+                    .foregroundStyle(appState.hotKeyService.isRegistered ? Color.green : Color.orange)
                 }
             }
 
@@ -130,6 +152,84 @@ private struct GeneralSettingsView: View {
     }
 }
 
+private struct ShortcutRecorder: NSViewRepresentable {
+    @Binding var shortcut: HotKeyShortcut
+
+    func makeNSView(context: Context) -> ShortcutRecorderButton {
+        let button = ShortcutRecorderButton()
+        button.onChange = { shortcut = $0 }
+        button.shortcut = shortcut
+        return button
+    }
+
+    func updateNSView(_ button: ShortcutRecorderButton, context: Context) {
+        button.onChange = { shortcut = $0 }
+        button.shortcut = shortcut
+    }
+}
+
+private final class ShortcutRecorderButton: NSButton {
+    var onChange: ((HotKeyShortcut) -> Void)?
+    var shortcut: HotKeyShortcut = .defaultShowPanel {
+        didSet {
+            guard !isRecording else {
+                return
+            }
+            title = shortcut.displayString
+        }
+    }
+    private var isRecording = false
+
+    override init(frame frameRect: NSRect) {
+        super.init(frame: frameRect)
+        bezelStyle = .rounded
+        font = .monospacedSystemFont(ofSize: NSFont.systemFontSize, weight: .medium)
+        target = self
+        action = #selector(beginRecording)
+        setAccessibilityLabel(String(localized: "Record keyboard shortcut"))
+    }
+
+    required init?(coder: NSCoder) {
+        nil
+    }
+
+    override var acceptsFirstResponder: Bool {
+        true
+    }
+
+    @objc private func beginRecording() {
+        isRecording = true
+        title = String(localized: "Type shortcut…")
+        window?.makeFirstResponder(self)
+    }
+
+    override func keyDown(with event: NSEvent) {
+        if event.keyCode == UInt16(kVK_Escape) {
+            finishRecording()
+            return
+        }
+        guard let shortcut = HotKeyShortcut.from(event: event) else {
+            NSSound.beep()
+            return
+        }
+        onChange?(shortcut)
+        finishRecording(with: shortcut)
+    }
+
+    override func resignFirstResponder() -> Bool {
+        let result = super.resignFirstResponder()
+        if result {
+            finishRecording()
+        }
+        return result
+    }
+
+    private func finishRecording(with shortcut: HotKeyShortcut? = nil) {
+        isRecording = false
+        title = (shortcut ?? self.shortcut).displayString
+    }
+}
+
 private struct HistorySettingsView: View {
     @Bindable var appState: AppState
     @State private var confirmation: HistoryClearConfirmation?
@@ -150,11 +250,22 @@ private struct HistorySettingsView: View {
                             .tag(limit)
                     }
                 }
+
+                Picker("Disk Budget", selection: diskBudgetBinding) {
+                    ForEach(HistoryDiskBudget.allCases) { budget in
+                        Text(budget.displayName)
+                            .tag(budget)
+                    }
+                }
             }
 
             Section("Current History") {
                 LabeledContent("Items", value: "\(appState.store.items.count)")
                 LabeledContent("Pinned", value: "\(appState.store.pinnedItemCount)")
+                if let storageMessage = appState.store.storageMessage {
+                    Label(storageMessage, systemImage: "exclamationmark.triangle.fill")
+                        .foregroundStyle(.red)
+                }
             }
 
             Section("Pinned Clips") {
@@ -227,6 +338,13 @@ private struct HistorySettingsView: View {
         Binding(
             get: { appState.settings.historyLimit },
             set: { appState.setHistoryLimit($0) }
+        )
+    }
+
+    private var diskBudgetBinding: Binding<HistoryDiskBudget> {
+        Binding(
+            get: { appState.settings.historyDiskBudget },
+            set: { appState.setHistoryDiskBudget($0) }
         )
     }
 
@@ -404,6 +522,10 @@ private struct ExcludedApplicationRow: View {
         }
         return NSWorkspace.shared.icon(forFile: applicationURL.path)
     }
+}
+
+#Preview("Settings") {
+    SettingsView(appState: AppState())
 }
 
 @MainActor

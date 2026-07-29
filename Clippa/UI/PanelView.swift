@@ -1,19 +1,28 @@
 import AppKit
 import SwiftUI
 
+struct PanelPasteDestination: Equatable {
+    let applicationName: String
+    let bundleIdentifier: String?
+}
+
 struct PanelView: View {
     @Bindable var store: ClipboardStore
+    var pasteDestination: PanelPasteDestination?
     var onPasteSelected: @MainActor () -> Void
+    var onPasteAsPlainText: @MainActor (ClipboardItem) -> Void
     var onCopy: @MainActor (ClipboardItem) -> Void
     var onPreview: @MainActor (ClipboardItem) -> Void
     var onOpen: @MainActor (ClipboardItem) -> Void
     var onExtractText: @MainActor (ClipboardItem) -> Void
     var onTogglePin: @MainActor (ClipboardItem) -> Void
     var onDelete: @MainActor (ClipboardItem) -> Void
+    var onUndo: @MainActor () -> Void
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorSchemeContrast) private var contrast
     @FocusState private var isSearchFocused: Bool
+    @State private var isShowingSearchHelp = false
 
     private let metrics = DesignSystem.panelMetrics
 
@@ -28,6 +37,7 @@ struct PanelView: View {
             }
 
             results
+            ShortcutFooter()
         }
         .padding(metrics.panelPadding)
         .frame(width: DesignSystem.panelWidth, height: DesignSystem.panelHeight)
@@ -37,26 +47,52 @@ struct PanelView: View {
             RoundedRectangle(cornerRadius: metrics.panelCornerRadius)
                 .strokeBorder(panelStroke)
         }
+        .overlay(alignment: .bottom) {
+            if let undoMessage = store.undoMessage {
+                UndoBanner(
+                    message: undoMessage,
+                    onUndo: onUndo,
+                    onDismiss: store.dismissUndoMessage
+                )
+                .padding(.horizontal, 18)
+                .padding(.bottom, 38)
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
         .shadow(color: .black.opacity(metrics.shadowOpacity), radius: metrics.shadowRadius, x: 0, y: metrics.shadowY)
         .accessibilityElement(children: .contain)
         .accessibilityLabel(Text("Clippa clipboard history"))
         .onAppear {
             isSearchFocused = true
         }
+        .onDisappear {
+            store.dismissUndoMessage()
+        }
+        .task(id: store.undoMessage) {
+            guard let message = store.undoMessage else {
+                return
+            }
+            do {
+                try await Task.sleep(for: .seconds(5))
+            } catch {
+                return
+            }
+            guard store.undoMessage == message else {
+                return
+            }
+            animate {
+                store.dismissUndoMessage()
+            }
+        }
+        .animation(reduceMotion ? nil : .snappy(duration: 0.18), value: store.undoMessage)
     }
 
     private var headerRow: some View {
         HStack(spacing: 10) {
-            Image(nsImage: NSApp.applicationIconImage)
-                .resizable()
-                .interpolation(.high)
-                .antialiased(true)
-                .frame(width: 36, height: 36)
-                .accessibilityHidden(true)
+            headerIcon
 
             VStack(alignment: .leading, spacing: 2) {
-                Text("Clippa")
-                    .font(.headline.weight(.semibold))
+                headerTitle
                 Text(summaryText)
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -72,6 +108,32 @@ struct PanelView: View {
             }
         }
         .frame(height: metrics.headerHeight)
+    }
+
+    @ViewBuilder
+    private var headerIcon: some View {
+        if let bundleIdentifier = pasteDestination?.bundleIdentifier {
+            ApplicationIconView(bundleIdentifier: bundleIdentifier, size: 36)
+        } else {
+            Image(nsImage: NSApp.applicationIconImage)
+                .resizable()
+                .interpolation(.high)
+                .antialiased(true)
+                .frame(width: 36, height: 36)
+                .accessibilityHidden(true)
+        }
+    }
+
+    @ViewBuilder
+    private var headerTitle: some View {
+        if let pasteDestination {
+            Text("Paste into \(pasteDestination.applicationName)")
+                .font(.headline.weight(.semibold))
+                .lineLimit(1)
+        } else {
+            Text("Clippa")
+                .font(.headline.weight(.semibold))
+        }
     }
 
     private var summaryText: String {
@@ -102,6 +164,35 @@ struct PanelView: View {
                 .buttonStyle(.plain)
                 .foregroundStyle(.tertiary)
                 .accessibilityLabel(Text("Clear search"))
+            }
+
+            Button {
+                isShowingSearchHelp.toggle()
+            } label: {
+                Image(systemName: "questionmark.circle")
+                    .font(.system(size: 13, weight: .medium))
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(.secondary)
+            .accessibilityLabel(Text("Search help"))
+            .popover(isPresented: $isShowingSearchHelp, arrowEdge: .bottom) {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Search Tips")
+                        .font(.headline)
+                    Text("Combine words with these filters:")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text(verbatim: "kind:text  type:link  from:safari")
+                        .font(.caption.monospaced())
+                    Text(verbatim: "is:pinned  today  yesterday")
+                        .font(.caption.monospaced())
+                    Divider()
+                    Text("Press ⌘Return to paste text or links as plain text.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+                .padding(14)
+                .frame(width: 310, alignment: .leading)
             }
         }
         .padding(.horizontal, 10)
@@ -136,7 +227,7 @@ struct PanelView: View {
     private func count(for filter: ClipboardFilter) -> Int? {
         switch filter {
         case .all:
-            let total = store.items.count(where: { !$0.isPinned })
+            let total = store.items.count
             return total == 0 ? nil : total
         case .pinned:
             return store.pinnedItemCount == 0 ? nil : store.pinnedItemCount
@@ -152,7 +243,7 @@ struct PanelView: View {
     }
 
     private func count(kind: ClipboardItemKind) -> Int? {
-        let total = store.items.count { !$0.isPinned && $0.kind == kind }
+        let total = store.items.count { $0.kind == kind }
         return total == 0 ? nil : total
     }
 
@@ -163,39 +254,22 @@ struct PanelView: View {
         } else {
             ScrollViewReader { proxy in
                 ScrollView {
-                    LazyVStack(spacing: 5) {
-                        ForEach(store.visibleItems) { item in
-                            ClipboardRow(
-                                item: item,
-                                isSelected: item.id == store.selectedItemID,
-                                contrast: contrast,
-                                metrics: metrics,
-                                reduceMotion: reduceMotion,
-                                onPaste: {
-                                    animate { store.select(item) }
-                                    onPasteSelected()
-                                },
-                                onCopy: {
-                                    onCopy(item)
-                                },
-                                onPreview: {
-                                    onPreview(item)
-                                },
-                                onOpen: {
-                                    onOpen(item)
-                                },
-                                onExtractText: {
-                                    onExtractText(item)
-                                },
-                                onTogglePin: {
-                                    animate { onTogglePin(item) }
-                                },
-                                onDelete: {
-                                    animate { onDelete(item) }
+                    LazyVStack(alignment: .leading, spacing: 5) {
+                        if store.selectedFilter == .all {
+                            let pinnedItems = store.visibleItems.filter(\.isPinned)
+                            let recentItems = store.visibleItems.filter { !$0.isPinned }
+                            if !pinnedItems.isEmpty {
+                                ResultSectionHeader(title: "Pinned")
+                                clipboardRows(pinnedItems)
+                            }
+                            if !recentItems.isEmpty {
+                                if !pinnedItems.isEmpty {
+                                    ResultSectionHeader(title: "Recent")
                                 }
-                            )
-                            .id(item.id)
-                            .transition(.opacity.combined(with: .move(edge: .top)))
+                                clipboardRows(recentItems)
+                            }
+                        } else {
+                            clipboardRows(store.visibleItems)
                         }
                     }
                     .padding(.vertical, 2)
@@ -211,6 +285,49 @@ struct PanelView: View {
                 }
                 .animation(reduceMotion ? nil : .snappy(duration: 0.16), value: store.visibleItemsRevision)
             }
+        }
+    }
+
+    private func clipboardRows(_ items: [ClipboardItem]) -> some View {
+        ForEach(items) { item in
+            ClipboardRow(
+                item: item,
+                loadImageData: store.imageData(for:),
+                isSelected: item.id == store.selectedItemID,
+                contrast: contrast,
+                metrics: metrics,
+                reduceMotion: reduceMotion,
+                onSelect: {
+                    animate { store.select(item) }
+                },
+                onPaste: {
+                    animate { store.select(item) }
+                    onPasteSelected()
+                },
+                onPasteAsPlainText: {
+                    onPasteAsPlainText(item)
+                },
+                onCopy: {
+                    onCopy(item)
+                },
+                onPreview: {
+                    onPreview(item)
+                },
+                onOpen: {
+                    onOpen(item)
+                },
+                onExtractText: {
+                    onExtractText(item)
+                },
+                onTogglePin: {
+                    animate { onTogglePin(item) }
+                },
+                onDelete: {
+                    animate { onDelete(item) }
+                }
+            )
+            .id(item.id)
+            .transition(.opacity.combined(with: .move(edge: .top)))
         }
     }
 
@@ -240,6 +357,95 @@ struct PanelView: View {
 
     private var searchBackground: some ShapeStyle {
         AnyShapeStyle(.thinMaterial)
+    }
+}
+
+private struct ResultSectionHeader: View {
+    let title: LocalizedStringKey
+
+    var body: some View {
+        Text(title)
+            .font(.caption2.weight(.semibold))
+            .foregroundStyle(.secondary)
+            .textCase(.uppercase)
+            .padding(.horizontal, 8)
+            .padding(.top, 3)
+            .accessibilityAddTraits(.isHeader)
+    }
+}
+
+private struct ShortcutFooter: View {
+    var body: some View {
+        HStack(spacing: 12) {
+            ShortcutHint(keys: "↑↓", action: "Select")
+            ShortcutHint(keys: "↵", action: "Paste")
+            ShortcutHint(keys: "⌘↵", action: "Plain Text")
+            ShortcutHint(keys: "⌘Y", action: "Preview")
+            ShortcutHint(keys: "⌘P", action: "Pin")
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: 18)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(Text("Keyboard shortcuts"))
+    }
+}
+
+private struct ShortcutHint: View {
+    let keys: String
+    let action: LocalizedStringKey
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Text(verbatim: keys)
+                .font(.caption2.monospaced().weight(.semibold))
+                .foregroundStyle(.primary)
+            Text(action)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+        }
+        .lineLimit(1)
+    }
+}
+
+private struct UndoBanner: View {
+    let message: String
+    let onUndo: @MainActor () -> Void
+    let onDismiss: @MainActor () -> Void
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: "trash")
+                .foregroundStyle(.secondary)
+                .accessibilityHidden(true)
+
+            Text(message)
+                .font(.caption.weight(.medium))
+                .lineLimit(1)
+
+            Button("Undo", action: onUndo)
+                .buttonStyle(.plain)
+                .font(.caption.weight(.semibold))
+                .foregroundStyle(Color.accentColor)
+
+            Button(action: onDismiss) {
+                Image(systemName: "xmark")
+                    .font(.caption2.weight(.bold))
+                    .frame(width: 20, height: 20)
+            }
+            .buttonStyle(.plain)
+            .foregroundStyle(.secondary)
+            .accessibilityLabel(Text("Dismiss"))
+        }
+        .padding(.leading, 12)
+        .padding(.trailing, 7)
+        .frame(height: 36)
+        .background(.ultraThickMaterial, in: .capsule)
+        .overlay {
+            Capsule()
+                .strokeBorder(Color.primary.opacity(0.10))
+        }
+        .shadow(color: .black.opacity(0.16), radius: 12, y: 5)
+        .accessibilityElement(children: .contain)
     }
 }
 
@@ -345,11 +551,14 @@ private struct EmptyClipboardView: View {
 
 private struct ClipboardRow: View {
     let item: ClipboardItem
+    let loadImageData: @MainActor (ClipboardPayload) async throws -> Data
     let isSelected: Bool
     let contrast: ColorSchemeContrast
     let metrics: PanelMetrics
     let reduceMotion: Bool
+    let onSelect: @MainActor () -> Void
     let onPaste: @MainActor () -> Void
+    let onPasteAsPlainText: @MainActor () -> Void
     let onCopy: @MainActor () -> Void
     let onPreview: @MainActor () -> Void
     let onOpen: @MainActor () -> Void
@@ -380,6 +589,12 @@ private struct ClipboardRow: View {
             Button(action: onPaste) {
                 Label("Paste", systemImage: "return")
             }
+            if item.payload.plainTextValue != nil {
+                Button(action: onPasteAsPlainText) {
+                    Label("Paste as Plain Text", systemImage: "textformat")
+                }
+                .keyboardShortcut(.return, modifiers: .command)
+            }
             Button(action: onCopy) {
                 Label("Copy", systemImage: "doc.on.doc")
             }
@@ -405,10 +620,12 @@ private struct ClipboardRow: View {
             }
         }
         .onDrag {
-            item.dragItemProvider
+            item.dragItemProvider(loadImageData: loadImageData)
         }
         .accessibilityElement(children: .contain)
         .accessibilityAddTraits(isSelected ? [.isSelected] : [])
+        .accessibilityAction(named: Text("Select"), onSelect)
+        .accessibilityAction(.default, onPaste)
     }
 
     @ViewBuilder
@@ -459,6 +676,7 @@ private struct ClipboardRow: View {
         HStack(spacing: metrics.rowSpacing) {
             ClipboardThumbnailView(
                 item: item,
+                loadImageData: loadImageData,
                 size: metrics.iconWellSize,
                 cornerRadius: metrics.thumbnailCornerRadius,
                 showsPin: item.isPinned
@@ -484,7 +702,21 @@ private struct ClipboardRow: View {
             }
         }
         .contentShape(.rect)
-        .onTapGesture(perform: onPaste)
+        .gesture(rowTapGesture)
+        .help("Double-click to paste")
+    }
+
+    private var rowTapGesture: some Gesture {
+        TapGesture(count: 2)
+            .exclusively(before: TapGesture(count: 1))
+            .onEnded { gesture in
+                switch gesture {
+                case .first:
+                    onPaste()
+                case .second:
+                    onSelect()
+                }
+            }
     }
 
     private var metadataLine: some View {
@@ -492,7 +724,7 @@ private struct ClipboardRow: View {
             Label(item.kind.displayName, systemImage: item.kind.symbolName)
                 .labelStyle(.titleAndIcon)
 
-            if case .image = item.payload {
+            if item.kind == .image {
                 ClipboardImageInfoView(item: item)
             }
 
@@ -600,7 +832,9 @@ private struct RowIconButton: View {
 
 @MainActor
 private extension ClipboardItem {
-    var dragItemProvider: NSItemProvider {
+    func dragItemProvider(
+        loadImageData: @escaping @MainActor (ClipboardPayload) async throws -> Data
+    ) -> NSItemProvider {
         switch payload {
         case .text(let text):
             return NSItemProvider(object: text as NSString)
@@ -611,6 +845,25 @@ private extension ClipboardItem {
                 return NSItemProvider(object: image)
             }
             return NSItemProvider(object: preview as NSString)
+        case .storedImage(_, let uti, _, _):
+            let provider = NSItemProvider()
+            provider.suggestedName = String(localized: "Clipboard image")
+            provider.registerDataRepresentation(
+                forTypeIdentifier: uti ?? "public.image",
+                visibility: .all
+            ) { completion in
+                let progress = Progress(totalUnitCount: 1)
+                Task { @MainActor in
+                    defer { progress.completedUnitCount = 1 }
+                    do {
+                        completion(try await loadImageData(payload), nil)
+                    } catch {
+                        completion(nil, error)
+                    }
+                }
+                return progress
+            }
+            return provider
         case .files(let references):
             if let url = references.first(where: \.exists)?.url {
                 return NSItemProvider(object: url as NSURL)
@@ -618,4 +871,35 @@ private extension ClipboardItem {
             return NSItemProvider(object: preview as NSString)
         }
     }
+}
+
+#Preview("History Panel") {
+    let store = ClipboardStore(persistenceEnabled: false)
+    store.add(
+        payload: .text("A private clipboard item ready to paste"),
+        sourceBundleIdentifier: "com.apple.Notes"
+    )
+    store.add(
+        payload: .url(URL(string: "https://clippa.app/docs")!),
+        sourceBundleIdentifier: "com.apple.Safari"
+    )
+    if let first = store.items.first {
+        store.togglePin(first)
+    }
+    return PanelView(
+        store: store,
+        pasteDestination: PanelPasteDestination(
+            applicationName: "Notes",
+            bundleIdentifier: "com.apple.Notes"
+        ),
+        onPasteSelected: {},
+        onPasteAsPlainText: { _ in },
+        onCopy: { _ in },
+        onPreview: { _ in },
+        onOpen: { _ in },
+        onExtractText: { _ in },
+        onTogglePin: { _ in },
+        onDelete: { _ in },
+        onUndo: {}
+    )
 }

@@ -63,6 +63,27 @@ final class PasteFailureController {
 }
 
 @MainActor
+final class OperationFailureController {
+    private var isShowing = false
+
+    func show(title: String, message: String) {
+        guard !isShowing else {
+            return
+        }
+        isShowing = true
+        defer { isShowing = false }
+
+        let alert = NSAlert()
+        alert.alertStyle = .warning
+        alert.messageText = title
+        alert.informativeText = message
+        alert.addButton(withTitle: String(localized: "OK"))
+        NSApp.activate(ignoringOtherApps: true)
+        alert.runModal()
+    }
+}
+
+@MainActor
 final class ClipboardPreviewController: NSObject, @preconcurrency QLPreviewPanelDataSource, QLPreviewPanelDelegate {
     private var previewURLs: [URL] = []
     private let previewDirectory = FileManager.default.temporaryDirectory
@@ -116,6 +137,8 @@ final class ClipboardPreviewController: NSObject, @preconcurrency QLPreviewPanel
         case .image(let data, let uti):
             let fileExtension = uti.flatMap { UTType($0)?.preferredFilenameExtension } ?? "tiff"
             return writeTemporary(data, named: "Clipboard.\(fileExtension)")
+        case .storedImage:
+            return []
         }
     }
 

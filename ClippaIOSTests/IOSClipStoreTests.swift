@@ -190,6 +190,94 @@ final class IOSClipStoreTests: XCTestCase {
         XCTAssertEqual(reloaded.clips.map(\.id), IOSClip.sampleClips.map(\.id))
     }
 
+    func testLegacyDefaultsArchiveMigratesOnlyAfterFileWrite() throws {
+        let defaults = try makeDefaults()
+        let rootURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("ClippaIOSMigration.\(UUID().uuidString)", isDirectory: true)
+        let legacyData = try JSONEncoder().encode(IOSClip.sampleClips)
+        defaults.set(legacyData, forKey: "clippa.ios.clips")
+        addTeardownBlock {
+            try? FileManager.default.removeItem(at: rootURL)
+        }
+
+        let store = IOSClipStore(
+            defaults: defaults,
+            pasteboard: MockPasteboard(),
+            storageDirectoryURL: rootURL
+        )
+
+        XCTAssertEqual(store.clips.map(\.id), IOSClip.sampleClips.map(\.id))
+        XCTAssertNil(defaults.data(forKey: "clippa.ios.clips"))
+        XCTAssertTrue(
+            FileManager.default.fileExists(
+                atPath: rootURL.appendingPathComponent("clips.json").path
+            )
+        )
+    }
+
+    func testImagePersistsAsSeparateProtectedFileInsteadOfDefaultsBlob() async throws {
+        let defaults = try makeDefaults()
+        let rootURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("ClippaIOSImages.\(UUID().uuidString)", isDirectory: true)
+        let pasteboard = MockPasteboard()
+        pasteboard.image = UIGraphicsImageRenderer(size: CGSize(width: 5, height: 4)).image { context in
+            UIColor.systemPurple.setFill()
+            context.fill(CGRect(x: 0, y: 0, width: 5, height: 4))
+        }
+        let store = IOSClipStore(
+            defaults: defaults,
+            pasteboard: pasteboard,
+            storageDirectoryURL: rootURL
+        )
+        addTeardownBlock {
+            try? FileManager.default.removeItem(at: rootURL)
+        }
+
+        XCTAssertTrue(store.saveCurrentPasteboard())
+        await store.flushPersistence()
+
+        XCTAssertNil(defaults.data(forKey: "clippa.ios.clips"))
+        let imageURLs = try FileManager.default.contentsOfDirectory(
+            at: rootURL.appendingPathComponent("Images", isDirectory: true),
+            includingPropertiesForKeys: nil
+        )
+        XCTAssertEqual(imageURLs.count, 1)
+        XCTAssertGreaterThan(try Data(contentsOf: imageURLs[0]).count, 0)
+    }
+
+    func testManifestRejectsImageFilenamePathTraversal() throws {
+        let defaults = try makeDefaults()
+        let rootURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent("ClippaIOSPathValidation.\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: rootURL, withIntermediateDirectories: true)
+        let record = TestIOSClipDiskRecord(
+            id: UUID(),
+            kind: .image,
+            title: "Hostile image",
+            detail: "test",
+            content: nil,
+            imageFilename: "../outside.png",
+            createdAt: Date(),
+            lastCopiedAt: nil,
+            isPinned: false
+        )
+        let encoder = JSONEncoder()
+        encoder.dateEncodingStrategy = .iso8601
+        try encoder.encode([record]).write(to: rootURL.appendingPathComponent("clips.json"))
+        addTeardownBlock {
+            try? FileManager.default.removeItem(at: rootURL)
+        }
+
+        let store = IOSClipStore(
+            defaults: defaults,
+            pasteboard: MockPasteboard(),
+            storageDirectoryURL: rootURL
+        )
+
+        XCTAssertTrue(store.clips.isEmpty)
+        XCTAssertNotNil(store.storageMessage)
+    }
+
     private func makeDefaults() throws -> UserDefaults {
         let suite = "ClippaIOSTests.\(UUID().uuidString)"
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
@@ -216,4 +304,16 @@ private final class MockPasteboard: IOSPasteboard {
     }
 
     private(set) var changeCount = 0
+}
+
+private struct TestIOSClipDiskRecord: Codable {
+    var id: UUID
+    var kind: IOSClipKind
+    var title: String
+    var detail: String
+    var content: String?
+    var imageFilename: String?
+    var createdAt: Date
+    var lastCopiedAt: Date?
+    var isPinned: Bool
 }

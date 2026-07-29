@@ -8,6 +8,7 @@ final class GlobalHotKeyService: @unchecked Sendable {
     private var eventHandlerRef: EventHandlerRef?
     private var onHotKey: (@MainActor () -> Void)?
     private(set) var registrationStatus: String = String(localized: "Not registered")
+    private(set) var isRegistered = false
 
     @discardableResult
     func register(shortcut: HotKeyShortcut, onHotKey: @escaping @MainActor () -> Void) -> Bool {
@@ -38,6 +39,7 @@ final class GlobalHotKeyService: @unchecked Sendable {
             &hotKeyRef
         )
         if status == noErr {
+            isRegistered = true
             registrationStatus = String(localized: "Registered")
             return true
         } else {
@@ -48,6 +50,7 @@ final class GlobalHotKeyService: @unchecked Sendable {
     }
 
     func unregister() {
+        isRegistered = false
         if let hotKeyRef {
             UnregisterEventHotKey(hotKeyRef)
             self.hotKeyRef = nil

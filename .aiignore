@@ -1,0 +1,14 @@
+.env
+.env.*
+secrets/
+credentials/
+agent-framework/runs/
+data/
+logs/
+tmp/
+outputs/
+build/
+coverage/
+DerivedData/
+node_modules/
+.idea/

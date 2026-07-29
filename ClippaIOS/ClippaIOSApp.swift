@@ -29,6 +29,7 @@ struct SaveCurrentClipboardIntent: AppIntent {
     func perform() async throws -> some IntentResult & ProvidesDialog {
         let store = IOSClipStore()
         let didSave = store.saveCurrentPasteboard()
+        await store.flushPersistence()
         return .result(dialog: didSave ? "Saved to Clippa." : "Clipboard is empty.")
     }
 }
@@ -55,6 +56,7 @@ struct CopyLatestClipIntent: AppIntent {
             return .result(dialog: "No saved clips yet.")
         }
         let didCopy = store.copy(clip)
+        await store.flushPersistence()
         return .result(dialog: didCopy ? "Copied latest Clippa item." : "Could not copy that item.")
     }
 }

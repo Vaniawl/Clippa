@@ -28,6 +28,7 @@
 		AA0001010000000000000013 /* ClipboardCoreTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002010000000000000013 /* ClipboardCoreTests.swift */; };
 		AA0001010000000000000019 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = AA0002010000000000000019 /* Assets.xcassets */; };
 		AA0001010000000000000020 /* ClippaIOSApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002010000000000000020 /* ClippaIOSApp.swift */; };
+		AA0001010000000000000032 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = AA0003010000000000000002 /* Localizable.strings */; };
 		AA0001010000000000000021 /* IOSClip.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002010000000000000021 /* IOSClip.swift */; };
 		AA0001010000000000000022 /* IOSClipStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002010000000000000022 /* IOSClipStore.swift */; };
 		AA0001010000000000000023 /* ClipsHomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA0002010000000000000023 /* ClipsHomeView.swift */; };
@@ -82,6 +83,8 @@
 		AA0002010000000000000024 /* Clippa iOS.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Clippa iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		AA0002010000000000000030 /* IOSClipStoreTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IOSClipStoreTests.swift; sourceTree = "<group>"; };
 		AA0002010000000000000031 /* ClippaIOSTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = ClippaIOSTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA0002010000000000000032 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
+		AA0002010000000000000033 /* uk */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = uk; path = uk.lproj/Localizable.strings; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -165,8 +168,15 @@
 				AA0002010000000000000021 /* IOSClip.swift */,
 				AA0002010000000000000022 /* IOSClipStore.swift */,
 				AA0002010000000000000023 /* ClipsHomeView.swift */,
+				AA000701000000000000000C /* Resources */,
 			);
 			path = ClippaIOS;
+			sourceTree = "<group>";
+		};
+		AA000701000000000000000C /* Resources */ = {
+			isa = PBXGroup;
+			children = (AA0003010000000000000002 /* Localizable.strings */);
+			path = Resources;
 			sourceTree = "<group>";
 		};
 		AA000701000000000000000B /* ClippaIOSTests */ = {
@@ -256,7 +266,7 @@
 /* Begin PBXResourcesBuildPhase section */
 		AA000A010000000000000001 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (AA0001010000000000000019, AA0001010000000000000012); runOnlyForDeploymentPostprocessing = 0; };
 		AA000A010000000000000002 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
-		AA000A010000000000000003 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		AA000A010000000000000003 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (AA0001010000000000000032); runOnlyForDeploymentPostprocessing = 0; };
 		AA000A010000000000000004 /* Resources */ = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
 /* End PBXResourcesBuildPhase section */
 
@@ -281,6 +291,12 @@
 		AA0003010000000000000001 /* Localizable.strings */ = {
 			isa = PBXVariantGroup;
 			children = (AA0002010000000000000012 /* en */, AA0002010000000000000014 /* uk */);
+			name = Localizable.strings;
+			sourceTree = "<group>";
+		};
+		AA0003010000000000000002 /* Localizable.strings */ = {
+			isa = PBXVariantGroup;
+			children = (AA0002010000000000000032 /* en */, AA0002010000000000000033 /* uk */);
 			name = Localizable.strings;
 			sourceTree = "<group>";
 		};

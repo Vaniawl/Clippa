@@ -69,9 +69,30 @@ struct FileReference: Codable, Hashable, Sendable {
         self.bookmarkData = bookmarkData
     }
 
-    var url: URL { URL(fileURLWithPath: path) }
-    var exists: Bool { FileManager.default.fileExists(atPath: path) }
+    var url: URL {
+        guard let bookmarkData else {
+            return URL(fileURLWithPath: path)
+        }
+        var isStale = false
+        return (
+            try? URL(
+                resolvingBookmarkData: bookmarkData,
+                options: [.withoutUI, .withoutMounting],
+                relativeTo: nil,
+                bookmarkDataIsStale: &isStale
+            )
+        ) ?? URL(fileURLWithPath: path)
+    }
+    var exists: Bool { FileManager.default.fileExists(atPath: url.path) }
     var displayName: String { url.lastPathComponent.isEmpty ? path : url.lastPathComponent }
+}
+
+enum ClipboardPayloadLimits {
+    static let maximumTextByteCount = 1 * 1024 * 1024
+    static let maximumImageByteCount = 25 * 1024 * 1024
+    static let maximumFileCount = 100
+    static let maximumImportByteCount = 50 * 1024 * 1024
+    static let maximumImportItemCount = 500
 }
 
 struct ClipboardImageMetadata: Codable, Equatable, Sendable {
@@ -79,6 +100,13 @@ struct ClipboardImageMetadata: Codable, Equatable, Sendable {
     var heightPixels: Int?
     var byteCount: Int
     var uti: String?
+
+    init(widthPixels: Int?, heightPixels: Int?, byteCount: Int, uti: String?) {
+        self.widthPixels = widthPixels
+        self.heightPixels = heightPixels
+        self.byteCount = byteCount
+        self.uti = uti
+    }
 
     init(data: Data, uti: String?) {
         self.byteCount = data.count
@@ -106,13 +134,14 @@ enum ClipboardPayload: Codable, Equatable, Sendable {
     case text(String)
     case url(URL)
     case image(data: Data, uti: String?)
+    case storedImage(filename: String, uti: String?, metadata: ClipboardImageMetadata, payloadHash: String)
     case files([FileReference])
 
     var kind: ClipboardItemKind {
         switch self {
         case .text: .text
         case .url: .url
-        case .image: .image
+        case .image, .storedImage: .image
         case .files: .files
         }
     }
@@ -125,6 +154,8 @@ enum ClipboardPayload: Codable, Equatable, Sendable {
             url.absoluteString
         case .image(let data, _):
             ByteCountFormatter.string(fromByteCount: Int64(data.count), countStyle: .file)
+        case .storedImage(_, _, let metadata, _):
+            ByteCountFormatter.string(fromByteCount: Int64(metadata.byteCount), countStyle: .file)
         case .files(let refs):
             refs.map(\.displayName).joined(separator: ", ")
         }
@@ -136,7 +167,7 @@ enum ClipboardPayload: Codable, Equatable, Sendable {
             value
         case .url(let url):
             url.absoluteString
-        case .image:
+        case .image, .storedImage:
             ClipboardItemKind.image.displayName
         case .files(let refs):
             refs.map { "\($0.displayName) \($0.path)" }.joined(separator: " ")
@@ -154,6 +185,8 @@ enum ClipboardPayload: Codable, Equatable, Sendable {
         case .image(let data, let uti):
             hasher.update(data: Data((uti ?? "").utf8))
             hasher.update(data: data)
+        case .storedImage(_, _, _, let payloadHash):
+            return payloadHash
         case .files(let refs):
             for path in refs.map(\.path).sorted() {
                 hasher.update(data: Data(path.utf8))
@@ -163,10 +196,25 @@ enum ClipboardPayload: Codable, Equatable, Sendable {
     }
 
     var imageMetadata: ClipboardImageMetadata? {
-        guard case .image(let data, let uti) = self else {
+        switch self {
+        case .image(let data, let uti):
+            return ClipboardImageMetadata(data: data, uti: uti)
+        case .storedImage(_, _, let metadata, _):
+            return metadata
+        default:
             return nil
         }
-        return ClipboardImageMetadata(data: data, uti: uti)
+    }
+
+    var plainTextValue: String? {
+        switch self {
+        case .text(let value):
+            return value
+        case .url(let url):
+            return url.absoluteString
+        default:
+            return nil
+        }
     }
 
     func cleaned(normalizeText: Bool, removeTrackingParameters: Bool) -> ClipboardPayload {
@@ -186,7 +234,7 @@ enum ClipboardPayload: Codable, Equatable, Sendable {
                 return self
             }
             return .url(cleaned)
-        case .image, .files:
+        case .image, .storedImage, .files:
             return self
         }
     }

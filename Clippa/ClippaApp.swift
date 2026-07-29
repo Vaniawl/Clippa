@@ -16,6 +16,13 @@ private struct MenuBarContentView: View {
     @Bindable var appState: AppState
 
     var body: some View {
+        Button {
+            appState.togglePanelFromShortcut()
+        } label: {
+            Label("Open History", systemImage: "clock.arrow.circlepath")
+        }
+        Divider()
+
         if appState.settings.isCapturePaused {
             Button {
                 appState.settings.resumeCapture()
@@ -80,6 +87,7 @@ private struct MenuBarContentView: View {
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let appState = AppState()
+    private var isPreparingToTerminate = false
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -91,8 +99,29 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        guard !isPreparingToTerminate else {
+            return .terminateLater
+        }
+        isPreparingToTerminate = true
         appState.monitor.stop()
         appState.hotKeyService.unregister()
-        return .terminateNow
+        Task {
+            do {
+                try await appState.store.flushPendingSave()
+                sender.reply(toApplicationShouldTerminate: true)
+            } catch {
+                isPreparingToTerminate = false
+                appState.monitor.start()
+                appState.registerShowPanelShortcut()
+                sender.reply(toApplicationShouldTerminate: false)
+
+                let alert = NSAlert()
+                alert.alertStyle = .warning
+                alert.messageText = String(localized: "Clippa Could Not Save History")
+                alert.informativeText = String(localized: "Clippa is still running so you can retry without losing the latest clipboard changes.")
+                alert.runModal()
+            }
+        }
+        return .terminateLater
     }
 }

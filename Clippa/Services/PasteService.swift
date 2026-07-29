@@ -30,11 +30,45 @@ final class PasteService {
             if let image = NSImage(data: data) {
                 pasteboard.writeObjects([image])
             }
+        case .storedImage:
+            assertionFailure("Stored image payloads must be resolved before writing to the pasteboard.")
         case .files(let refs):
             let urls = refs.map { $0.url as NSURL }
             pasteboard.writeObjects(urls)
         }
         monitor.noteInternalWrite(changeCount: pasteboard.changeCount)
+    }
+
+    func copyPlainText(_ text: String) {
+        pasteboard.clearContents()
+        pasteboard.setString(text, forType: .string)
+        monitor.noteInternalWrite(changeCount: pasteboard.changeCount)
+    }
+
+    func pastePlainText(
+        _ text: String,
+        into target: PasteTarget?,
+        addTrailingSpace: Bool = false
+    ) async -> PasteOutcome {
+        copyPlainText(text)
+        guard AccessibilityService.isTrusted else {
+            return .copiedOnlyRequiresAccessibility
+        }
+        guard let application = target?.application, !application.isTerminated else {
+            return .copiedOnlyPasteUnavailable
+        }
+        guard await activatePasteTarget(application) else {
+            return .copiedOnlyPasteUnavailable
+        }
+        let focusedElement = AccessibilityService.focusedEditableTextElement(in: application) ?? target?.focusedElement
+        await restoreFocus(focusedElement, in: application)
+        guard await sendCommandV(to: application) else {
+            return .copiedOnlyPasteUnavailable
+        }
+        if addTrailingSpace {
+            _ = await sendSpace(to: application)
+        }
+        return .pasted
     }
 
     func paste(
@@ -83,7 +117,7 @@ final class PasteService {
         switch payload {
         case .text, .url:
             return true
-        case .image, .files:
+        case .image, .storedImage, .files:
             return false
         }
     }
