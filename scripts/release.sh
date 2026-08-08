@@ -10,6 +10,20 @@ OUTPUT_DIR="${OUTPUT_DIR:-outputs}"
 APP_NAME="${APP_NAME:-Clippa}"
 SMOKE_LAUNCH="${SMOKE_LAUNCH:-0}"
 SKIP_TEST="${SKIP_TEST:-0}"
+SIGNING_MODE="${SIGNING_MODE:-adhoc}"
+
+BUILD_SETTINGS=()
+if [[ "$SIGNING_MODE" == "adhoc" ]]; then
+    BUILD_SETTINGS+=(
+        CODE_SIGN_STYLE=Manual
+        CODE_SIGN_IDENTITY=-
+        DEVELOPMENT_TEAM=
+        CODE_SIGN_ENTITLEMENTS=
+    )
+elif [[ "$SIGNING_MODE" != "configured" ]]; then
+    echo "SIGNING_MODE must be 'adhoc' or 'configured'" >&2
+    exit 1
+fi
 
 DERIVED_DATA_DIR="$(mktemp -d /tmp/clippa-release-derived-data.XXXXXX)"
 CHECK_DIR="$(mktemp -d /tmp/clippa-release-check.XXXXXX)"
@@ -31,6 +45,7 @@ if [[ "$SKIP_TEST" != "1" ]]; then
         -project "$PROJECT" \
         -scheme "$SCHEME" \
         -destination "$DESTINATION" \
+        CODE_SIGNING_ALLOWED=NO \
         test
 else
     echo "==> Test skipped"
@@ -43,6 +58,7 @@ xcodebuild \
     -configuration "$CONFIGURATION" \
     -destination "$DESTINATION" \
     -derivedDataPath "$DERIVED_DATA_DIR" \
+    "${BUILD_SETTINGS[@]}" \
     build
 
 APP_PATH="$DERIVED_DATA_DIR/Build/Products/$CONFIGURATION/$APP_NAME.app"

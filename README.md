@@ -139,17 +139,17 @@ Accessibility permission is only used to restore focus and paste the selected cl
 
 ## Verification
 
-The current public release is `1.0.13`.
+The current public release is `1.0.14`.
 
 | Check | Status |
 | --- | --- |
 | GitHub Actions CI | Passing |
-| Local Swift tests | 34/34 passing |
-| Local iOS companion tests | 8/8 passing |
+| Local Swift tests | 37/37 passing |
+| Local iOS companion tests | 11/11 passing |
 | Release build | Passing |
 | Smoke launch | Passing |
-| GitHub release | `v1.0.13` live |
-| npm package | `clippa@1.0.13` prepared; publish requires npm 2FA |
+| GitHub release | `v1.0.14` live |
+| npm package | `clippa@1.0.14` |
 | Homebrew cask | `clippa 1.0.13` |
 | Bundle identifier | `app.clippa.Clippa` |
 
@@ -193,7 +193,7 @@ git pull origin main
 ## Production Notes
 
 - Bundle identifier: `app.clippa.Clippa`
-- Version: `1.0.13`
+- Version: `1.0.14`
 - Release builds use hardened runtime.
 - History retention and item limits are configurable; the default is 100 items for one week.
 - iCloud container: `iCloud.app.clippa.Clippa`.
@@ -208,4 +208,4 @@ Both app targets contain the iCloud entitlement for `iCloud.app.clippa.Clippa`. 
 3. Run a development build once to create the `ClippaClip` record type and its encrypted fields.
 4. In CloudKit Console, deploy the development schema to production before shipping.
 
-The existing ad-hoc package command can still compile with `CODE_SIGNING_ALLOWED=NO`, but an ad-hoc signed app cannot access the CloudKit container.
+The public npx package is ad-hoc signed, so it cannot access the CloudKit container. Use `SIGNING_MODE=configured ./scripts/release.sh` with a CloudKit-capable Developer ID profile to create a synchronized distribution build.

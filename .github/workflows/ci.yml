@@ -36,6 +36,7 @@ jobs:
             -project Clippa.xcodeproj \
             -scheme Clippa \
             -destination 'platform=macOS' \
+            CODE_SIGNING_ALLOWED=NO \
             test
 
   release:
@@ -51,7 +52,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Build and verify release archive
-        run: SKIP_TEST=1 ./scripts/release.sh
+        run: SKIP_TEST=1 SIGNING_MODE=adhoc ./scripts/release.sh
 
       - name: Upload verified archive
         uses: actions/upload-artifact@v7

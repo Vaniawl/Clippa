@@ -30,7 +30,7 @@
     <circle cx="585" cy="642" r="11" fill="#30D158"/>
     <text x="607" y="648" fill="#B8BEBC">Release live</text>
     <circle cx="753" cy="642" r="11" fill="#30D158"/>
-    <text x="775" y="648" fill="#B8BEBC">npm 1.0.13</text>
+    <text x="775" y="648" fill="#B8BEBC">npm 1.0.14</text>
     <circle cx="920" cy="642" r="11" fill="#30D158"/>
     <text x="942" y="648" fill="#B8BEBC">brew 1.0.13</text>
   </g>
