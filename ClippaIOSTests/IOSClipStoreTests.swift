@@ -190,6 +190,52 @@ final class IOSClipStoreTests: XCTestCase {
         XCTAssertEqual(reloaded.clips.map(\.id), IOSClip.sampleClips.map(\.id))
     }
 
+    func testSyncDownloadsRemoteClipAndUploadsLocalClip() async throws {
+        let defaults = try makeDefaults()
+        let remoteDate = Date(timeIntervalSince1970: 200)
+        let remoteContent = "Synced from Mac"
+        let remote = SyncedClip(
+            recordName: UUID().uuidString,
+            fingerprint: SyncedClip.fingerprint(kind: .text, content: remoteContent),
+            kind: .text,
+            content: remoteContent,
+            imageData: nil,
+            createdAt: remoteDate,
+            lastUsedAt: remoteDate,
+            isPinned: true,
+            modifiedAt: remoteDate,
+            originDeviceID: "mac",
+            isDeleted: false
+        )
+        let repository = MockSyncRepository(records: [remote])
+        let store = IOSClipStore(
+            defaults: defaults,
+            pasteboard: MockPasteboard(),
+            syncService: ClipSyncService(repository: repository)
+        )
+
+        await store.synchronize()
+
+        XCTAssertEqual(store.clips.first?.content, remoteContent)
+        XCTAssertTrue(store.clips.first?.isPinned == true)
+        guard case .synced = store.syncState else {
+            return XCTFail("Expected a successful sync state")
+        }
+
+        let pasteboard = MockPasteboard()
+        pasteboard.string = "Created on iPhone"
+        let uploadingStore = IOSClipStore(
+            defaults: defaults,
+            pasteboard: pasteboard,
+            syncService: ClipSyncService(repository: repository)
+        )
+        XCTAssertTrue(uploadingStore.saveCurrentPasteboard())
+        await uploadingStore.synchronize()
+
+        let saved = await repository.savedRecords()
+        XCTAssertTrue(saved.contains { $0.content == "Created on iPhone" })
+    }
+
     private func makeDefaults() throws -> UserDefaults {
         let suite = "ClippaIOSTests.\(UUID().uuidString)"
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
@@ -198,6 +244,36 @@ final class IOSClipStoreTests: XCTestCase {
             defaults.removePersistentDomain(forName: suite)
         }
         return defaults
+    }
+}
+
+private actor MockSyncRepository: ClipSyncRepository {
+    private var records: [SyncedClip]
+    private var saved: [SyncedClip] = []
+
+    init(records: [SyncedClip] = []) {
+        self.records = records
+    }
+
+    func accountAvailability() async throws -> CloudAccountAvailability {
+        .available
+    }
+
+    func fetchAll() async throws -> [SyncedClip] {
+        records
+    }
+
+    func save(_ records: [SyncedClip]) async throws {
+        saved.append(contentsOf: records)
+        self.records = ClipSyncMerger.makePlan(local: records, remote: self.records).mergedRecords
+    }
+
+    func delete(recordNames: [String]) async throws {
+        records.removeAll { recordNames.contains($0.recordName) }
+    }
+
+    func savedRecords() -> [SyncedClip] {
+        saved
     }
 }
 

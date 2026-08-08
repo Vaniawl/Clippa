@@ -79,7 +79,7 @@ final class PasteboardMonitor {
         }
 
         if let string = pasteboard.string(forType: .string) {
-            if let url = URL(string: string), let scheme = url.scheme, !scheme.isEmpty {
+            if let url = ClipboardContentCleaner.webURL(from: string) {
                 return .url(url)
             }
             return .text(string)

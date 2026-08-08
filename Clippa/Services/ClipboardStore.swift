@@ -17,25 +17,55 @@ final class ClipboardStore {
         didSet { rebuildVisibleItems() }
     }
     var storageMessage: String?
+    private(set) var syncState: ClipSyncState = .idle
 
     private let historyStore: EncryptedHistoryStore
+    private let syncDefaults: UserDefaults
+    private let syncService: ClipSyncService?
     private var policy: ClipboardHistoryPolicy
     private var persistTask: Task<Void, Never>?
+    private var syncTask: Task<Void, Never>?
+    private var syncMetadata: ClipSyncMetadata
+    private var isApplyingSync = false
+    private let syncMetadataKey = "clippa.sync.metadata"
 
     init(
         historyStore: EncryptedHistoryStore = EncryptedHistoryStore(),
-        policy: ClipboardHistoryPolicy = .default
+        policy: ClipboardHistoryPolicy = .default,
+        syncDefaults: UserDefaults = .standard,
+        syncService: ClipSyncService? = nil
     ) {
         self.historyStore = historyStore
         self.policy = policy
+        self.syncDefaults = syncDefaults
+        self.syncService = syncService
+        if let data = syncDefaults.data(forKey: syncMetadataKey),
+           let metadata = try? JSONDecoder().decode(ClipSyncMetadata.self, from: data) {
+            self.syncMetadata = metadata
+        } else {
+            self.syncMetadata = ClipSyncMetadata()
+        }
     }
 
     func load() async {
         do {
             let snapshot = try await historyStore.load()
-            items = ordered(snapshot.items)
-            enforceRetention(now: Date())
+            let repairs = snapshot.items.map { item in
+                (original: item, repaired: item.repairedForCurrentVersion)
+            }
+            let contentMigrations = repairs.filter { $0.original.id != $0.repaired.id }
+            let migrationDate = Date()
+            contentMigrations.forEach { migration in
+                markDeleted(migration.original)
+                markChanged(migration.repaired, at: migrationDate)
+            }
+            items = ordered(repairs.map(\.repaired))
+            let removed = enforceRetention(now: migrationDate)
+            removed.forEach(markDeleted)
             rebuildVisibleItems()
+            if repairs.contains(where: { $0.original != $0.repaired }) || !removed.isEmpty {
+                persist(.immediate)
+            }
         } catch EncryptedHistoryStoreError.corruptStoreIsolated(let url) {
             items = []
             rebuildVisibleItems()
@@ -53,8 +83,11 @@ final class ClipboardStore {
             items[index].lastUsedAt = date
             items[index].createdAt = date
             items[index].sourceBundleIdentifier = sourceBundleIdentifier ?? items[index].sourceBundleIdentifier
+            markChanged(items[index], at: date)
         } else {
-            items.append(ClipboardItem(payload: payload, createdAt: date, sourceBundleIdentifier: sourceBundleIdentifier))
+            let item = ClipboardItem(payload: payload, createdAt: date, sourceBundleIdentifier: sourceBundleIdentifier)
+            items.append(item)
+            markChanged(item, at: date)
         }
         applyOrderingAndRetention(now: date)
     }
@@ -64,6 +97,7 @@ final class ClipboardStore {
             return
         }
         items[index].lastUsedAt = date
+        markChanged(items[index], at: date)
         applyOrderingAndRetention(now: date, persistence: .deferred)
     }
 
@@ -72,6 +106,7 @@ final class ClipboardStore {
             return
         }
         items[index].isPinned.toggle()
+        markChanged(items[index])
         applyOrderingAndRetention(now: Date())
     }
 
@@ -86,6 +121,9 @@ final class ClipboardStore {
             return nil
         }
         let deleted = items.first { $0.id == selectedItemID }
+        if let deleted {
+            markDeleted(deleted)
+        }
         items.removeAll { $0.id == selectedItemID }
         applyOrderingAndRetention(now: Date())
         return deleted
@@ -100,6 +138,7 @@ final class ClipboardStore {
     @discardableResult
     func clearUnpinned() -> [ClipboardItem] {
         let removed = items.filter { !$0.isPinned }
+        removed.forEach(markDeleted)
         items.removeAll { !$0.isPinned }
         applyOrderingAndRetention(now: Date())
         return removed
@@ -108,6 +147,7 @@ final class ClipboardStore {
     @discardableResult
     func clearAll() -> [ClipboardItem] {
         let removed = items
+        removed.forEach(markDeleted)
         items.removeAll()
         applyOrderingAndRetention(now: Date())
         return removed
@@ -125,6 +165,7 @@ final class ClipboardStore {
             return
         }
         items.append(contentsOf: missingItems)
+        missingItems.forEach { markChanged($0, at: now) }
         applyOrderingAndRetention(now: now)
     }
 
@@ -163,7 +204,8 @@ final class ClipboardStore {
     }
 
     private func applyOrderingAndRetention(now: Date, persistence: PersistenceMode) {
-        enforceRetention(now: now)
+        let removed = enforceRetention(now: now)
+        removed.forEach(markDeleted)
         items = ordered(items)
         rebuildVisibleItems()
         persist(persistence)
@@ -206,8 +248,32 @@ final class ClipboardStore {
             return []
         }
         items.append(contentsOf: imported)
+        imported.forEach { markChanged($0, at: date) }
         applyOrderingAndRetention(now: date)
         return imported
+    }
+
+    func synchronize() async {
+        guard let syncService else {
+            syncState = .unavailable("iCloud sync is not configured.")
+            return
+        }
+        guard !syncState.isSyncing else {
+            return
+        }
+
+        syncTask?.cancel()
+        syncTask = nil
+        syncState = .syncing
+        do {
+            let mergedRecords = try await syncService.synchronize(localRecords: makeSyncRecords())
+            applySyncedRecords(mergedRecords)
+            syncState = .synced(Date())
+        } catch let error as ClipSyncError {
+            syncState = .unavailable(error.localizedDescription)
+        } catch {
+            syncState = .failed("Couldn’t sync with iCloud. Try again.")
+        }
     }
 
     private func rebuildVisibleItems() {
@@ -238,7 +304,9 @@ final class ClipboardStore {
         selectedItemID = visibleItems[next].id
     }
 
-    private func enforceRetention(now: Date) {
+    @discardableResult
+    private func enforceRetention(now: Date) -> [ClipboardItem] {
+        let previousItems = items
         items.removeAll { item in
             guard !item.isPinned, let retention = policy.retention.timeInterval else {
                 return false
@@ -251,6 +319,9 @@ final class ClipboardStore {
             let allowed = Set(unpinned.sorted { activityDate($0) > activityDate($1) }.prefix(policy.limit.rawValue).map(\.id))
             items.removeAll { !$0.isPinned && !allowed.contains($0.id) }
         }
+
+        let remainingIDs = Set(items.map(\.id))
+        return previousItems.filter { !remainingIDs.contains($0.id) }
     }
 
     private func ordered(_ source: [ClipboardItem]) -> [ClipboardItem] {
@@ -263,6 +334,8 @@ final class ClipboardStore {
 
     private func persist(_ mode: PersistenceMode) {
         let snapshot = StoredClipboardSnapshot(items: items)
+        persistSyncMetadata()
+        scheduleSyncIfAvailable()
         persistTask?.cancel()
         persistTask = Task { [historyStore] in
             if mode == .deferred {
@@ -281,6 +354,246 @@ final class ClipboardStore {
         persistTask = nil
         let snapshot = StoredClipboardSnapshot(items: items)
         try? await historyStore.save(snapshot)
+    }
+
+    private func persistSyncMetadata() {
+        guard syncService != nil else {
+            return
+        }
+        guard let data = try? JSONEncoder().encode(syncMetadata) else {
+            return
+        }
+        syncDefaults.set(data, forKey: syncMetadataKey)
+    }
+
+    private func scheduleSyncIfAvailable() {
+        guard syncService != nil, !isApplyingSync else {
+            return
+        }
+        syncTask?.cancel()
+        syncTask = Task { @MainActor [weak self] in
+            do {
+                try await Task.sleep(for: .milliseconds(650))
+            } catch {
+                return
+            }
+            guard let self, !Task.isCancelled else {
+                return
+            }
+            self.syncTask = nil
+            await self.synchronize()
+        }
+    }
+
+    private func markChanged(_ item: ClipboardItem, at date: Date = Date()) {
+        guard syncService != nil else {
+            return
+        }
+        syncMetadata.modifiedAtByRecordName[item.id.uuidString] = date
+        if let record = makeSyncedClip(from: item, modifiedAt: date) {
+            syncMetadata.tombstones.removeAll { $0.fingerprint == record.fingerprint }
+        }
+    }
+
+    private func markDeleted(_ item: ClipboardItem) {
+        guard syncService != nil else {
+            return
+        }
+        let date = Date()
+        guard let record = makeSyncedClip(from: item, modifiedAt: date) else {
+            return
+        }
+        syncMetadata.modifiedAtByRecordName.removeValue(forKey: item.id.uuidString)
+        syncMetadata.tombstones.removeAll { $0.fingerprint == record.fingerprint }
+        syncMetadata.tombstones.append(record.tombstone(at: date, originDeviceID: syncMetadata.originDeviceID))
+    }
+
+    private func makeSyncRecords() -> [SyncedClip] {
+        let activeRecords = items.compactMap { item -> SyncedClip? in
+            let modifiedAt = syncMetadata.modifiedAtByRecordName[item.id.uuidString] ?? activityDate(item)
+            return makeSyncedClip(from: item, modifiedAt: modifiedAt)
+        }
+        return activeRecords.filter(\.isEligibleForCloud) + syncMetadata.tombstones
+    }
+
+    private func makeSyncedClip(from item: ClipboardItem, modifiedAt: Date) -> SyncedClip? {
+        let kind: SyncedClipKind
+        let content: String?
+        let imageData: Data?
+        switch item.payload {
+        case .text(let text):
+            kind = .text
+            content = text
+            imageData = nil
+        case .url(let url):
+            kind = .link
+            content = url.absoluteString
+            imageData = nil
+        case .image(let data, _):
+            kind = .image
+            content = nil
+            imageData = data
+        case .files:
+            return nil
+        }
+
+        return SyncedClip(
+            recordName: item.id.uuidString,
+            fingerprint: SyncedClip.fingerprint(kind: kind, content: content, imageData: imageData),
+            kind: kind,
+            content: content,
+            imageData: imageData,
+            createdAt: item.createdAt,
+            lastUsedAt: item.lastUsedAt,
+            isPinned: item.isPinned,
+            modifiedAt: modifiedAt,
+            originDeviceID: syncMetadata.originDeviceID,
+            isDeleted: false
+        )
+    }
+
+    private func applySyncedRecords(_ records: [SyncedClip]) {
+        isApplyingSync = true
+        let repairedRecords = repairingLegacyLinkRecords(records)
+        var needsFollowUpSync = repairedRecords.didRepair
+        defer {
+            isApplyingSync = false
+            if needsFollowUpSync {
+                scheduleSyncIfAvailable()
+            }
+        }
+
+        var nextItems = items
+        var nextVersions: [String: Date] = [:]
+        var nextTombstones: [SyncedClip] = []
+
+        for record in repairedRecords.records {
+            if record.isDeleted {
+                nextItems.removeAll { item in
+                    item.id.uuidString == record.recordName || item.syncFingerprint == record.fingerprint
+                }
+                nextTombstones.append(record)
+                continue
+            }
+            guard let item = ClipboardItem(syncedRecord: record) else {
+                continue
+            }
+            nextItems.removeAll { existing in
+                existing.id == item.id || existing.syncFingerprint == record.fingerprint
+            }
+            nextItems.append(item)
+            nextVersions[item.id.uuidString] = record.modifiedAt
+        }
+
+        syncMetadata.modifiedAtByRecordName = nextVersions
+        syncMetadata.tombstones = nextTombstones
+        items = ordered(nextItems)
+        let removed = enforceRetention(now: Date())
+        removed.forEach(markDeleted)
+        needsFollowUpSync = needsFollowUpSync || removed.contains {
+            makeSyncedClip(from: $0, modifiedAt: Date()) != nil
+        }
+        rebuildVisibleItems()
+        persistSyncMetadata()
+        let snapshot = StoredClipboardSnapshot(items: items)
+        persistTask?.cancel()
+        persistTask = Task { [historyStore] in
+            try? await historyStore.save(snapshot)
+        }
+    }
+
+    private func repairingLegacyLinkRecords(
+        _ records: [SyncedClip]
+    ) -> (records: [SyncedClip], didRepair: Bool) {
+        var repairedRecords: [SyncedClip] = []
+        var didRepair = false
+        let repairDate = Date()
+
+        for record in records {
+            guard !record.isDeleted,
+                  record.kind == .link,
+                  let content = record.content,
+                  ClipboardContentCleaner.webURL(from: content) == nil
+            else {
+                repairedRecords.append(record)
+                continue
+            }
+
+            let decodedContent = content.removingPercentEncoding ?? content
+            let normalizedContent = ClipboardContentCleaner.normalizedText(decodedContent)
+            guard !normalizedContent.isEmpty else {
+                repairedRecords.append(record)
+                continue
+            }
+
+            repairedRecords.append(
+                record.tombstone(
+                    at: repairDate,
+                    originDeviceID: syncMetadata.originDeviceID
+                )
+            )
+            repairedRecords.append(
+                SyncedClip(
+                    recordName: UUID().uuidString,
+                    fingerprint: SyncedClip.fingerprint(kind: .text, content: normalizedContent),
+                    kind: .text,
+                    content: normalizedContent,
+                    imageData: nil,
+                    createdAt: record.createdAt,
+                    lastUsedAt: record.lastUsedAt,
+                    isPinned: record.isPinned,
+                    modifiedAt: repairDate,
+                    originDeviceID: syncMetadata.originDeviceID,
+                    isDeleted: false
+                )
+            )
+            didRepair = true
+        }
+
+        return (repairedRecords, didRepair)
+    }
+}
+
+private extension ClipboardItem {
+    var syncFingerprint: String? {
+        switch payload {
+        case .text(let text):
+            SyncedClip.fingerprint(kind: .text, content: text)
+        case .url(let url):
+            SyncedClip.fingerprint(kind: .link, content: url.absoluteString)
+        case .image(let data, _):
+            SyncedClip.fingerprint(kind: .image, imageData: data)
+        case .files:
+            nil
+        }
+    }
+
+    init?(syncedRecord record: SyncedClip) {
+        guard let id = UUID(uuidString: record.recordName), let kind = record.kind else {
+            return nil
+        }
+        let payload: ClipboardPayload
+        switch kind {
+        case .text:
+            guard let content = record.content else { return nil }
+            payload = .text(content)
+        case .link:
+            guard let content = record.content,
+                  let url = ClipboardContentCleaner.webURL(from: content)
+            else { return nil }
+            payload = .url(url)
+        case .image:
+            guard let imageData = record.imageData else { return nil }
+            payload = .image(data: imageData, uti: nil)
+        }
+        self.init(
+            id: id,
+            payload: payload,
+            createdAt: record.createdAt,
+            lastUsedAt: record.lastUsedAt,
+            isPinned: record.isPinned,
+            sourceBundleIdentifier: nil
+        )
     }
 }
 

@@ -173,12 +173,15 @@ enum ClipboardPayload: Codable, Equatable, Sendable {
         switch self {
         case .text(let value):
             let text = normalizeText ? ClipboardContentCleaner.normalizedText(value) : value
-            if removeTrackingParameters,
-               let url = URL(string: text),
-               let cleaned = ClipboardContentCleaner.removingTrackingParameters(from: url) {
-                return .url(cleaned)
+            guard let url = ClipboardContentCleaner.webURL(from: text) else {
+                return .text(text)
             }
-            return .text(text)
+            guard removeTrackingParameters,
+                  let cleaned = ClipboardContentCleaner.removingTrackingParameters(from: url)
+            else {
+                return .url(url)
+            }
+            return .url(cleaned)
         case .url(let url):
             guard removeTrackingParameters,
                   let cleaned = ClipboardContentCleaner.removingTrackingParameters(from: url)
@@ -216,6 +219,21 @@ enum ClipboardContentCleaner {
             return url
         }
         components.queryItems = filtered.isEmpty ? nil : filtered
+        return components.url
+    }
+
+    static func webURL(from value: String) -> URL? {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty,
+              trimmed.rangeOfCharacter(from: .whitespacesAndNewlines) == nil,
+              let components = URLComponents(string: trimmed),
+              let scheme = components.scheme?.lowercased(),
+              scheme == "http" || scheme == "https",
+              let host = components.host,
+              !host.isEmpty
+        else {
+            return nil
+        }
         return components.url
     }
 
@@ -298,6 +316,42 @@ struct ClipboardItem: Identifiable, Codable, Equatable, Sendable {
         self.isPinned = isPinned
         self.sourceBundleIdentifier = sourceBundleIdentifier
         self.imageMetadata = payload.imageMetadata
+    }
+}
+
+extension ClipboardItem {
+    var repairedForCurrentVersion: ClipboardItem {
+        let repairedPayload: ClipboardPayload
+        let repairedID: UUID
+
+        if case .url(let url) = payload,
+           ClipboardContentCleaner.webURL(from: url.absoluteString) == nil {
+            let decodedValue = url.absoluteString.removingPercentEncoding ?? url.absoluteString
+            let normalizedValue = ClipboardContentCleaner.normalizedText(decodedValue)
+            repairedPayload = .text(normalizedValue.isEmpty ? url.absoluteString : normalizedValue)
+            repairedID = UUID()
+        } else {
+            repairedPayload = payload
+            repairedID = id
+        }
+
+        guard repairedID != id ||
+                kind != repairedPayload.kind ||
+                preview != repairedPayload.preview ||
+                payloadHash != repairedPayload.stableHash ||
+                imageMetadata != repairedPayload.imageMetadata
+        else {
+            return self
+        }
+
+        return ClipboardItem(
+            id: repairedID,
+            payload: repairedPayload,
+            createdAt: createdAt,
+            lastUsedAt: lastUsedAt,
+            isPinned: isPinned,
+            sourceBundleIdentifier: sourceBundleIdentifier
+        )
     }
 }
 

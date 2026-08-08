@@ -60,6 +60,17 @@ private struct MenuBarContentView: View {
         }
 
         Button {
+            Task {
+                await appState.store.synchronize()
+            }
+        } label: {
+            Label(appState.store.syncState.title, systemImage: appState.store.syncState.symbolName)
+        }
+        .disabled(appState.store.syncState.isSyncing)
+
+        Divider()
+
+        Button {
             appState.showSettings()
         } label: {
             Label("Settings", systemImage: "gearshape")

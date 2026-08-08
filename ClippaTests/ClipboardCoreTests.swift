@@ -212,6 +212,53 @@ final class ClipboardCoreTests: XCTestCase {
         XCTAssertEqual(cleanedPayload, .url(URL(string: "https://example.com/?q=clippa")!))
     }
 
+    func testContentCleanerDoesNotTurnCommandsOrPathsIntoLinks() {
+        let values = [
+            "gh repo clone Vaniawl/partygame",
+            "outputs/TikTok-Battle-Portable-Windows-v1.0.0.zip",
+            "ivan@Mac ~/Swift/Clippa % swift test"
+        ]
+
+        for value in values {
+            XCTAssertNil(ClipboardContentCleaner.webURL(from: value))
+            XCTAssertEqual(
+                ClipboardPayload.text(value).cleaned(
+                    normalizeText: true,
+                    removeTrackingParameters: true
+                ),
+                .text(value)
+            )
+        }
+
+        XCTAssertEqual(
+            ClipboardContentCleaner.webURL(from: "https://github.com/Vaniawl/partygame.git")?.absoluteString,
+            "https://github.com/Vaniawl/partygame.git"
+        )
+    }
+
+    func testRepairsLegacyPercentEncodedCommandStoredAsURL() {
+        let legacyURL = URL(string: "gh%20repo%20clone%20Vaniawl/partygame")!
+        let legacyItem = ClipboardItem(
+            id: UUID(),
+            payload: .url(legacyURL),
+            createdAt: Date(timeIntervalSince1970: 10),
+            lastUsedAt: Date(timeIntervalSince1970: 20),
+            isPinned: true,
+            sourceBundleIdentifier: "com.vivaldi.Vivaldi"
+        )
+
+        let repaired = legacyItem.repairedForCurrentVersion
+
+        XCTAssertNotEqual(repaired.id, legacyItem.id)
+        XCTAssertEqual(repaired.kind, .text)
+        XCTAssertEqual(repaired.payload, .text("gh repo clone Vaniawl/partygame"))
+        XCTAssertEqual(repaired.preview, "gh repo clone Vaniawl/partygame")
+        XCTAssertEqual(repaired.createdAt, legacyItem.createdAt)
+        XCTAssertEqual(repaired.lastUsedAt, legacyItem.lastUsedAt)
+        XCTAssertTrue(repaired.isPinned)
+        XCTAssertEqual(repaired.sourceBundleIdentifier, legacyItem.sourceBundleIdentifier)
+    }
+
     func testPinnedExportImportRoundTrip() throws {
         let source = ClipboardStore()
         source.add(payload: .text("pinned"), sourceBundleIdentifier: nil, date: Date(timeIntervalSince1970: 1))
@@ -483,6 +530,36 @@ final class ClipboardCoreTests: XCTestCase {
         let right = TestScreen(frame: NSRect(x: 0, y: 0, width: 800, height: 600), visibleFrame: NSRect(x: 0, y: 0, width: 800, height: 560))
         let frame = PanelController.panelFrame(near: NSPoint(x: -700, y: 400), size: NSSize(width: 300, height: 200), screens: [left, right])
         XCTAssertLessThan(frame.maxX, 0)
+    }
+
+    func testSyncMergeUsesNewestPayloadAndCanonicalRecordName() {
+        let fingerprint = SyncedClip.fingerprint(kind: .text, content: "shared")
+        let older = SyncedClip(
+            recordName: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+            fingerprint: fingerprint,
+            kind: .text,
+            content: "shared",
+            imageData: nil,
+            createdAt: Date(timeIntervalSince1970: 1),
+            lastUsedAt: Date(timeIntervalSince1970: 1),
+            isPinned: false,
+            modifiedAt: Date(timeIntervalSince1970: 1),
+            originDeviceID: "mac",
+            isDeleted: false
+        )
+        var newer = older
+        newer.recordName = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+        newer.isPinned = true
+        newer.modifiedAt = Date(timeIntervalSince1970: 2)
+        newer.originDeviceID = "iphone"
+
+        let plan = ClipSyncMerger.makePlan(local: [newer], remote: [older])
+
+        XCTAssertEqual(plan.mergedRecords.count, 1)
+        XCTAssertEqual(plan.mergedRecords.first?.recordName, newer.recordName)
+        XCTAssertTrue(plan.mergedRecords.first?.isPinned == true)
+        XCTAssertEqual(plan.recordNamesToDelete, [older.recordName])
+        XCTAssertEqual(plan.recordsToSave, [newer])
     }
 }
 

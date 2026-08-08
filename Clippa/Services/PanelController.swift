@@ -26,7 +26,13 @@ final class AppState {
 
     init() {
         let settings = AppSettings()
-        let store = ClipboardStore(policy: settings.historyPolicy)
+        let syncService = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil
+            ? ClipSyncService(repository: CloudKitClipSyncRepository())
+            : nil
+        let store = ClipboardStore(
+            policy: settings.historyPolicy,
+            syncService: syncService
+        )
         let monitor = PasteboardMonitor(store: store, settings: settings)
         self.settings = settings
         self.store = store
@@ -39,6 +45,7 @@ final class AppState {
         refreshAccessibilityState()
         Task {
             await store.load()
+            await store.synchronize()
             monitor.start()
         }
         registerShowPanelShortcut()
