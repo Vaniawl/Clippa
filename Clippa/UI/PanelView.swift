@@ -289,6 +289,7 @@ private struct FilterChip: View {
             }
         }
         .buttonStyle(.plain)
+        .focusEffectDisabled()
         .accessibilityAddTraits(isSelected ? [.isSelected] : [])
     }
 
