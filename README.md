@@ -139,17 +139,17 @@ Accessibility permission is only used to restore focus and paste the selected cl
 
 ## Verification
 
-The current public release is `1.0.15`.
+The current public release is `1.0.16`.
 
 | Check | Status |
 | --- | --- |
 | GitHub Actions CI | Passing |
-| Local Swift tests | 37/37 passing |
+| Local Swift tests | 38/38 passing |
 | Local iOS companion tests | 11/11 passing |
 | Release build | Passing |
 | Smoke launch | Passing |
-| GitHub release | `v1.0.15` live |
-| npm package | `clippa@1.0.15` |
+| GitHub release | `v1.0.16` live |
+| npm package | `clippa@1.0.16` |
 | Homebrew cask | `clippa 1.0.13` |
 | Bundle identifier | `app.clippa.Clippa` |
 
@@ -193,7 +193,7 @@ git pull origin main
 ## Production Notes
 
 - Bundle identifier: `app.clippa.Clippa`
-- Version: `1.0.15`
+- Version: `1.0.16`
 - Release builds use hardened runtime.
 - History retention and item limits are configurable; the default is 100 items for one week.
 - iCloud container: `iCloud.app.clippa.Clippa`.

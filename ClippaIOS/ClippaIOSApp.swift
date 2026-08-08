@@ -6,9 +6,7 @@ struct ClippaIOSApp: App {
     @State private var store: IOSClipStore
 
     init() {
-        let syncService = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil
-            ? ClipSyncService(repository: CloudKitClipSyncRepository())
-            : nil
+        let syncService = ClipSyncServiceFactory.makeCloudKitService()
         let store = IOSClipStore(
             syncService: syncService
         )
@@ -33,7 +31,7 @@ struct SaveCurrentClipboardIntent: AppIntent {
     @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog {
         let store = IOSClipStore(
-            syncService: ClipSyncService(repository: CloudKitClipSyncRepository())
+            syncService: ClipSyncServiceFactory.makeCloudKitService()
         )
         let didSave = store.saveCurrentPasteboard()
         if didSave {
@@ -61,7 +59,7 @@ struct CopyLatestClipIntent: AppIntent {
     @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog {
         let store = IOSClipStore(
-            syncService: ClipSyncService(repository: CloudKitClipSyncRepository())
+            syncService: ClipSyncServiceFactory.makeCloudKitService()
         )
         await store.synchronize()
         guard let clip = store.mostRecentClip else {

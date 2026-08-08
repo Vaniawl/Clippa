@@ -489,6 +489,19 @@ final class ClipboardCoreTests: XCTestCase {
         XCTAssertEqual(store.selectedFilter, .pinned)
     }
 
+    func testCloudKitSyncRequiresExpectedContainerEntitlement() {
+        XCTAssertTrue(
+            ClipSyncServiceFactory.hasCloudKitContainerEntitlement([
+                "iCloud.example.unrelated",
+                CloudKitClipSyncRepository.containerIdentifier
+            ])
+        )
+        XCTAssertFalse(
+            ClipSyncServiceFactory.hasCloudKitContainerEntitlement(["iCloud.example.unrelated"])
+        )
+        XCTAssertFalse(ClipSyncServiceFactory.hasCloudKitContainerEntitlement(nil))
+    }
+
     func testCommandPMapsToTogglePin() throws {
         let event = try XCTUnwrap(
             NSEvent.keyEvent(

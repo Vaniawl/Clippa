@@ -1,6 +1,9 @@
 import CloudKit
 import CryptoKit
 import Foundation
+#if os(macOS)
+import Security
+#endif
 
 enum SyncedClipKind: String, Codable, Sendable {
     case text
@@ -177,6 +180,35 @@ actor ClipSyncService {
         }
 
         throw CKError(.serverRecordChanged)
+    }
+}
+
+enum ClipSyncServiceFactory {
+    static func makeCloudKitService() -> ClipSyncService? {
+        guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil,
+              hasCloudKitContainerEntitlement(currentICloudContainerIdentifiers()) else {
+            return nil
+        }
+        return ClipSyncService(repository: CloudKitClipSyncRepository())
+    }
+
+    static func hasCloudKitContainerEntitlement(_ identifiers: [String]?) -> Bool {
+        identifiers?.contains(CloudKitClipSyncRepository.containerIdentifier) == true
+    }
+
+    private static func currentICloudContainerIdentifiers() -> [String]? {
+#if os(macOS)
+        guard let task = SecTaskCreateFromSelf(nil) else {
+            return nil
+        }
+        return SecTaskCopyValueForEntitlement(
+            task,
+            "com.apple.developer.icloud-container-identifiers" as CFString,
+            nil
+        ) as? [String]
+#else
+        [CloudKitClipSyncRepository.containerIdentifier]
+#endif
     }
 }
 

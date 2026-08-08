@@ -26,9 +26,7 @@ final class AppState {
 
     init() {
         let settings = AppSettings()
-        let syncService = ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil
-            ? ClipSyncService(repository: CloudKitClipSyncRepository())
-            : nil
+        let syncService = ClipSyncServiceFactory.makeCloudKitService()
         let store = ClipboardStore(
             policy: settings.historyPolicy,
             syncService: syncService

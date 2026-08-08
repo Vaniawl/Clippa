@@ -91,7 +91,7 @@ fi
 
 if [[ "$SMOKE_LAUNCH" == "1" ]]; then
     echo "==> Smoke launch"
-    open -n "$EXTRACTED_APP"
+    open -n "$EXTRACTED_APP" --env "LLVM_PROFILE_FILE=$CHECK_DIR/$APP_NAME.profraw"
     sleep 2
     pgrep -x "$APP_NAME" >/dev/null
     osascript -e "tell application id \"$BUNDLE_ID\" to quit" >/dev/null 2>&1 || true
