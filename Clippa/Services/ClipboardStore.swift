@@ -25,6 +25,7 @@ final class ClipboardStore {
     private var policy: ClipboardHistoryPolicy
     private var persistTask: Task<Void, Never>?
     private var syncTask: Task<Void, Never>?
+    private var syncRequestedWhileSyncing = false
     private var syncMetadata: ClipSyncMetadata
     private var isApplyingSync = false
     private let syncMetadataKey = "clippa.sync.metadata"
@@ -253,27 +254,58 @@ final class ClipboardStore {
         return imported
     }
 
+    func prepareForRemoteChangeNotifications() async {
+        guard let syncService else {
+            return
+        }
+        try? await syncService.prepareForRemoteChangeNotifications()
+    }
+
     func synchronize() async {
         guard let syncService else {
             syncState = .unavailable("iCloud sync is not configured.")
             return
         }
-        guard !syncState.isSyncing else {
+        if syncState.isSyncing {
+            syncRequestedWhileSyncing = true
             return
         }
 
         syncTask?.cancel()
         syncTask = nil
         syncState = .syncing
-        do {
-            let mergedRecords = try await syncService.synchronize(localRecords: makeSyncRecords())
-            applySyncedRecords(mergedRecords)
-            syncState = .synced(Date())
-        } catch let error as ClipSyncError {
-            syncState = .unavailable(error.localizedDescription)
-        } catch {
-            syncState = .failed("Couldn’t sync with iCloud. Try again.")
+        repeat {
+            syncRequestedWhileSyncing = false
+            do {
+                let mergedRecords = try await syncService.synchronize(localRecords: makeSyncRecords())
+                applySyncedRecords(mergedRecords)
+            } catch let error as ClipSyncError {
+                syncState = .unavailable(error.localizedDescription)
+                return
+            } catch {
+                syncState = .failed("Couldn’t sync with iCloud. Try again.")
+                return
+            }
+        } while syncRequestedWhileSyncing
+
+        syncState = .synced(Date())
+    }
+
+    func cancelPendingSync() {
+        syncTask?.cancel()
+        syncTask = nil
+        syncRequestedWhileSyncing = false
+    }
+
+    var isCloudSyncAvailable: Bool {
+        syncService != nil
+    }
+
+    func synchronizeAfterRemoteChange() async {
+        guard isCloudSyncAvailable else {
+            return
         }
+        await synchronize()
     }
 
     private func rebuildVisibleItems() {

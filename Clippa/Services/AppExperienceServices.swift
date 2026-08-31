@@ -7,6 +7,136 @@ import UniformTypeIdentifiers
 import Vision
 
 @MainActor
+final class BackgroundRuntimeController {
+    private var activity: (any NSObjectProtocol)?
+
+    var isActive: Bool {
+        activity != nil
+    }
+
+    func start() {
+        guard activity == nil else {
+            return
+        }
+        activity = ProcessInfo.processInfo.beginActivity(
+            options: [.automaticTerminationDisabled, .suddenTerminationDisabled, .background],
+            reason: "Clippa monitors clipboard changes in the background."
+        )
+    }
+
+    func stop() {
+        guard let activity else {
+            return
+        }
+        ProcessInfo.processInfo.endActivity(activity)
+        self.activity = nil
+    }
+}
+
+@MainActor
+final class AutomaticCloudSyncController: NSObject {
+    private let interval: Duration
+    private let prepareAction: @MainActor () async -> Void
+    private let syncAction: @MainActor () async -> Void
+    private var periodicTask: Task<Void, Never>?
+    private var requestTask: Task<Void, Never>?
+    private var preparationTask: Task<Void, Never>?
+    private var shouldSyncAgain = false
+
+    var isActive: Bool {
+        periodicTask != nil
+    }
+
+    init(
+        interval: Duration = .seconds(5 * 60),
+        prepareAction: @escaping @MainActor () async -> Void,
+        syncAction: @escaping @MainActor () async -> Void
+    ) {
+        self.interval = interval
+        self.prepareAction = prepareAction
+        self.syncAction = syncAction
+    }
+
+    func start() {
+        guard periodicTask == nil else {
+            return
+        }
+
+        NSWorkspace.shared.notificationCenter.addObserver(
+            self,
+            selector: #selector(workspaceDidWake),
+            name: NSWorkspace.didWakeNotification,
+            object: nil
+        )
+        NSApp.registerForRemoteNotifications()
+
+        preparationTask = Task { [weak self] in
+            guard let self else {
+                return
+            }
+            await prepareAction()
+            preparationTask = nil
+        }
+        periodicTask = Task { [weak self] in
+            while !Task.isCancelled {
+                guard let self else {
+                    return
+                }
+                do {
+                    try await Task.sleep(for: interval)
+                } catch {
+                    return
+                }
+                requestSync()
+            }
+        }
+    }
+
+    func stop() {
+        NSWorkspace.shared.notificationCenter.removeObserver(self)
+        NSApp.unregisterForRemoteNotifications()
+        preparationTask?.cancel()
+        preparationTask = nil
+        periodicTask?.cancel()
+        periodicTask = nil
+        requestTask?.cancel()
+        requestTask = nil
+        shouldSyncAgain = false
+    }
+
+    func requestSync() {
+        guard isActive else {
+            return
+        }
+        guard requestTask == nil else {
+            shouldSyncAgain = true
+            return
+        }
+
+        requestTask = Task { [weak self] in
+            guard let self else {
+                return
+            }
+            await syncAction()
+            finishRequest()
+        }
+    }
+
+    private func finishRequest() {
+        requestTask = nil
+        guard shouldSyncAgain else {
+            return
+        }
+        shouldSyncAgain = false
+        requestSync()
+    }
+
+    @objc private func workspaceDidWake(_ notification: Notification) {
+        requestSync()
+    }
+}
+
+@MainActor
 @Observable
 final class LaunchAtLoginController {
     private(set) var isEnabled = false

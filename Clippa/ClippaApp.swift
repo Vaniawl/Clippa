@@ -91,6 +91,7 @@ private struct MenuBarContentView: View {
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let appState = AppState()
+    private var terminationTask: Task<Void, Never>?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -99,11 +100,34 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidBecomeActive(_ notification: Notification) {
         appState.refreshAccessibilityState()
+        appState.requestAutomaticCloudSync()
+    }
+
+    func application(_ application: NSApplication, didReceiveRemoteNotification userInfo: [String: Any]) {
+        appState.requestAutomaticCloudSync()
+    }
+
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
+        false
     }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
-        appState.monitor.stop()
-        appState.hotKeyService.unregister()
-        return .terminateNow
+        guard terminationTask == nil else {
+            return .terminateLater
+        }
+        terminationTask = Task { [weak self, weak sender] in
+            guard let self else {
+                sender?.reply(toApplicationShouldTerminate: true)
+                return
+            }
+            await appState.prepareForTermination()
+            sender?.reply(toApplicationShouldTerminate: true)
+            terminationTask = nil
+        }
+        return .terminateLater
+    }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        appState.stopImmediately()
     }
 }

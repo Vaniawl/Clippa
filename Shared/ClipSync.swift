@@ -149,9 +149,14 @@ enum ClipSyncError: LocalizedError, Sendable {
 
 protocol ClipSyncRepository: Sendable {
     func accountAvailability() async throws -> CloudAccountAvailability
+    func prepareForRemoteChangeNotifications() async throws
     func fetchAll() async throws -> [SyncedClip]
     func save(_ records: [SyncedClip]) async throws
     func delete(recordNames: [String]) async throws
+}
+
+extension ClipSyncRepository {
+    func prepareForRemoteChangeNotifications() async throws {}
 }
 
 actor ClipSyncService {
@@ -159,6 +164,14 @@ actor ClipSyncService {
 
     init(repository: any ClipSyncRepository) {
         self.repository = repository
+    }
+
+    func prepareForRemoteChangeNotifications() async throws {
+        let availability = try await repository.accountAvailability()
+        guard availability == .available else {
+            throw ClipSyncError.accountUnavailable(availability)
+        }
+        try await repository.prepareForRemoteChangeNotifications()
     }
 
     func synchronize(localRecords: [SyncedClip]) async throws -> [SyncedClip] {
@@ -267,6 +280,7 @@ enum ClipSyncMerger {
 
 actor CloudKitClipSyncRepository: ClipSyncRepository {
     static let containerIdentifier = "iCloud.app.clippa.Clippa"
+    static let subscriptionIdentifier = "clippa-private-database-changes-v1"
 
     private let container: CKContainer
     private let database: CKDatabase
@@ -291,6 +305,21 @@ actor CloudKitClipSyncRepository: ClipSyncRepository {
         @unknown default:
             .unknown
         }
+    }
+
+    func prepareForRemoteChangeNotifications() async throws {
+        do {
+            _ = try await database.subscription(for: Self.subscriptionIdentifier)
+            return
+        } catch let error as CKError where error.code == .unknownItem {
+            // The subscription is installed once per iCloud account below.
+        }
+
+        let subscription = CKDatabaseSubscription(subscriptionID: Self.subscriptionIdentifier)
+        let notificationInfo = CKSubscription.NotificationInfo()
+        notificationInfo.shouldSendContentAvailable = true
+        subscription.notificationInfo = notificationInfo
+        _ = try await database.save(subscription)
     }
 
     func fetchAll() async throws -> [SyncedClip] {

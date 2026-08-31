@@ -402,6 +402,7 @@
 		AA000C010000000000000003 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				APS_ENVIRONMENT = development;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Clippa/Clippa.entitlements;
 				CODE_SIGN_IDENTITY = "Apple Development";
@@ -432,6 +433,7 @@
 		AA000C010000000000000004 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				APS_ENVIRONMENT = production;
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_ENTITLEMENTS = Clippa/Clippa.entitlements;
 				CODE_SIGN_IDENTITY = "Developer ID Application";

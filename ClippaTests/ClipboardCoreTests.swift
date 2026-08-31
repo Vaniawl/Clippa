@@ -7,6 +7,27 @@ import XCTest
 
 @MainActor
 final class ClipboardCoreTests: XCTestCase {
+    @MainActor
+    func testBackgroundRuntimeControllerKeepsOneBalancedActivity() {
+        let controller = BackgroundRuntimeController()
+
+        XCTAssertFalse(controller.isActive)
+        controller.start()
+        controller.start()
+        XCTAssertTrue(controller.isActive)
+
+        controller.stop()
+        controller.stop()
+        XCTAssertFalse(controller.isActive)
+    }
+
+    @MainActor
+    func testClosingLastWindowDoesNotTerminateMenuBarApp() {
+        let delegate = AppDelegate()
+
+        XCTAssertFalse(delegate.applicationShouldTerminateAfterLastWindowClosed(.shared))
+    }
+
     func testCreatesSupportedItemKinds() {
         let file = FileReference(url: URL(fileURLWithPath: "/tmp/example.txt"))
         XCTAssertEqual(ClipboardItem(payload: .text("hello")).kind, .text)
@@ -573,6 +594,79 @@ final class ClipboardCoreTests: XCTestCase {
         XCTAssertTrue(plan.mergedRecords.first?.isPinned == true)
         XCTAssertEqual(plan.recordNamesToDelete, [older.recordName])
         XCTAssertEqual(plan.recordsToSave, [newer])
+    }
+
+    func testSyncTransfersAClipBetweenTwoMacs() async throws {
+        let repository = MacSyncRepository()
+        let firstMac = ClipSyncService(repository: repository)
+        let secondMac = ClipSyncService(repository: repository)
+        let date = Date(timeIntervalSince1970: 100)
+        let clip = SyncedClip(
+            recordName: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+            fingerprint: SyncedClip.fingerprint(kind: .text, content: "From the first Mac"),
+            kind: .text,
+            content: "From the first Mac",
+            imageData: nil,
+            createdAt: date,
+            lastUsedAt: date,
+            isPinned: false,
+            modifiedAt: date,
+            originDeviceID: "first-mac",
+            isDeleted: false
+        )
+
+        _ = try await firstMac.synchronize(localRecords: [clip])
+        let downloaded = try await secondMac.synchronize(localRecords: [])
+
+        XCTAssertEqual(downloaded, [clip])
+    }
+
+    func testNewerDeletionWinsAgainstAStaleDevice() async throws {
+        let repository = MacSyncRepository()
+        let firstMac = ClipSyncService(repository: repository)
+        let secondMac = ClipSyncService(repository: repository)
+        let createdAt = Date(timeIntervalSince1970: 100)
+        let deletedAt = Date(timeIntervalSince1970: 200)
+        let clip = SyncedClip(
+            recordName: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+            fingerprint: SyncedClip.fingerprint(kind: .text, content: "Delete me"),
+            kind: .text,
+            content: "Delete me",
+            imageData: nil,
+            createdAt: createdAt,
+            lastUsedAt: createdAt,
+            isPinned: false,
+            modifiedAt: createdAt,
+            originDeviceID: "first-mac",
+            isDeleted: false
+        )
+        let tombstone = clip.tombstone(at: deletedAt, originDeviceID: "first-mac")
+
+        _ = try await firstMac.synchronize(localRecords: [clip])
+        _ = try await firstMac.synchronize(localRecords: [tombstone])
+        let downloaded = try await secondMac.synchronize(localRecords: [clip])
+
+        XCTAssertEqual(downloaded, [tombstone])
+    }
+}
+
+private actor MacSyncRepository: ClipSyncRepository {
+    private var records: [SyncedClip] = []
+
+    func accountAvailability() async throws -> CloudAccountAvailability {
+        .available
+    }
+
+    func fetchAll() async throws -> [SyncedClip] {
+        records
+    }
+
+    func save(_ records: [SyncedClip]) async throws {
+        self.records = ClipSyncMerger.makePlan(local: records, remote: self.records).mergedRecords
+    }
+
+    func delete(recordNames: [String]) async throws {
+        records.removeAll { recordNames.contains($0.recordName) }
     }
 }
 
