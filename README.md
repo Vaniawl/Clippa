@@ -5,7 +5,7 @@
 <h1 align="center">Clippa</h1>
 
 <p align="center">
-  <strong>Private clipboard history for macOS.</strong><br>
+  <strong>Private clipboard history for macOS and iPhone.</strong><br>
   Open with <code>Command-Shift-V</code>, pick an item, press <code>Return</code>, and keep working.
 </p>
 
@@ -114,21 +114,24 @@ The repo also includes a `Clippa iOS` target. It is a separate iPhone companion 
 - Open Clippa on iPhone.
 - Copy text, a link, or an image in another app, then return to Clippa. The app saves the current iPhone clipboard automatically while it is active.
 - Tap any saved clip to copy it back to the system clipboard.
+- Text, links, images, pins, and deletions sync between the iPhone and Mac through the user's private iCloud database.
 - Use search, filters, swipe actions, pinned clips, preview, and local settings from the iPhone app.
 - Return to the previous app and paste normally.
 - Use Shortcuts or Siri actions to save the current clipboard, copy the latest saved clip, or open Clippa.
 
-iOS may ask once before allowing automatic clipboard reads. It does not allow third-party apps to monitor the clipboard in the background, show a global floating paste window, or paste directly into other apps. This companion app keeps the flow explicit and local.
+iOS may ask before allowing automatic clipboard reads. It does not allow third-party apps to monitor the clipboard in the background, show a global floating paste window, or paste directly into other apps. Clippa captures new copies whenever its scene is active and also provides a Shortcuts action for an explicit save.
 
 ## Privacy
 
-Clippa does not upload clipboard contents, does not use analytics, and does not require an account.
+Clippa does not use analytics or require a Clippa account. When iCloud sync is available, supported clipboard items are stored in the user's private CloudKit database.
 
 Privacy behavior:
 
-- Clipboard history stays on your Mac.
-- Stored history is encrypted locally with AES-GCM.
-- No telemetry, advertising SDKs, account system, or cloud clipboard database.
+- Mac history is encrypted locally with AES-GCM.
+- CloudKit encrypted fields store text, link, and metadata values; images are stored as CloudKit assets in the user's private database.
+- File references and security-scoped bookmarks never leave the Mac.
+- Items larger than 20 MB remain local.
+- No telemetry, advertising SDKs, or separate account system.
 - Common password managers are excluded by default.
 - Additional apps can be added to the excluded-apps list.
 
@@ -136,17 +139,17 @@ Accessibility permission is only used to restore focus and paste the selected cl
 
 ## Verification
 
-The current public release is `1.0.13`.
+The current public release is `1.0.16`.
 
 | Check | Status |
 | --- | --- |
 | GitHub Actions CI | Passing |
-| Local Swift tests | 34/34 passing |
-| Local iOS companion tests | 8/8 passing |
+| Local Swift tests | 38/38 passing |
+| Local iOS companion tests | 11/11 passing |
 | Release build | Passing |
 | Smoke launch | Passing |
-| GitHub release | `v1.0.13` live |
-| npm package | `clippa@1.0.13` prepared; publish requires npm 2FA |
+| GitHub release | `v1.0.16` live |
+| npm package | `clippa@1.0.16` |
 | Homebrew cask | `clippa 1.0.13` |
 | Bundle identifier | `app.clippa.Clippa` |
 
@@ -168,7 +171,7 @@ brew info clippa
 ```bash
 git clone https://github.com/Vaniawl/Clippa.git
 cd Clippa
-xcodebuild -project Clippa.xcodeproj -scheme Clippa -destination 'platform=macOS' test
+xcodebuild -project Clippa.xcodeproj -scheme Clippa -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO test
 xcodebuild -project Clippa.xcodeproj -scheme 'Clippa iOS' -destination 'platform=iOS Simulator,name=iPhone 17 Pro' CODE_SIGNING_ALLOWED=NO test
 SMOKE_LAUNCH=1 ./scripts/release.sh
 ```
@@ -190,6 +193,19 @@ git pull origin main
 ## Production Notes
 
 - Bundle identifier: `app.clippa.Clippa`
-- Version: `1.0.13`
+- Version: `1.0.16`
 - Release builds use hardened runtime.
 - History retention and item limits are configurable; the default is 100 items for one week.
+- iCloud container: `iCloud.app.clippa.Clippa`.
+- A Developer ID provisioning profile with CloudKit is required for a synchronized macOS build distributed outside the Mac App Store.
+
+## CloudKit Setup
+
+Both app targets contain the iCloud entitlement for `iCloud.app.clippa.Clippa`. To enable sync for a development or production build:
+
+1. Enable CloudKit for the macOS and iOS App IDs in the Apple Developer portal and assign the shared container.
+2. Use an Apple Development profile locally. For direct macOS distribution, use a Developer ID provisioning profile that includes CloudKit.
+3. Run a development build once to create the `ClippaClip` record type and its encrypted fields.
+4. In CloudKit Console, deploy the development schema to production before shipping.
+
+The public npx package is ad-hoc signed, so it cannot access the CloudKit container. Use `SIGNING_MODE=configured ./scripts/release.sh` with a CloudKit-capable Developer ID profile to create a synchronized distribution build.

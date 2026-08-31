@@ -114,12 +114,23 @@ struct ClipsHomeView: View {
             .onChange(of: scenePhase) { _, phase in
                 if phase == .active {
                     captureClipboardIfNeeded(showMessage: false)
+                    Task {
+                        await store.synchronize()
+                    }
                 }
+            }
+            .task {
+                await store.synchronize()
             }
             .task(id: scenePhase) {
                 guard scenePhase == .active else { return }
                 while !Task.isCancelled {
-                    try? await Task.sleep(for: .milliseconds(900))
+                    do {
+                        try await Task.sleep(for: .milliseconds(900))
+                    } catch {
+                        return
+                    }
+                    guard !Task.isCancelled else { return }
                     captureClipboardIfNeeded(showMessage: false)
                 }
             }
@@ -432,8 +443,17 @@ private struct IOSSettingsSheet: View {
             List {
                 Section("Privacy") {
                     Label("Saved locally on this iPhone", systemImage: "iphone")
-                    Label("No account and no cloud sync", systemImage: "icloud.slash")
+                    Label(store.syncState.title, systemImage: store.syncState.symbolName)
                     Label("New copies appear when Clippa is active", systemImage: "checkmark.shield")
+
+                    Button {
+                        Task {
+                            await store.synchronize()
+                        }
+                    } label: {
+                        Label("Sync Now", systemImage: "arrow.clockwise.icloud")
+                    }
+                    .disabled(store.syncState.isSyncing)
                 }
 
                 Section("History") {

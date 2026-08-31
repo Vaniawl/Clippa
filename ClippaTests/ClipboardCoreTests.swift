@@ -7,6 +7,27 @@ import XCTest
 
 @MainActor
 final class ClipboardCoreTests: XCTestCase {
+    @MainActor
+    func testBackgroundRuntimeControllerKeepsOneBalancedActivity() {
+        let controller = BackgroundRuntimeController()
+
+        XCTAssertFalse(controller.isActive)
+        controller.start()
+        controller.start()
+        XCTAssertTrue(controller.isActive)
+
+        controller.stop()
+        controller.stop()
+        XCTAssertFalse(controller.isActive)
+    }
+
+    @MainActor
+    func testClosingLastWindowDoesNotTerminateMenuBarApp() {
+        let delegate = AppDelegate()
+
+        XCTAssertFalse(delegate.applicationShouldTerminateAfterLastWindowClosed(.shared))
+    }
+
     func testCreatesSupportedItemKinds() {
         let file = FileReference(url: URL(fileURLWithPath: "/tmp/example.txt"))
         XCTAssertEqual(ClipboardItem(payload: .text("hello")).kind, .text)
@@ -210,6 +231,53 @@ final class ClipboardCoreTests: XCTestCase {
         let cleanedPayload = ClipboardPayload.text("https://example.com/?gclid=1&q=clippa")
             .cleaned(normalizeText: true, removeTrackingParameters: true)
         XCTAssertEqual(cleanedPayload, .url(URL(string: "https://example.com/?q=clippa")!))
+    }
+
+    func testContentCleanerDoesNotTurnCommandsOrPathsIntoLinks() {
+        let values = [
+            "gh repo clone Vaniawl/partygame",
+            "outputs/TikTok-Battle-Portable-Windows-v1.0.0.zip",
+            "ivan@Mac ~/Swift/Clippa % swift test"
+        ]
+
+        for value in values {
+            XCTAssertNil(ClipboardContentCleaner.webURL(from: value))
+            XCTAssertEqual(
+                ClipboardPayload.text(value).cleaned(
+                    normalizeText: true,
+                    removeTrackingParameters: true
+                ),
+                .text(value)
+            )
+        }
+
+        XCTAssertEqual(
+            ClipboardContentCleaner.webURL(from: "https://github.com/Vaniawl/partygame.git")?.absoluteString,
+            "https://github.com/Vaniawl/partygame.git"
+        )
+    }
+
+    func testRepairsLegacyPercentEncodedCommandStoredAsURL() {
+        let legacyURL = URL(string: "gh%20repo%20clone%20Vaniawl/partygame")!
+        let legacyItem = ClipboardItem(
+            id: UUID(),
+            payload: .url(legacyURL),
+            createdAt: Date(timeIntervalSince1970: 10),
+            lastUsedAt: Date(timeIntervalSince1970: 20),
+            isPinned: true,
+            sourceBundleIdentifier: "com.vivaldi.Vivaldi"
+        )
+
+        let repaired = legacyItem.repairedForCurrentVersion
+
+        XCTAssertNotEqual(repaired.id, legacyItem.id)
+        XCTAssertEqual(repaired.kind, .text)
+        XCTAssertEqual(repaired.payload, .text("gh repo clone Vaniawl/partygame"))
+        XCTAssertEqual(repaired.preview, "gh repo clone Vaniawl/partygame")
+        XCTAssertEqual(repaired.createdAt, legacyItem.createdAt)
+        XCTAssertEqual(repaired.lastUsedAt, legacyItem.lastUsedAt)
+        XCTAssertTrue(repaired.isPinned)
+        XCTAssertEqual(repaired.sourceBundleIdentifier, legacyItem.sourceBundleIdentifier)
     }
 
     func testPinnedExportImportRoundTrip() throws {
@@ -442,6 +510,19 @@ final class ClipboardCoreTests: XCTestCase {
         XCTAssertEqual(store.selectedFilter, .pinned)
     }
 
+    func testCloudKitSyncRequiresExpectedContainerEntitlement() {
+        XCTAssertTrue(
+            ClipSyncServiceFactory.hasCloudKitContainerEntitlement([
+                "iCloud.example.unrelated",
+                CloudKitClipSyncRepository.containerIdentifier
+            ])
+        )
+        XCTAssertFalse(
+            ClipSyncServiceFactory.hasCloudKitContainerEntitlement(["iCloud.example.unrelated"])
+        )
+        XCTAssertFalse(ClipSyncServiceFactory.hasCloudKitContainerEntitlement(nil))
+    }
+
     func testCommandPMapsToTogglePin() throws {
         let event = try XCTUnwrap(
             NSEvent.keyEvent(
@@ -483,6 +564,109 @@ final class ClipboardCoreTests: XCTestCase {
         let right = TestScreen(frame: NSRect(x: 0, y: 0, width: 800, height: 600), visibleFrame: NSRect(x: 0, y: 0, width: 800, height: 560))
         let frame = PanelController.panelFrame(near: NSPoint(x: -700, y: 400), size: NSSize(width: 300, height: 200), screens: [left, right])
         XCTAssertLessThan(frame.maxX, 0)
+    }
+
+    func testSyncMergeUsesNewestPayloadAndCanonicalRecordName() {
+        let fingerprint = SyncedClip.fingerprint(kind: .text, content: "shared")
+        let older = SyncedClip(
+            recordName: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+            fingerprint: fingerprint,
+            kind: .text,
+            content: "shared",
+            imageData: nil,
+            createdAt: Date(timeIntervalSince1970: 1),
+            lastUsedAt: Date(timeIntervalSince1970: 1),
+            isPinned: false,
+            modifiedAt: Date(timeIntervalSince1970: 1),
+            originDeviceID: "mac",
+            isDeleted: false
+        )
+        var newer = older
+        newer.recordName = "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+        newer.isPinned = true
+        newer.modifiedAt = Date(timeIntervalSince1970: 2)
+        newer.originDeviceID = "iphone"
+
+        let plan = ClipSyncMerger.makePlan(local: [newer], remote: [older])
+
+        XCTAssertEqual(plan.mergedRecords.count, 1)
+        XCTAssertEqual(plan.mergedRecords.first?.recordName, newer.recordName)
+        XCTAssertTrue(plan.mergedRecords.first?.isPinned == true)
+        XCTAssertEqual(plan.recordNamesToDelete, [older.recordName])
+        XCTAssertEqual(plan.recordsToSave, [newer])
+    }
+
+    func testSyncTransfersAClipBetweenTwoMacs() async throws {
+        let repository = MacSyncRepository()
+        let firstMac = ClipSyncService(repository: repository)
+        let secondMac = ClipSyncService(repository: repository)
+        let date = Date(timeIntervalSince1970: 100)
+        let clip = SyncedClip(
+            recordName: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+            fingerprint: SyncedClip.fingerprint(kind: .text, content: "From the first Mac"),
+            kind: .text,
+            content: "From the first Mac",
+            imageData: nil,
+            createdAt: date,
+            lastUsedAt: date,
+            isPinned: false,
+            modifiedAt: date,
+            originDeviceID: "first-mac",
+            isDeleted: false
+        )
+
+        _ = try await firstMac.synchronize(localRecords: [clip])
+        let downloaded = try await secondMac.synchronize(localRecords: [])
+
+        XCTAssertEqual(downloaded, [clip])
+    }
+
+    func testNewerDeletionWinsAgainstAStaleDevice() async throws {
+        let repository = MacSyncRepository()
+        let firstMac = ClipSyncService(repository: repository)
+        let secondMac = ClipSyncService(repository: repository)
+        let createdAt = Date(timeIntervalSince1970: 100)
+        let deletedAt = Date(timeIntervalSince1970: 200)
+        let clip = SyncedClip(
+            recordName: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+            fingerprint: SyncedClip.fingerprint(kind: .text, content: "Delete me"),
+            kind: .text,
+            content: "Delete me",
+            imageData: nil,
+            createdAt: createdAt,
+            lastUsedAt: createdAt,
+            isPinned: false,
+            modifiedAt: createdAt,
+            originDeviceID: "first-mac",
+            isDeleted: false
+        )
+        let tombstone = clip.tombstone(at: deletedAt, originDeviceID: "first-mac")
+
+        _ = try await firstMac.synchronize(localRecords: [clip])
+        _ = try await firstMac.synchronize(localRecords: [tombstone])
+        let downloaded = try await secondMac.synchronize(localRecords: [clip])
+
+        XCTAssertEqual(downloaded, [tombstone])
+    }
+}
+
+private actor MacSyncRepository: ClipSyncRepository {
+    private var records: [SyncedClip] = []
+
+    func accountAvailability() async throws -> CloudAccountAvailability {
+        .available
+    }
+
+    func fetchAll() async throws -> [SyncedClip] {
+        records
+    }
+
+    func save(_ records: [SyncedClip]) async throws {
+        self.records = ClipSyncMerger.makePlan(local: records, remote: self.records).mergedRecords
+    }
+
+    func delete(recordNames: [String]) async throws {
+        records.removeAll { recordNames.contains($0.recordName) }
     }
 }
 

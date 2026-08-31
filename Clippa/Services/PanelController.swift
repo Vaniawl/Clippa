@@ -15,9 +15,12 @@ final class AppState {
     let panelController = PanelController()
     let settingsWindowController = SettingsWindowController()
     let launchAtLoginController = LaunchAtLoginController()
+    let backgroundRuntimeController = BackgroundRuntimeController()
+    let automaticCloudSyncController: AutomaticCloudSyncController
     let previewController = ClipboardPreviewController()
     let pasteFailureController = PasteFailureController()
     private var undoHistory: [[ClipboardItem]] = []
+    private var startupTask: Task<Void, Never>?
     private(set) var isAutoPasteReady = AccessibilityService.isTrusted
 
     var canUndoHistoryAction: Bool {
@@ -26,20 +29,43 @@ final class AppState {
 
     init() {
         let settings = AppSettings()
-        let store = ClipboardStore(policy: settings.historyPolicy)
+        let syncService = ClipSyncServiceFactory.makeCloudKitService()
+        let store = ClipboardStore(
+            policy: settings.historyPolicy,
+            syncService: syncService
+        )
         let monitor = PasteboardMonitor(store: store, settings: settings)
         self.settings = settings
         self.store = store
         self.monitor = monitor
         self.hotKeyService = GlobalHotKeyService()
         self.pasteService = PasteService(monitor: monitor)
+        self.automaticCloudSyncController = AutomaticCloudSyncController(
+            prepareAction: { [weak store] in
+                await store?.prepareForRemoteChangeNotifications()
+            },
+            syncAction: { [weak store] in
+                await store?.synchronizeAfterRemoteChange()
+            }
+        )
     }
 
     func start() {
+        backgroundRuntimeController.start()
         refreshAccessibilityState()
-        Task {
+        startupTask?.cancel()
+        startupTask = Task { [weak self] in
+            guard let self else {
+                return
+            }
             await store.load()
+            guard !Task.isCancelled else {
+                return
+            }
             monitor.start()
+            await store.synchronize()
+            automaticCloudSyncController.start()
+            startupTask = nil
         }
         registerShowPanelShortcut()
         if !settings.hasShownAccessibilityOnboarding && !AccessibilityService.isTrusted {
@@ -48,8 +74,33 @@ final class AppState {
         }
     }
 
+    func prepareForTermination() async {
+        startupTask?.cancel()
+        startupTask = nil
+        monitor.stop()
+        hotKeyService.unregister()
+        automaticCloudSyncController.stop()
+        store.cancelPendingSync()
+        await store.flushPendingSave()
+        backgroundRuntimeController.stop()
+    }
+
+    func stopImmediately() {
+        startupTask?.cancel()
+        startupTask = nil
+        monitor.stop()
+        hotKeyService.unregister()
+        automaticCloudSyncController.stop()
+        store.cancelPendingSync()
+        backgroundRuntimeController.stop()
+    }
+
     func refreshAccessibilityState() {
         isAutoPasteReady = AccessibilityService.isTrusted
+    }
+
+    func requestAutomaticCloudSync() {
+        automaticCloudSyncController.requestSync()
     }
 
     func registerShowPanelShortcut() {
@@ -260,10 +311,7 @@ final class AppState {
     }
 
     func quit() {
-        Task {
-            await store.flushPendingSave()
-            NSApp.terminate(nil)
-        }
+        NSApp.terminate(nil)
     }
 }
 

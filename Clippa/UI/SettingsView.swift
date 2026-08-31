@@ -157,6 +157,24 @@ private struct HistorySettingsView: View {
                 LabeledContent("Pinned", value: "\(appState.store.pinnedItemCount)")
             }
 
+            Section("iCloud Sync") {
+                LabeledContent("Status") {
+                    Label(appState.store.syncState.title, systemImage: appState.store.syncState.symbolName)
+                }
+                Button {
+                    Task {
+                        await appState.store.synchronize()
+                    }
+                } label: {
+                    Label("Sync Now", systemImage: "arrow.clockwise.icloud")
+                }
+                .disabled(appState.store.syncState.isSyncing)
+
+                Text("Text, links, images, pins, and deletions sync privately through iCloud. File references stay on this Mac.")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+
             Section("Pinned Clips") {
                 HStack {
                     Button {

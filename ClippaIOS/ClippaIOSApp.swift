@@ -6,7 +6,10 @@ struct ClippaIOSApp: App {
     @State private var store: IOSClipStore
 
     init() {
-        let store = IOSClipStore()
+        let syncService = ClipSyncServiceFactory.makeCloudKitService()
+        let store = IOSClipStore(
+            syncService: syncService
+        )
         if ProcessInfo.processInfo.arguments.contains("--seed-sample-clips") {
             store.replaceAll(IOSClip.sampleClips)
         }
@@ -27,8 +30,13 @@ struct SaveCurrentClipboardIntent: AppIntent {
 
     @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog {
-        let store = IOSClipStore()
+        let store = IOSClipStore(
+            syncService: ClipSyncServiceFactory.makeCloudKitService()
+        )
         let didSave = store.saveCurrentPasteboard()
+        if didSave {
+            await store.synchronize()
+        }
         return .result(dialog: didSave ? "Saved to Clippa." : "Clipboard is empty.")
     }
 }
@@ -50,7 +58,10 @@ struct CopyLatestClipIntent: AppIntent {
 
     @MainActor
     func perform() async throws -> some IntentResult & ProvidesDialog {
-        let store = IOSClipStore()
+        let store = IOSClipStore(
+            syncService: ClipSyncServiceFactory.makeCloudKitService()
+        )
+        await store.synchronize()
         guard let clip = store.mostRecentClip else {
             return .result(dialog: "No saved clips yet.")
         }
