@@ -1,0 +1,163 @@
+<!-- GENERATED — DO NOT EDIT. Run scripts/agent-framework/design-tokens/generate.py. -->
+<resources>
+    <!-- token=brand.color.accent; source=www/assets/css/custom.css:11 | portal/includes/header.php:112; status=extracted -->
+    <color name="base_brand_color_accent">#FF0EA5E9</color>
+    <!-- token=brand.color.logo-ink; source=www/assets/logos/skyphoenix-logo.svg:5-23 | design-system/brand/logo/skyphoenix-logo-color.svg; status=extracted -->
+    <color name="base_brand_color_logo_ink">#FF231815</color>
+    <!-- token=brand.color.logo-orange; source=www/assets/logos/skyphoenix-logo.svg:5-23 | design-system/brand/logo/skyphoenix-logo-color.svg; status=extracted -->
+    <color name="base_brand_color_logo_orange">#FFED6D1F</color>
+    <!-- token=brand.color.logo-red; source=www/assets/logos/skyphoenix-logo.svg:5-23 | design-system/brand/logo/skyphoenix-logo-color.svg; status=extracted -->
+    <color name="base_brand_color_logo_red">#FFB92D26</color>
+    <!-- token=brand.color.primary; source=www/assets/css/custom.css:8 | www/partials/header.php:66 | portal/includes/header.php:110; status=extracted -->
+    <color name="base_brand_color_primary">#FF1E3A5F</color>
+    <!-- token=brand.color.primary-dark; source=www/assets/css/custom.css:9 | www/partials/header.php:67; status=extracted -->
+    <color name="base_brand_color_primary_dark">#FF152A45</color>
+    <!-- token=brand.color.primary-light; source=www/partials/header.php:68; status=extracted -->
+    <color name="base_brand_color_primary_light">#FF2D5A8A</color>
+    <!-- token=brand.color.secondary; source=www/assets/css/custom.css:10 | portal/assets/css/portal.css:5; status=extracted -->
+    <color name="base_brand_color_secondary">#FF3B82F6</color>
+    <!-- token=semantic.color.background; source=www/partials/header.php:113 (bg-white); status=extracted -->
+    <color name="light_semantic_color_background">#FFFFFFFF</color>
+    <!-- token=semantic.color.background-app; source=portal/includes/header.php:122 (bg-gray-50), portal.css:30,39,57,219; status=extracted -->
+    <color name="light_semantic_color_background_app">#FFF9FAFB</color>
+    <!-- token=semantic.color.background-hover; source=www/assets/css/custom.css:83,106; portal.css:54,261; status=extracted -->
+    <color name="light_semantic_color_background_hover">#FFEFF6FF</color>
+    <!-- token=semantic.color.background-selected; source=portal/assets/css/portal.css:124,164; status=extracted -->
+    <color name="light_semantic_color_background_selected">#FFDBEAFE</color>
+    <!-- token=semantic.color.background-subtle; source=www/assets/css/custom.css:14 (- -color-bg-light); status=extracted -->
+    <color name="light_semantic_color_background_subtle">#FFF8FAFC</color>
+    <!-- token=semantic.color.border; source=www/assets/css/custom.css:15 (- -color-border), portal.css:31; status=extracted -->
+    <color name="light_semantic_color_border">#FFE5E7EB</color>
+    <!-- token=semantic.color.border-strong; source=portal/assets/css/portal.css:68,111,216 (inputs, outline buttons); status=extracted -->
+    <color name="light_semantic_color_border_strong">#FFD1D5DB</color>
+    <!-- token=semantic.color.brand-surface; source=www/index.php:275 (CTA band bg-primary), portal sidebar active; status=extracted; resolved-from=brand.color.primary -->
+    <color name="light_semantic_color_brand_surface">#FF1E3A5F</color>
+    <!-- token=semantic.color.cta-fill; source=design-system/tokens/base.json brand.color.logo-orange | design-system/cross-platform-standard.md section 1; status=approved-derived; resolved-from=brand.color.logo-orange -->
+    <color name="light_semantic_color_cta_fill">#FFED6D1F</color>
+    <!-- token=semantic.color.cta-text-on-fill; source=design-system/tokens/base.json brand.color.logo-ink | design-system/cross-platform-standard.md section 1; status=approved-derived; resolved-from=brand.color.logo-ink -->
+    <color name="light_semantic_color_cta_text_on_fill">#FF231815</color>
+    <!-- token=semantic.color.danger; source=portal/assets/css/portal.css:180,222; status=extracted -->
+    <color name="light_semantic_color_danger">#FFDC2626</color>
+    <!-- token=semantic.color.error-bg; source=portal/assets/css/portal.css:271; status=extracted -->
+    <color name="light_semantic_color_error_bg">#FFFEF2F2</color>
+    <!-- token=semantic.color.error-border; source=portal/assets/css/portal.css:272; status=extracted -->
+    <color name="light_semantic_color_error_border">#FFFECACA</color>
+    <!-- token=semantic.color.error-text; source=portal/assets/css/portal.css:273; status=extracted -->
+    <color name="light_semantic_color_error_text">#FF991B1B</color>
+    <!-- token=semantic.color.focus-outline; source=www/assets/css/custom.css:40-47 (2px solid, offset 2px), portal.css:4-7; status=extracted; resolved-from=brand.color.secondary -->
+    <color name="light_semantic_color_focus_outline">#FF3B82F6</color>
+    <!-- token=semantic.color.footer-bg; source=www/partials/footer.php:5 (bg-gray-900); status=extracted -->
+    <color name="light_semantic_color_footer_bg">#FF111827</color>
+    <!-- token=semantic.color.footer-text; source=www/partials/footer.php:5 (text-gray-300); status=extracted -->
+    <color name="light_semantic_color_footer_text">#FFD1D5DB</color>
+    <!-- token=semantic.color.info-bg; source=portal/assets/css/portal.css:261; status=extracted -->
+    <color name="light_semantic_color_info_bg">#FFEFF6FF</color>
+    <!-- token=semantic.color.info-border; source=portal/assets/css/portal.css:262; status=extracted -->
+    <color name="light_semantic_color_info_border">#FFBFDBFE</color>
+    <!-- token=semantic.color.info-text; source=portal/assets/css/portal.css:263; status=extracted -->
+    <color name="light_semantic_color_info_text">#FF1E40AF</color>
+    <!-- token=semantic.color.success-bg; source=portal/assets/css/portal.css:266; status=extracted -->
+    <color name="light_semantic_color_success_bg">#FFF0FDF4</color>
+    <!-- token=semantic.color.success-border; source=portal/assets/css/portal.css:267; status=extracted -->
+    <color name="light_semantic_color_success_border">#FFBBF7D0</color>
+    <!-- token=semantic.color.success-text; source=portal/assets/css/portal.css:268; status=extracted -->
+    <color name="light_semantic_color_success_text">#FF166534</color>
+    <!-- token=semantic.color.surface; source=www/index.php:47 (bg-white cards); status=extracted -->
+    <color name="light_semantic_color_surface">#FFFFFFFF</color>
+    <!-- token=semantic.color.text-disabled; source=portal/assets/css/portal.css:60,91; status=extracted -->
+    <color name="light_semantic_color_text_disabled">#FF9CA3AF</color>
+    <!-- token=semantic.color.text-heading; source=portal/assets/css/portal.css:240; status=extracted -->
+    <color name="light_semantic_color_text_heading">#FF111827</color>
+    <!-- token=semantic.color.text-link; source=www/index.php:57 ('Mehr erfahren' links); status=extracted; resolved-from=brand.color.secondary -->
+    <color name="light_semantic_color_text_link">#FF3B82F6</color>
+    <!-- token=semantic.color.text-muted; source=www/assets/css/custom.css:13 (- -color-text-light), portal.css:29,114,245; status=extracted -->
+    <color name="light_semantic_color_text_muted">#FF6B7280</color>
+    <!-- token=semantic.color.text-on-brand; source=www/index.php:14 (hero), portal/includes/header.php:143 (active nav); status=extracted -->
+    <color name="light_semantic_color_text_on_brand">#FFFFFFFF</color>
+    <!-- token=semantic.color.text-primary; source=www/assets/css/custom.css:12 (- -color-text); status=extracted -->
+    <color name="light_semantic_color_text_primary">#FF1F2937</color>
+    <!-- token=semantic.color.text-secondary; source=portal/assets/css/portal.css:120,154,177,215; status=extracted -->
+    <color name="light_semantic_color_text_secondary">#FF374151</color>
+    <!-- token=semantic.color.warning-bg; source=portal/assets/css/portal.css:256; status=extracted -->
+    <color name="light_semantic_color_warning_bg">#FFFFFBEB</color>
+    <!-- token=semantic.color.warning-border; source=portal/assets/css/portal.css:257; status=extracted -->
+    <color name="light_semantic_color_warning_border">#FFFDE68A</color>
+    <!-- token=semantic.color.warning-text; source=portal/assets/css/portal.css:258; status=extracted -->
+    <color name="light_semantic_color_warning_text">#FF92400E</color>
+    <!-- token=semantic.color.background; source=tokens/dark.json; status=proposed-derived -->
+    <color name="dark_semantic_color_background">#FF111827</color>
+    <!-- token=semantic.color.background-app; source=tokens/dark.json; status=proposed-derived -->
+    <color name="dark_semantic_color_background_app">#FF111827</color>
+    <!-- token=semantic.color.background-hover; source=tokens/dark.json; status=proposed-derived -->
+    <color name="dark_semantic_color_background_hover">#FF1E3A5F</color>
+    <!-- token=semantic.color.background-subtle; source=tokens/dark.json; status=proposed-derived -->
+    <color name="dark_semantic_color_background_subtle">#FF1F2937</color>
+    <!-- token=semantic.color.border; source=tokens/dark.json; status=proposed-derived -->
+    <color name="dark_semantic_color_border">#FF374151</color>
+    <!-- token=semantic.color.border-strong; source=tokens/dark.json; status=proposed-derived -->
+    <color name="dark_semantic_color_border_strong">#FF6B7280</color>
+    <!-- token=semantic.color.brand-surface; source=tokens/dark.json; status=proposed-derived; resolved-from=brand.color.primary -->
+    <color name="dark_semantic_color_brand_surface">#FF1E3A5F</color>
+    <!-- token=semantic.color.cta-fill; source=tokens/dark.json; status=proposed-derived; resolved-from=brand.color.logo-orange -->
+    <color name="dark_semantic_color_cta_fill">#FFED6D1F</color>
+    <!-- token=semantic.color.cta-text-on-fill; source=tokens/dark.json; status=proposed-derived; resolved-from=brand.color.logo-ink -->
+    <color name="dark_semantic_color_cta_text_on_fill">#FF231815</color>
+    <!-- token=semantic.color.danger; source=tokens/dark.json; status=proposed-derived -->
+    <color name="dark_semantic_color_danger">#FFF87171</color>
+    <!-- token=semantic.color.error-text; source=tokens/dark.json; status=proposed-derived -->
+    <color name="dark_semantic_color_error_text">#FFFECACA</color>
+    <!-- token=semantic.color.focus-outline; source=tokens/dark.json; status=proposed-derived -->
+    <color name="dark_semantic_color_focus_outline">#FF60A5FA</color>
+    <!-- token=semantic.color.info-text; source=tokens/dark.json; status=proposed-derived -->
+    <color name="dark_semantic_color_info_text">#FFBFDBFE</color>
+    <!-- token=semantic.color.success-text; source=tokens/dark.json; status=proposed-derived -->
+    <color name="dark_semantic_color_success_text">#FFBBF7D0</color>
+    <!-- token=semantic.color.surface; source=tokens/dark.json; status=proposed-derived -->
+    <color name="dark_semantic_color_surface">#FF1F2937</color>
+    <!-- token=semantic.color.text-link; source=tokens/dark.json; status=proposed-derived -->
+    <color name="dark_semantic_color_text_link">#FF60A5FA</color>
+    <!-- token=semantic.color.text-muted; source=tokens/dark.json; status=proposed-derived -->
+    <color name="dark_semantic_color_text_muted">#FF9CA3AF</color>
+    <!-- token=semantic.color.text-on-brand; source=tokens/dark.json; status=proposed-derived -->
+    <color name="dark_semantic_color_text_on_brand">#FFFFFFFF</color>
+    <!-- token=semantic.color.text-primary; source=tokens/dark.json; status=proposed-derived -->
+    <color name="dark_semantic_color_text_primary">#FFF9FAFB</color>
+    <!-- token=semantic.color.text-secondary; source=tokens/dark.json; status=proposed-derived -->
+    <color name="dark_semantic_color_text_secondary">#FFD1D5DB</color>
+    <!-- token=semantic.color.warning-text; source=tokens/dark.json; status=proposed-derived -->
+    <color name="dark_semantic_color_warning_text">#FFFDE68A</color>
+    <!-- token=semantic.color.background; source=tokens/high-contrast.json; status=proposed-derived -->
+    <color name="high_contrast_semantic_color_background">#FFFFFFFF</color>
+    <!-- token=semantic.color.border; source=tokens/high-contrast.json; status=proposed-derived -->
+    <color name="high_contrast_semantic_color_border">#FF374151</color>
+    <!-- token=semantic.color.brand-surface; source=tokens/high-contrast.json; status=proposed-derived; resolved-from=brand.color.primary -->
+    <color name="high_contrast_semantic_color_brand_surface">#FF1E3A5F</color>
+    <!-- token=semantic.color.cta-fill; source=tokens/high-contrast.json; status=proposed-derived; resolved-from=brand.color.primary -->
+    <color name="high_contrast_semantic_color_cta_fill">#FF1E3A5F</color>
+    <!-- token=semantic.color.cta-text-on-fill; source=tokens/high-contrast.json; status=proposed-derived -->
+    <color name="high_contrast_semantic_color_cta_text_on_fill">#FFFFFFFF</color>
+    <!-- token=semantic.color.danger; source=tokens/high-contrast.json; status=proposed-derived -->
+    <color name="high_contrast_semantic_color_danger">#FF991B1B</color>
+    <!-- token=semantic.color.focus-outline; source=tokens/high-contrast.json; status=proposed-derived -->
+    <color name="high_contrast_semantic_color_focus_outline">#FF1E40AF</color>
+    <!-- token=semantic.color.info-text; source=tokens/high-contrast.json; status=proposed-derived -->
+    <color name="high_contrast_semantic_color_info_text">#FF1E40AF</color>
+    <!-- token=semantic.color.success-text; source=tokens/high-contrast.json; status=proposed-derived -->
+    <color name="high_contrast_semantic_color_success_text">#FF166534</color>
+    <!-- token=semantic.color.surface; source=tokens/high-contrast.json; status=proposed-derived -->
+    <color name="high_contrast_semantic_color_surface">#FFFFFFFF</color>
+    <!-- token=semantic.color.text-disabled; source=tokens/high-contrast.json; status=proposed-derived -->
+    <color name="high_contrast_semantic_color_text_disabled">#FF4B5563</color>
+    <!-- token=semantic.color.text-link; source=tokens/high-contrast.json; status=proposed-derived -->
+    <color name="high_contrast_semantic_color_text_link">#FF1E40AF</color>
+    <!-- token=semantic.color.text-muted; source=tokens/high-contrast.json; status=proposed-derived -->
+    <color name="high_contrast_semantic_color_text_muted">#FF374151</color>
+    <!-- token=semantic.color.text-on-brand; source=tokens/high-contrast.json; status=proposed-derived -->
+    <color name="high_contrast_semantic_color_text_on_brand">#FFFFFFFF</color>
+    <!-- token=semantic.color.text-primary; source=tokens/high-contrast.json; status=proposed-derived -->
+    <color name="high_contrast_semantic_color_text_primary">#FF111827</color>
+    <!-- token=semantic.color.text-secondary; source=tokens/high-contrast.json; status=proposed-derived -->
+    <color name="high_contrast_semantic_color_text_secondary">#FF1F2937</color>
+    <!-- token=semantic.color.warning-text; source=tokens/high-contrast.json; status=proposed-derived -->
+    <color name="high_contrast_semantic_color_warning_text">#FF92400E</color>
+</resources>

@@ -1,0 +1,83 @@
+{
+  "$comment": "GENERATED — DO NOT EDIT. Run scripts/agent-framework/design-tokens/generate.py.",
+  "colors": [
+    {
+      "$comment": "token=semantic.color.text-muted; source=www/assets/css/custom.css:13 (--color-text-light), portal.css:29,114,245; status=extracted",
+      "color": {
+        "color-space": "srgb",
+        "components": {
+          "alpha": "1.000",
+          "blue": "0x80",
+          "green": "0x72",
+          "red": "0x6B"
+        }
+      },
+      "idiom": "universal"
+    },
+    {
+      "$comment": "token=semantic.color.text-muted; source=tokens/dark.json; status=proposed-derived",
+      "appearances": [
+        {
+          "appearance": "luminosity",
+          "value": "dark"
+        }
+      ],
+      "color": {
+        "color-space": "srgb",
+        "components": {
+          "alpha": "1.000",
+          "blue": "0xAF",
+          "green": "0xA3",
+          "red": "0x9C"
+        }
+      },
+      "idiom": "universal"
+    },
+    {
+      "$comment": "token=semantic.color.text-muted; source=tokens/high-contrast.json; status=proposed-derived",
+      "appearances": [
+        {
+          "appearance": "contrast",
+          "value": "high"
+        }
+      ],
+      "color": {
+        "color-space": "srgb",
+        "components": {
+          "alpha": "1.000",
+          "blue": "0x51",
+          "green": "0x41",
+          "red": "0x37"
+        }
+      },
+      "idiom": "universal"
+    },
+    {
+      "$comment": "token=semantic.color.text-muted; source=tokens/high-contrast.json; status=proposed-derived",
+      "appearances": [
+        {
+          "appearance": "luminosity",
+          "value": "dark"
+        },
+        {
+          "appearance": "contrast",
+          "value": "high"
+        }
+      ],
+      "color": {
+        "color-space": "srgb",
+        "components": {
+          "alpha": "1.000",
+          "blue": "0x51",
+          "green": "0x41",
+          "red": "0x37"
+        }
+      },
+      "idiom": "universal"
+    }
+  ],
+  "info": {
+    "author": "generated",
+    "version": 1
+  }
+}

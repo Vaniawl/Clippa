@@ -1,0 +1,462 @@
+/* GENERATED — DO NOT EDIT. Run scripts/agent-framework/design-tokens/generate.py. */
+
+:root {
+  /* token=border.width-accent-stripe; source=www/index.php:126-142 (border-l-4 accent cards); status=extracted */
+  --border-width-accent-stripe: 4px;
+  /* token=border.width-default; source=portal/assets/css/portal.css:31,68,111; status=extracted */
+  --border-width-default: 1px;
+  /* token=border.width-emphasis; source=www/assets/css/custom.css:181 (toolchain box), www/index.php:27 (hero secondary button border-2); status=extracted */
+  --border-width-emphasis: 2px;
+  /* token=brand.color.accent; source=www/assets/css/custom.css:11 | portal/includes/header.php:112; status=extracted */
+  --brand-color-accent: #0ea5e9;
+  /* token=brand.color.logo-ink; source=www/assets/logos/skyphoenix-logo.svg:5-23 | design-system/brand/logo/skyphoenix-logo-color.svg; status=extracted */
+  --brand-color-logo-ink: #231815;
+  /* token=brand.color.logo-orange; source=www/assets/logos/skyphoenix-logo.svg:5-23 | design-system/brand/logo/skyphoenix-logo-color.svg; status=extracted */
+  --brand-color-logo-orange: #ed6d1f;
+  /* token=brand.color.logo-red; source=www/assets/logos/skyphoenix-logo.svg:5-23 | design-system/brand/logo/skyphoenix-logo-color.svg; status=extracted */
+  --brand-color-logo-red: #b92d26;
+  /* token=brand.color.primary; source=www/assets/css/custom.css:8 | www/partials/header.php:66 | portal/includes/header.php:110; status=extracted */
+  --brand-color-primary: #1e3a5f;
+  /* token=brand.color.primary-dark; source=www/assets/css/custom.css:9 | www/partials/header.php:67; status=extracted */
+  --brand-color-primary-dark: #152a45;
+  /* token=brand.color.primary-light; source=www/partials/header.php:68; status=extracted */
+  --brand-color-primary-light: #2d5a8a;
+  /* token=brand.color.secondary; source=www/assets/css/custom.css:10 | portal/assets/css/portal.css:5; status=extracted */
+  --brand-color-secondary: #3b82f6;
+  /* token=brand.gradient.hero; source=www/assets/css/custom.css:67-72 | portal/login.php:36; status=extracted */
+  --brand-gradient-hero: linear-gradient(135deg, #1e3a5f 0%, #152a45 100%);
+  /* token=breakpoint.compact; source=www/assets/css/custom.css:281 | portal/assets/css/portal.css:376; status=extracted */
+  --breakpoint-compact: 375px;
+  /* token=breakpoint.lg; source=portal/includes/header.php:129 (sidebar switch); min-width:1024px custom.css:293; status=extracted */
+  --breakpoint-lg: 1024px;
+  /* token=breakpoint.md; source=www/partials/header.php:130 (desktop nav switch); custom media max-width:768px custom.css:233; status=extracted */
+  --breakpoint-md: 768px;
+  /* token=breakpoint.sm; source=Tailwind defaults used in markup (sm:), www/partials/header.php:119; status=extracted */
+  --breakpoint-sm: 640px;
+  /* token=breakpoint.xl-wide; source=www/assets/css/custom.css:300 | portal/assets/css/portal.css:402; status=extracted */
+  --breakpoint-xl-wide: 1920px;
+  /* token=breakpoint.xxl-wide; source=www/assets/css/custom.css:311 (www only); status=extracted */
+  --breakpoint-xxl-wide: 2560px;
+  /* token=font.family.mono; source=portal/assets/css/portal.css:81; status=extracted */
+  --font-family-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
+  /* token=font.family.sans; source=www/partials/header.php:74; status=extracted */
+  --font-family-sans: Inter, system-ui, -apple-system, sans-serif;
+  /* token=font.size.h1-hero; source=www/index.php:14; status=extracted */
+  --font-size-h1-hero: text-4xl lg:text-5xl;
+  /* token=font.size.h2-section; source=www/index.php:39,112,156,203,277; status=extracted */
+  --font-size-h2-section: text-3xl;
+  /* token=font.size.h3-card; source=www/index.php:53; status=extracted */
+  --font-size-h3-card: text-xl;
+  /* token=font.size.sm; source=portal/assets/css/portal.css:70,153,175,191 (buttons, forms, labels); status=extracted */
+  --font-size-sm: 0.875rem;
+  /* token=font.size.stat; source=portal/assets/css/portal.css:238; status=extracted */
+  --font-size-stat: 1.875rem;
+  /* token=font.size.xs; source=portal/assets/css/portal.css:26 (table th), portal.css:181 (error text); status=extracted */
+  --font-size-xs: 0.75rem;
+  /* token=font.weight.bold; source=portal/assets/css/portal.css:239 (stat values), www/index.php:14 (h1/h2); status=extracted */
+  --font-weight-bold: 700;
+  /* token=font.weight.medium; source=portal/assets/css/portal.css:191 (buttons/labels/nav); status=extracted */
+  --font-weight-medium: 500;
+  /* token=font.weight.semibold; source=portal/assets/css/portal.css:27 (table headers), www/index.php:53 (h3); status=extracted */
+  --font-weight-semibold: 600;
+  /* token=motion.duration-base; source=www/assets/css/custom.css:57 | portal/assets/css/portal.css:11,71,194; status=extracted */
+  --motion-duration-base: 0.2s;
+  /* token=motion.duration-fast; source=portal/assets/css/portal.css:116; status=extracted */
+  --motion-duration-fast: 0.15s;
+  /* token=motion.duration-slow; source=www/assets/css/custom.css:27 | portal/assets/css/portal.css:287; status=extracted */
+  --motion-duration-slow: 0.3s;
+  /* token=motion.hover-lift; source=www/assets/css/custom.css:61 (www); portal -1px portal.css:15; status=extracted */
+  --motion-hover-lift: translateY(-2px);
+  /* token=motion.reduced-motion; source=www/assets/css/custom.css:369-378; status=extracted */
+  --motion-reduced-motion: honored;
+  /* token=radius.lg; source=portal/assets/css/portal.css:233 (stat cards); rounded-xl 187 uses www (cards, www/index.php:47); status=extracted */
+  --radius-lg: 0.75rem;
+  /* token=radius.md; source=portal/assets/css/portal.css:69,113,193,250 (inputs/buttons/alerts); rounded-lg 177 uses www; status=extracted */
+  --radius-md: 0.5rem;
+  /* token=radius.pill; source=portal/assets/css/portal.css:280,286 (pills/progress); rounded-full badges portal/includes/functions.php:238; status=extracted */
+  --radius-pill: 9999px;
+  /* token=radius.sm; source=www/partials/header.php:132 (rounded-md nav links, 20 uses); status=extracted */
+  --radius-sm: 0.375rem;
+  /* token=shadow.card-hover; source=www/assets/css/custom.css:62; status=extracted */
+  --shadow-card-hover: 0 10px 25px -5px rgba(0,0,0,0.1);
+  /* token=shadow.card-hover-portal; source=portal/assets/css/portal.css:14; status=extracted */
+  --shadow-card-hover-portal: 0 4px 12px rgba(0,0,0,0.1);
+  /* token=shadow.dropdown; source=portal/assets/css/portal.css:140; status=extracted */
+  --shadow-dropdown: 0 10px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1);
+  /* token=shadow.focus-ring; source=portal/assets/css/portal.css:75; status=extracted */
+  --shadow-focus-ring: 0 0 0 3px rgba(59,130,246,0.1);
+  /* token=spacing.button-padding; source=portal/assets/css/portal.css:190; status=extracted */
+  --spacing-button-padding: 0.5rem 1rem;
+  /* token=spacing.card-padding; source=portal/assets/css/portal.css:235 (stat card; 1rem mobile :359, 2rem >=1920 :408); www uses p-8/p-6/p-5 www/index.php:47,163,126; status=extracted */
+  --spacing-card-padding: 1.5rem;
+  /* token=spacing.container; source=www/partials/header.php:119 | portal/includes/header.php:322; status=extracted */
+  --spacing-container: max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  /* token=spacing.container-wide; source=www/assets/css/custom.css:293-297 | portal/assets/css/portal.css:395-399; status=extracted */
+  --spacing-container-wide: 1400px;
+  /* token=spacing.header-height; source=www/partials/header.php:120 (h-16) | portal/includes/header.php:131; status=extracted */
+  --spacing-header-height: 4rem;
+  /* token=spacing.hero-y; source=www/index.php:11; status=extracted */
+  --spacing-hero-y: py-20 lg:py-28;
+  /* token=spacing.input-padding; source=portal/assets/css/portal.css:67; status=extracted */
+  --spacing-input-padding: 0.5rem 0.75rem;
+  /* token=spacing.section-y; source=www/index.php:36,108,153,200,275; status=extracted */
+  --spacing-section-y: py-16 lg:py-24;
+  /* token=spacing.sidebar-width; source=portal/includes/header.php:129 (w-64), content offset lg:pl-64 :321; status=extracted */
+  --spacing-sidebar-width: 16rem;
+  /* token=spacing.table-cell; source=portal/assets/css/portal.css:25,34; status=extracted */
+  --spacing-table-cell: 0.75rem 1rem;
+  /* token=spacing.touch-target-min; source=www/assets/css/custom.css:235 | portal/assets/css/portal.css:311; status=extracted */
+  --spacing-touch-target-min: 44px;
+}
+
+[data-theme="light"] {
+  /* token=semantic.color.background; source=www/partials/header.php:113 (bg-white); status=extracted */
+  --semantic-color-background: #ffffff;
+  /* token=semantic.color.background-app; source=portal/includes/header.php:122 (bg-gray-50), portal.css:30,39,57,219; status=extracted */
+  --semantic-color-background-app: #f9fafb;
+  /* token=semantic.color.background-hover; source=www/assets/css/custom.css:83,106; portal.css:54,261; status=extracted */
+  --semantic-color-background-hover: #eff6ff;
+  /* token=semantic.color.background-selected; source=portal/assets/css/portal.css:124,164; status=extracted */
+  --semantic-color-background-selected: #dbeafe;
+  /* token=semantic.color.background-subtle; source=www/assets/css/custom.css:14 (--color-bg-light); status=extracted */
+  --semantic-color-background-subtle: #f8fafc;
+  /* token=semantic.color.border; source=www/assets/css/custom.css:15 (--color-border), portal.css:31; status=extracted */
+  --semantic-color-border: #e5e7eb;
+  /* token=semantic.color.border-strong; source=portal/assets/css/portal.css:68,111,216 (inputs, outline buttons); status=extracted */
+  --semantic-color-border-strong: #d1d5db;
+  /* token=semantic.color.brand-surface; source=www/index.php:275 (CTA band bg-primary), portal sidebar active; status=extracted; resolved-from=brand.color.primary */
+  --semantic-color-brand-surface: #1e3a5f;
+  /* token=semantic.color.cta-fill; source=design-system/tokens/base.json brand.color.logo-orange | design-system/cross-platform-standard.md section 1; status=approved-derived; resolved-from=brand.color.logo-orange */
+  --semantic-color-cta-fill: #ed6d1f;
+  /* token=semantic.color.cta-text-on-fill; source=design-system/tokens/base.json brand.color.logo-ink | design-system/cross-platform-standard.md section 1; status=approved-derived; resolved-from=brand.color.logo-ink */
+  --semantic-color-cta-text-on-fill: #231815;
+  /* token=semantic.color.danger; source=portal/assets/css/portal.css:180,222; status=extracted */
+  --semantic-color-danger: #dc2626;
+  /* token=semantic.color.error-bg; source=portal/assets/css/portal.css:271; status=extracted */
+  --semantic-color-error-bg: #fef2f2;
+  /* token=semantic.color.error-border; source=portal/assets/css/portal.css:272; status=extracted */
+  --semantic-color-error-border: #fecaca;
+  /* token=semantic.color.error-text; source=portal/assets/css/portal.css:273; status=extracted */
+  --semantic-color-error-text: #991b1b;
+  /* token=semantic.color.focus-outline; source=www/assets/css/custom.css:40-47 (2px solid, offset 2px), portal.css:4-7; status=extracted; resolved-from=brand.color.secondary */
+  --semantic-color-focus-outline: #3b82f6;
+  /* token=semantic.color.footer-bg; source=www/partials/footer.php:5 (bg-gray-900); status=extracted */
+  --semantic-color-footer-bg: #111827;
+  /* token=semantic.color.footer-text; source=www/partials/footer.php:5 (text-gray-300); status=extracted */
+  --semantic-color-footer-text: #d1d5db;
+  /* token=semantic.color.info-bg; source=portal/assets/css/portal.css:261; status=extracted */
+  --semantic-color-info-bg: #eff6ff;
+  /* token=semantic.color.info-border; source=portal/assets/css/portal.css:262; status=extracted */
+  --semantic-color-info-border: #bfdbfe;
+  /* token=semantic.color.info-text; source=portal/assets/css/portal.css:263; status=extracted */
+  --semantic-color-info-text: #1e40af;
+  /* token=semantic.color.success-bg; source=portal/assets/css/portal.css:266; status=extracted */
+  --semantic-color-success-bg: #f0fdf4;
+  /* token=semantic.color.success-border; source=portal/assets/css/portal.css:267; status=extracted */
+  --semantic-color-success-border: #bbf7d0;
+  /* token=semantic.color.success-text; source=portal/assets/css/portal.css:268; status=extracted */
+  --semantic-color-success-text: #166534;
+  /* token=semantic.color.surface; source=www/index.php:47 (bg-white cards); status=extracted */
+  --semantic-color-surface: #ffffff;
+  /* token=semantic.color.text-disabled; source=portal/assets/css/portal.css:60,91; status=extracted */
+  --semantic-color-text-disabled: #9ca3af;
+  /* token=semantic.color.text-heading; source=portal/assets/css/portal.css:240; status=extracted */
+  --semantic-color-text-heading: #111827;
+  /* token=semantic.color.text-link; source=www/index.php:57 ('Mehr erfahren' links); status=extracted; resolved-from=brand.color.secondary */
+  --semantic-color-text-link: #3b82f6;
+  /* token=semantic.color.text-muted; source=www/assets/css/custom.css:13 (--color-text-light), portal.css:29,114,245; status=extracted */
+  --semantic-color-text-muted: #6b7280;
+  /* token=semantic.color.text-on-brand; source=www/index.php:14 (hero), portal/includes/header.php:143 (active nav); status=extracted */
+  --semantic-color-text-on-brand: #ffffff;
+  /* token=semantic.color.text-primary; source=www/assets/css/custom.css:12 (--color-text); status=extracted */
+  --semantic-color-text-primary: #1f2937;
+  /* token=semantic.color.text-secondary; source=portal/assets/css/portal.css:120,154,177,215; status=extracted */
+  --semantic-color-text-secondary: #374151;
+  /* token=semantic.color.warning-bg; source=portal/assets/css/portal.css:256; status=extracted */
+  --semantic-color-warning-bg: #fffbeb;
+  /* token=semantic.color.warning-border; source=portal/assets/css/portal.css:257; status=extracted */
+  --semantic-color-warning-border: #fde68a;
+  /* token=semantic.color.warning-text; source=portal/assets/css/portal.css:258; status=extracted */
+  --semantic-color-warning-text: #92400e;
+  /* token=semantic.component.button-danger; source=portal/assets/css/portal.css:221-228; status=extracted */
+  --semantic-component-button-danger: bg #dc2626, text #fff, hover #b91c1c;
+  /* token=semantic.component.button-outline; source=portal/assets/css/portal.css:213-220; status=extracted */
+  --semantic-component-button-outline: bg #fff, text #374151, border #d1d5db, hover bg #f9fafb;
+  /* token=semantic.component.button-primary; source=portal/assets/css/portal.css:197-204; status=extracted; resolved-from=brand.color.primary | brand.color.primary-dark */
+  --semantic-component-button-primary: bg #1e3a5f, text #fff, hover #152a45;
+  /* token=semantic.component.button-secondary; source=portal/assets/css/portal.css:205-212; status=extracted; resolved-from=brand.color.secondary */
+  --semantic-component-button-secondary: bg #3b82f6, text #fff, hover #2563eb;
+  /* token=semantic.component.status-badges; source=portal/includes/functions.php:227-236; status=extracted */
+  --semantic-component-status-badges: draft gray-100/700, submitted blue-100/700, approved green-100/700, rejected red-100/700, pending yellow-100/700, cancelled gray-100/500, billed purple-100/700;
+}
+
+[data-theme="dark"] {
+  /* token=semantic.color.alert-bg-pattern; source=tokens/dark.json; status=proposed-derived */
+  --semantic-color-alert-bg-pattern: surface + 1px border in the semantic hue at ~40% strength;
+  /* token=semantic.color.background; source=tokens/dark.json; status=proposed-derived */
+  --semantic-color-background: #111827;
+  /* token=semantic.color.background-app; source=tokens/dark.json; status=proposed-derived */
+  --semantic-color-background-app: #111827;
+  /* token=semantic.color.background-hover; source=tokens/dark.json; status=proposed-derived */
+  --semantic-color-background-hover: #1e3a5f;
+  /* token=semantic.color.background-subtle; source=tokens/dark.json; status=proposed-derived */
+  --semantic-color-background-subtle: #1f2937;
+  /* token=semantic.color.border; source=tokens/dark.json; status=proposed-derived */
+  --semantic-color-border: #374151;
+  /* token=semantic.color.border-strong; source=tokens/dark.json; status=proposed-derived */
+  --semantic-color-border-strong: #6b7280;
+  /* token=semantic.color.brand-surface; source=tokens/dark.json; status=proposed-derived; resolved-from=brand.color.primary */
+  --semantic-color-brand-surface: #1e3a5f;
+  /* token=semantic.color.cta-fill; source=tokens/dark.json; status=proposed-derived; resolved-from=brand.color.logo-orange */
+  --semantic-color-cta-fill: #ed6d1f;
+  /* token=semantic.color.cta-text-on-fill; source=tokens/dark.json; status=proposed-derived; resolved-from=brand.color.logo-ink */
+  --semantic-color-cta-text-on-fill: #231815;
+  /* token=semantic.color.danger; source=tokens/dark.json; status=proposed-derived */
+  --semantic-color-danger: #f87171;
+  /* token=semantic.color.error-text; source=tokens/dark.json; status=proposed-derived */
+  --semantic-color-error-text: #fecaca;
+  /* token=semantic.color.focus-outline; source=tokens/dark.json; status=proposed-derived */
+  --semantic-color-focus-outline: #60a5fa;
+  /* token=semantic.color.info-text; source=tokens/dark.json; status=proposed-derived */
+  --semantic-color-info-text: #bfdbfe;
+  /* token=semantic.color.success-text; source=tokens/dark.json; status=proposed-derived */
+  --semantic-color-success-text: #bbf7d0;
+  /* token=semantic.color.surface; source=tokens/dark.json; status=proposed-derived */
+  --semantic-color-surface: #1f2937;
+  /* token=semantic.color.text-link; source=tokens/dark.json; status=proposed-derived */
+  --semantic-color-text-link: #60a5fa;
+  /* token=semantic.color.text-muted; source=tokens/dark.json; status=proposed-derived */
+  --semantic-color-text-muted: #9ca3af;
+  /* token=semantic.color.text-on-brand; source=tokens/dark.json; status=proposed-derived */
+  --semantic-color-text-on-brand: #ffffff;
+  /* token=semantic.color.text-primary; source=tokens/dark.json; status=proposed-derived */
+  --semantic-color-text-primary: #f9fafb;
+  /* token=semantic.color.text-secondary; source=tokens/dark.json; status=proposed-derived */
+  --semantic-color-text-secondary: #d1d5db;
+  /* token=semantic.color.warning-text; source=tokens/dark.json; status=proposed-derived */
+  --semantic-color-warning-text: #fde68a;
+}
+
+[data-theme="high-contrast"] {
+  /* token=semantic.color.background; source=tokens/high-contrast.json; status=proposed-derived */
+  --semantic-color-background: #ffffff;
+  /* token=semantic.color.border; source=tokens/high-contrast.json; status=proposed-derived */
+  --semantic-color-border: #374151;
+  /* token=semantic.color.brand-surface; source=tokens/high-contrast.json; status=proposed-derived; resolved-from=brand.color.primary */
+  --semantic-color-brand-surface: #1e3a5f;
+  /* token=semantic.color.cta-fill; source=tokens/high-contrast.json; status=proposed-derived; resolved-from=brand.color.primary */
+  --semantic-color-cta-fill: #1e3a5f;
+  /* token=semantic.color.cta-text-on-fill; source=tokens/high-contrast.json; status=proposed-derived */
+  --semantic-color-cta-text-on-fill: #ffffff;
+  /* token=semantic.color.danger; source=tokens/high-contrast.json; status=proposed-derived */
+  --semantic-color-danger: #991b1b;
+  /* token=semantic.color.focus-outline; source=tokens/high-contrast.json; status=proposed-derived */
+  --semantic-color-focus-outline: #1e40af;
+  /* token=semantic.color.info-text; source=tokens/high-contrast.json; status=proposed-derived */
+  --semantic-color-info-text: #1e40af;
+  /* token=semantic.color.success-text; source=tokens/high-contrast.json; status=proposed-derived */
+  --semantic-color-success-text: #166534;
+  /* token=semantic.color.surface; source=tokens/high-contrast.json; status=proposed-derived */
+  --semantic-color-surface: #ffffff;
+  /* token=semantic.color.text-disabled; source=tokens/high-contrast.json; status=proposed-derived */
+  --semantic-color-text-disabled: #4b5563;
+  /* token=semantic.color.text-link; source=tokens/high-contrast.json; status=proposed-derived */
+  --semantic-color-text-link: #1e40af;
+  /* token=semantic.color.text-muted; source=tokens/high-contrast.json; status=proposed-derived */
+  --semantic-color-text-muted: #374151;
+  /* token=semantic.color.text-on-brand; source=tokens/high-contrast.json; status=proposed-derived */
+  --semantic-color-text-on-brand: #ffffff;
+  /* token=semantic.color.text-primary; source=tokens/high-contrast.json; status=proposed-derived */
+  --semantic-color-text-primary: #111827;
+  /* token=semantic.color.text-secondary; source=tokens/high-contrast.json; status=proposed-derived */
+  --semantic-color-text-secondary: #1f2937;
+  /* token=semantic.color.warning-text; source=tokens/high-contrast.json; status=proposed-derived */
+  --semantic-color-warning-text: #92400e;
+  /* token=semantic.policy.focus-width; source=tokens/high-contrast.json; status=proposed-derived */
+  --semantic-policy-focus-width: 3px;
+  /* token=semantic.policy.forced-colors; source=tokens/high-contrast.json; status=proposed-derived */
+  --semantic-policy-forced-colors: respect system palette; no overrides under forced-colors media query;
+  /* token=semantic.policy.min-contrast-normal-text; source=tokens/high-contrast.json; status=proposed-derived */
+  --semantic-policy-min-contrast-normal-text: 7:1 target, 4.5:1 floor;
+  /* token=semantic.policy.underline-links; source=tokens/high-contrast.json; status=proposed-derived */
+  --semantic-policy-underline-links: true;
+}
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    /* token=semantic.color.background; source=www/partials/header.php:113 (bg-white); status=extracted */
+    --semantic-color-background: #ffffff;
+    /* token=semantic.color.background-app; source=portal/includes/header.php:122 (bg-gray-50), portal.css:30,39,57,219; status=extracted */
+    --semantic-color-background-app: #f9fafb;
+    /* token=semantic.color.background-hover; source=www/assets/css/custom.css:83,106; portal.css:54,261; status=extracted */
+    --semantic-color-background-hover: #eff6ff;
+    /* token=semantic.color.background-selected; source=portal/assets/css/portal.css:124,164; status=extracted */
+    --semantic-color-background-selected: #dbeafe;
+    /* token=semantic.color.background-subtle; source=www/assets/css/custom.css:14 (--color-bg-light); status=extracted */
+    --semantic-color-background-subtle: #f8fafc;
+    /* token=semantic.color.border; source=www/assets/css/custom.css:15 (--color-border), portal.css:31; status=extracted */
+    --semantic-color-border: #e5e7eb;
+    /* token=semantic.color.border-strong; source=portal/assets/css/portal.css:68,111,216 (inputs, outline buttons); status=extracted */
+    --semantic-color-border-strong: #d1d5db;
+    /* token=semantic.color.brand-surface; source=www/index.php:275 (CTA band bg-primary), portal sidebar active; status=extracted; resolved-from=brand.color.primary */
+    --semantic-color-brand-surface: #1e3a5f;
+    /* token=semantic.color.cta-fill; source=design-system/tokens/base.json brand.color.logo-orange | design-system/cross-platform-standard.md section 1; status=approved-derived; resolved-from=brand.color.logo-orange */
+    --semantic-color-cta-fill: #ed6d1f;
+    /* token=semantic.color.cta-text-on-fill; source=design-system/tokens/base.json brand.color.logo-ink | design-system/cross-platform-standard.md section 1; status=approved-derived; resolved-from=brand.color.logo-ink */
+    --semantic-color-cta-text-on-fill: #231815;
+    /* token=semantic.color.danger; source=portal/assets/css/portal.css:180,222; status=extracted */
+    --semantic-color-danger: #dc2626;
+    /* token=semantic.color.error-bg; source=portal/assets/css/portal.css:271; status=extracted */
+    --semantic-color-error-bg: #fef2f2;
+    /* token=semantic.color.error-border; source=portal/assets/css/portal.css:272; status=extracted */
+    --semantic-color-error-border: #fecaca;
+    /* token=semantic.color.error-text; source=portal/assets/css/portal.css:273; status=extracted */
+    --semantic-color-error-text: #991b1b;
+    /* token=semantic.color.focus-outline; source=www/assets/css/custom.css:40-47 (2px solid, offset 2px), portal.css:4-7; status=extracted; resolved-from=brand.color.secondary */
+    --semantic-color-focus-outline: #3b82f6;
+    /* token=semantic.color.footer-bg; source=www/partials/footer.php:5 (bg-gray-900); status=extracted */
+    --semantic-color-footer-bg: #111827;
+    /* token=semantic.color.footer-text; source=www/partials/footer.php:5 (text-gray-300); status=extracted */
+    --semantic-color-footer-text: #d1d5db;
+    /* token=semantic.color.info-bg; source=portal/assets/css/portal.css:261; status=extracted */
+    --semantic-color-info-bg: #eff6ff;
+    /* token=semantic.color.info-border; source=portal/assets/css/portal.css:262; status=extracted */
+    --semantic-color-info-border: #bfdbfe;
+    /* token=semantic.color.info-text; source=portal/assets/css/portal.css:263; status=extracted */
+    --semantic-color-info-text: #1e40af;
+    /* token=semantic.color.success-bg; source=portal/assets/css/portal.css:266; status=extracted */
+    --semantic-color-success-bg: #f0fdf4;
+    /* token=semantic.color.success-border; source=portal/assets/css/portal.css:267; status=extracted */
+    --semantic-color-success-border: #bbf7d0;
+    /* token=semantic.color.success-text; source=portal/assets/css/portal.css:268; status=extracted */
+    --semantic-color-success-text: #166534;
+    /* token=semantic.color.surface; source=www/index.php:47 (bg-white cards); status=extracted */
+    --semantic-color-surface: #ffffff;
+    /* token=semantic.color.text-disabled; source=portal/assets/css/portal.css:60,91; status=extracted */
+    --semantic-color-text-disabled: #9ca3af;
+    /* token=semantic.color.text-heading; source=portal/assets/css/portal.css:240; status=extracted */
+    --semantic-color-text-heading: #111827;
+    /* token=semantic.color.text-link; source=www/index.php:57 ('Mehr erfahren' links); status=extracted; resolved-from=brand.color.secondary */
+    --semantic-color-text-link: #3b82f6;
+    /* token=semantic.color.text-muted; source=www/assets/css/custom.css:13 (--color-text-light), portal.css:29,114,245; status=extracted */
+    --semantic-color-text-muted: #6b7280;
+    /* token=semantic.color.text-on-brand; source=www/index.php:14 (hero), portal/includes/header.php:143 (active nav); status=extracted */
+    --semantic-color-text-on-brand: #ffffff;
+    /* token=semantic.color.text-primary; source=www/assets/css/custom.css:12 (--color-text); status=extracted */
+    --semantic-color-text-primary: #1f2937;
+    /* token=semantic.color.text-secondary; source=portal/assets/css/portal.css:120,154,177,215; status=extracted */
+    --semantic-color-text-secondary: #374151;
+    /* token=semantic.color.warning-bg; source=portal/assets/css/portal.css:256; status=extracted */
+    --semantic-color-warning-bg: #fffbeb;
+    /* token=semantic.color.warning-border; source=portal/assets/css/portal.css:257; status=extracted */
+    --semantic-color-warning-border: #fde68a;
+    /* token=semantic.color.warning-text; source=portal/assets/css/portal.css:258; status=extracted */
+    --semantic-color-warning-text: #92400e;
+    /* token=semantic.component.button-danger; source=portal/assets/css/portal.css:221-228; status=extracted */
+    --semantic-component-button-danger: bg #dc2626, text #fff, hover #b91c1c;
+    /* token=semantic.component.button-outline; source=portal/assets/css/portal.css:213-220; status=extracted */
+    --semantic-component-button-outline: bg #fff, text #374151, border #d1d5db, hover bg #f9fafb;
+    /* token=semantic.component.button-primary; source=portal/assets/css/portal.css:197-204; status=extracted; resolved-from=brand.color.primary | brand.color.primary-dark */
+    --semantic-component-button-primary: bg #1e3a5f, text #fff, hover #152a45;
+    /* token=semantic.component.button-secondary; source=portal/assets/css/portal.css:205-212; status=extracted; resolved-from=brand.color.secondary */
+    --semantic-component-button-secondary: bg #3b82f6, text #fff, hover #2563eb;
+    /* token=semantic.component.status-badges; source=portal/includes/functions.php:227-236; status=extracted */
+    --semantic-component-status-badges: draft gray-100/700, submitted blue-100/700, approved green-100/700, rejected red-100/700, pending yellow-100/700, cancelled gray-100/500, billed purple-100/700;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    /* token=semantic.color.alert-bg-pattern; source=tokens/dark.json; status=proposed-derived */
+    --semantic-color-alert-bg-pattern: surface + 1px border in the semantic hue at ~40% strength;
+    /* token=semantic.color.background; source=tokens/dark.json; status=proposed-derived */
+    --semantic-color-background: #111827;
+    /* token=semantic.color.background-app; source=tokens/dark.json; status=proposed-derived */
+    --semantic-color-background-app: #111827;
+    /* token=semantic.color.background-hover; source=tokens/dark.json; status=proposed-derived */
+    --semantic-color-background-hover: #1e3a5f;
+    /* token=semantic.color.background-subtle; source=tokens/dark.json; status=proposed-derived */
+    --semantic-color-background-subtle: #1f2937;
+    /* token=semantic.color.border; source=tokens/dark.json; status=proposed-derived */
+    --semantic-color-border: #374151;
+    /* token=semantic.color.border-strong; source=tokens/dark.json; status=proposed-derived */
+    --semantic-color-border-strong: #6b7280;
+    /* token=semantic.color.brand-surface; source=tokens/dark.json; status=proposed-derived; resolved-from=brand.color.primary */
+    --semantic-color-brand-surface: #1e3a5f;
+    /* token=semantic.color.cta-fill; source=tokens/dark.json; status=proposed-derived; resolved-from=brand.color.logo-orange */
+    --semantic-color-cta-fill: #ed6d1f;
+    /* token=semantic.color.cta-text-on-fill; source=tokens/dark.json; status=proposed-derived; resolved-from=brand.color.logo-ink */
+    --semantic-color-cta-text-on-fill: #231815;
+    /* token=semantic.color.danger; source=tokens/dark.json; status=proposed-derived */
+    --semantic-color-danger: #f87171;
+    /* token=semantic.color.error-text; source=tokens/dark.json; status=proposed-derived */
+    --semantic-color-error-text: #fecaca;
+    /* token=semantic.color.focus-outline; source=tokens/dark.json; status=proposed-derived */
+    --semantic-color-focus-outline: #60a5fa;
+    /* token=semantic.color.info-text; source=tokens/dark.json; status=proposed-derived */
+    --semantic-color-info-text: #bfdbfe;
+    /* token=semantic.color.success-text; source=tokens/dark.json; status=proposed-derived */
+    --semantic-color-success-text: #bbf7d0;
+    /* token=semantic.color.surface; source=tokens/dark.json; status=proposed-derived */
+    --semantic-color-surface: #1f2937;
+    /* token=semantic.color.text-link; source=tokens/dark.json; status=proposed-derived */
+    --semantic-color-text-link: #60a5fa;
+    /* token=semantic.color.text-muted; source=tokens/dark.json; status=proposed-derived */
+    --semantic-color-text-muted: #9ca3af;
+    /* token=semantic.color.text-on-brand; source=tokens/dark.json; status=proposed-derived */
+    --semantic-color-text-on-brand: #ffffff;
+    /* token=semantic.color.text-primary; source=tokens/dark.json; status=proposed-derived */
+    --semantic-color-text-primary: #f9fafb;
+    /* token=semantic.color.text-secondary; source=tokens/dark.json; status=proposed-derived */
+    --semantic-color-text-secondary: #d1d5db;
+    /* token=semantic.color.warning-text; source=tokens/dark.json; status=proposed-derived */
+    --semantic-color-warning-text: #fde68a;
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root:not([data-theme]) {
+    /* token=semantic.color.background; source=tokens/high-contrast.json; status=proposed-derived */
+    --semantic-color-background: #ffffff;
+    /* token=semantic.color.border; source=tokens/high-contrast.json; status=proposed-derived */
+    --semantic-color-border: #374151;
+    /* token=semantic.color.brand-surface; source=tokens/high-contrast.json; status=proposed-derived; resolved-from=brand.color.primary */
+    --semantic-color-brand-surface: #1e3a5f;
+    /* token=semantic.color.cta-fill; source=tokens/high-contrast.json; status=proposed-derived; resolved-from=brand.color.primary */
+    --semantic-color-cta-fill: #1e3a5f;
+    /* token=semantic.color.cta-text-on-fill; source=tokens/high-contrast.json; status=proposed-derived */
+    --semantic-color-cta-text-on-fill: #ffffff;
+    /* token=semantic.color.danger; source=tokens/high-contrast.json; status=proposed-derived */
+    --semantic-color-danger: #991b1b;
+    /* token=semantic.color.focus-outline; source=tokens/high-contrast.json; status=proposed-derived */
+    --semantic-color-focus-outline: #1e40af;
+    /* token=semantic.color.info-text; source=tokens/high-contrast.json; status=proposed-derived */
+    --semantic-color-info-text: #1e40af;
+    /* token=semantic.color.success-text; source=tokens/high-contrast.json; status=proposed-derived */
+    --semantic-color-success-text: #166534;
+    /* token=semantic.color.surface; source=tokens/high-contrast.json; status=proposed-derived */
+    --semantic-color-surface: #ffffff;
+    /* token=semantic.color.text-disabled; source=tokens/high-contrast.json; status=proposed-derived */
+    --semantic-color-text-disabled: #4b5563;
+    /* token=semantic.color.text-link; source=tokens/high-contrast.json; status=proposed-derived */
+    --semantic-color-text-link: #1e40af;
+    /* token=semantic.color.text-muted; source=tokens/high-contrast.json; status=proposed-derived */
+    --semantic-color-text-muted: #374151;
+    /* token=semantic.color.text-on-brand; source=tokens/high-contrast.json; status=proposed-derived */
+    --semantic-color-text-on-brand: #ffffff;
+    /* token=semantic.color.text-primary; source=tokens/high-contrast.json; status=proposed-derived */
+    --semantic-color-text-primary: #111827;
+    /* token=semantic.color.text-secondary; source=tokens/high-contrast.json; status=proposed-derived */
+    --semantic-color-text-secondary: #1f2937;
+    /* token=semantic.color.warning-text; source=tokens/high-contrast.json; status=proposed-derived */
+    --semantic-color-warning-text: #92400e;
+    /* token=semantic.policy.focus-width; source=tokens/high-contrast.json; status=proposed-derived */
+    --semantic-policy-focus-width: 3px;
+    /* token=semantic.policy.forced-colors; source=tokens/high-contrast.json; status=proposed-derived */
+    --semantic-policy-forced-colors: respect system palette; no overrides under forced-colors media query;
+    /* token=semantic.policy.min-contrast-normal-text; source=tokens/high-contrast.json; status=proposed-derived */
+    --semantic-policy-min-contrast-normal-text: 7:1 target, 4.5:1 floor;
+    /* token=semantic.policy.underline-links; source=tokens/high-contrast.json; status=proposed-derived */
+    --semantic-policy-underline-links: true;
+  }
+}

@@ -193,3 +193,8 @@ git pull origin main
 - Version: `1.0.13`
 - Release builds use hardened runtime.
 - History retention and item limits are configurable; the default is 100 items for one week.
+
+## Apple-команда
+
+Відкрий репозиторій у Codex і звертайся до координатора звичайною мовою.
+[Як працювати з командою](docs/operations/apple-team.md).
