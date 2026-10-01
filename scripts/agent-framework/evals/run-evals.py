@@ -377,20 +377,45 @@ def e12_market_evidence():
 
 
 def e13_ui_tokens():
-    skill = read("agent-framework/canonical/skills/ui-ux-review/SKILL.md").lower()
-    base = json.loads(read("agent-framework/design-system/tokens/base.json"))
-    sourced = all("source" in v.get("$extensions", {})
-                  for v in base["brand"]["color"].values())
-    dark = json.loads(read("agent-framework/design-system/tokens/dark.json"))
-    core = read("AGENTS.md")
-    ok = ("design-system/tokens" in skill and "never" in skill and sourced
+    try:
+        skill = read("agent-framework/canonical/skills/ui-ux-review/SKILL.md").lower()
+        # Check the reachable, applicable procedure rather than requiring its
+        # full text to remain duplicated in the compact entrypoint.
+        branded = read("agent-framework/canonical/skills/ui-ux-review/references/web-branded.md").lower()
+        native = read("agent-framework/canonical/skills/ui-ux-review/references/native-apple.md").lower()
+        router = read("agent-framework/canonical/policies/apple-product-engineering.md")
+        standard = read("agent-framework/canonical/policies/apple-product-engineering-reference.md").lower()
+        base = json.loads(read("agent-framework/design-system/tokens/base.json"))
+        colors = base["brand"]["color"]
+        sourced = bool(colors) and all(isinstance(v.get("$extensions", {}).get("source"), list)
+                                      and v["$extensions"]["source"]
+                                      and all(isinstance(source, str) and source.strip()
+                                              for source in v["$extensions"]["source"])
+                                      for v in colors.values())
+        dark = json.loads(read("agent-framework/design-system/tokens/dark.json"))
+        core = read("AGENTS.md")
+    except (OSError, ValueError, KeyError, TypeError, AttributeError):
+        record("E13-ui-follows-tokens", False, "deterministic:artifact",
+               "required UI routing/reference or token artifact is missing or invalid")
+        return
+    ok = ("(references/web-branded.md)" in skill and "(references/native-apple.md)" in skill
+          and "apple-product-engineering-reference.md](apple-product-engineering-reference.md)" in router
+          and "new or materially changed native ui" in router.lower()
+          and "small consistent scale rather than arbitrary values" in standard
+          and "prefer apple system typography" in standard
+          and "suitable native control" in standard
+          and "native semantic" in native and "documented brand-owner approval" in native
+          and "design-system/tokens" in branded and "never invent" in branded
+          and "candidate" in branded and "do not improvise a value" in branded
+          and "require documented brand-owner approval" in branded and "review failure" in branded
+          and sourced
           and dark.get("$status") == "proposed-derived"
           and "system semantic controls" in core
           and "instead of arbitrary" in core
           and "Branded surfaces use their adopted, approved tokens" in core
           and "tokens retain their approval requirements" in core)
     record("E13-ui-follows-tokens", ok, "deterministic:artifact",
-           "native semantic styling and coherent custom scales required; approved brand tokens retain source refs and proposed-derived approval gates")
+           "linked native/branded procedures and compact-router reference preserve native semantic styling and coherent custom scales; approved brand tokens retain nonempty source refs and proposed-derived approval gates")
 
 
 def e14_supervisor_resumes(tmp):

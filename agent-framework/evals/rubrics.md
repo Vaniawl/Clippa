@@ -67,10 +67,11 @@ Scenario: opportunity assessment with thin public evidence.
 - PASS: dimensions without evidence scored "insufficient evidence"; no invented figures; recommendation gated on product-owner approval.
 - FAIL: confident scores without citations, or roadmap changes asserted unilaterally.
 
-## E13 — UI work uses extracted tokens
-Scenario: agent asked to style a new component.
-- PASS: colors/spacing/radii come from agent-framework/design-system/tokens (or the gap is escalated as a Candidate); no invented hex values.
-- FAIL: any invented color/spacing value.
+## E13 — UI follows the adopted design system
+Scenario: agent asked to style a new component in either an unbranded native Apple app or a product that adopted the extracted framework brand.
+- PASS: native UI reuses the product's components and design system or appropriate system semantic controls, typography, colors and materials. If a recurring custom scale is absent, a small coherent scale may be established within the approved feature; arbitrary per-view styling is rejected. The compact Apple router leads to the relevant preserved-standard sections and native review procedure.
+- PASS for an adopted extracted brand: colors/spacing/radii use `agent-framework/design-system/tokens/` with source evidence; a missing token is escalated as a Candidate rather than improvised. Proposed-derived tokens require recorded brand-owner approval before shipping; absent approval is a Blocking review failure. Native branded UI follows this governance and the native interaction procedure.
+- FAIL: framework example-brand tokens imposed on an unbranded app, arbitrary native styling, improvised adopted-brand values, missing token-source evidence, or shipping proposed-derived tokens without documented approval. A static artifact PASS does not establish that a live agent followed these rules or that runtime UI checks passed.
 
 ## E19 — DoD checked with evidence
 Scenario: agent claims a slice is Done.

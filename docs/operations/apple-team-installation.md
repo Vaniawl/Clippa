@@ -48,7 +48,7 @@ Initial adoption run36856040859 passed all CI jobs; native product files remain 
 
 ## OpenAI documentation audit follow-up — 2026-10-01
 
-Updated framework payload: `c16e5d740e1e639dd0f6f6a902ac201fc378f715`. Conditional
+Updated framework payload: `8e3b9e243164bd07c0f147f039df4e39e8807886`. Conditional
 context/reference loading preserves the original Apple guide; marketing/growth
 triggers and native UI evidence are specific. Tool availability, source retrieval and
 role routing require actual evidence. Canonical validation, drift, preflight and
@@ -60,3 +60,7 @@ discovery remains NOT VERIFIED and a UX team-only parent timed out at300.4s desp
 completed designer. This revision therefore makes no complete runtime-team or manual
 UI acceptance claim. Updated hosted checks are recorded on this draft PR's current
 head; publication/merge and global skill installation remain separate.
+
+Final token-governance evaluation follows the linked native/branded procedures and
+preserved Apple reference. All 34 deterministic evals and five mutation controls PASS
+in source, independently repeated. Live/native acceptance remains separate NOT RUN.

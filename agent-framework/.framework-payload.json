@@ -2,9 +2,9 @@
   "framework_version": "1.1.4",
   "template": "ios-starter",
   "source_url": "https://github.com/Vaniawl/ios-starter.git",
-  "source_commit": "c16e5d740e1e639dd0f6f6a902ac201fc378f715",
+  "source_commit": "8e3b9e243164bd07c0f147f039df4e39e8807886",
   "baseline_commits": [
-    "ca627242f936488da2e82f8284b59a0bdc6b6e3c"
+    "c16e5d740e1e639dd0f6f6a902ac201fc378f715"
   ],
   "files": {
     "agent-framework/README.md": "635f534d761876d434c20796e35209b68af2267da833ce616ef2251bd6f297ad",
@@ -218,7 +218,7 @@
     "agent-framework/design-system/tokens/dark.json": "cce7f001b267498b15f17b52fb0e0d8d36d575cd3b1cc4ad28cecbdf1be94efb",
     "agent-framework/design-system/tokens/high-contrast.json": "01626da7bdbc259592da479cab7d613e04ba1bfc52eaea4f50905107a0b82cab",
     "agent-framework/design-system/tokens/light.json": "2bde7955c3e804b80b4397da426f9baafba8be5264aa8ecb7cbb7516f4cb3dcc",
-    "agent-framework/evals/rubrics.md": "fe352e823924dff61e887713b73e71e1690ec193573b2f4d8b2e56a25e218f1a",
+    "agent-framework/evals/rubrics.md": "f0cb9068bfda556a60f266976a4831222dee255ff4d20ab941a7755187b40e34",
     "agent-framework/providers/claude/adapter.yaml": "ff4b5f5b213fe5dd77898e91aabfff9556063345bd7c5f187a731d79c0f8fa57",
     "agent-framework/providers/codex/adapter.yaml": "cd456feed243d1f1b8ddca9ee1ef4a999479dc8a69a9c77bfae35f13dc50de8d",
     "agent-framework/providers/generic/README.md": "ba81cd8ff1a99e5c439424f1d102e0b3a4d204500773164f185134b138d32123",
@@ -245,7 +245,7 @@
     "scripts/agent-framework/check-team.py": "37f6214bb169bbd35985f73fbe862cdb4bde13bf34f1260fcddb1e9aca4abbe5",
     "scripts/agent-framework/design-tokens/generate.py": "e66d64058d8bf74b831b6121961b4e812e475f4e56aa47c615f7b0885a7cc313",
     "scripts/agent-framework/evals/compare-apple-team.py": "18c47218e9965a66102d53c28cd5c0be9792ade09c8da0ed45007e75fcef0d78",
-    "scripts/agent-framework/evals/run-evals.py": "d027d6232c9bed0bb04e085945dd3bcb4739bca5cf8cab0ba37e35b5d3457a32",
+    "scripts/agent-framework/evals/run-evals.py": "e5eaeb3aefb8cf7872cd8831084b453d6f1cd0e1740cb12b622a8233e9fe8f2e",
     "scripts/agent-framework/evals/run-local-model-benchmark.py": "e2c823b5afbba43238b73dc45d54eab5a11cf5c439d79e14f08ace70938b2007",
     "scripts/agent-framework/install-apple-team.py": "9681d25e2d463141557d7a5baeda7ca529da61f7f9fd97fc68e33c6adf592935",
     "scripts/agent-framework/provider-claude.sh": "d3c61b42840c8f5d1e3b06d4ac416999091b26d1409a2cdce2d468a63723664a",
@@ -262,6 +262,7 @@
     "tests/agent-framework/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "tests/agent-framework/_helpers.py": "1d98e637095f0e6cfb725245bcaeeef158862a8e546e8927f182d1fbf531a826",
     "tests/agent-framework/test_apple_product_engineering.py": "bd06b2f374069effb97bbb6033232cfad9c524f78a6e2373ffea18e4d1ce1dfe",
+    "tests/agent-framework/test_artifact_evals.py": "5945b475e8a583cab7204c34106052f37c16d127ee54c4dd5183d3882b6a7d99",
     "tests/agent-framework/test_design_tokens.py": "5276423a68045e5674fb455e4fb81fbbbc899b06a6c1220432769298d10bb99d",
     "tests/agent-framework/test_generated_artifacts.py": "7c311dc6d352b530f68743ff39d5b7b248b74f57200f707ab944b606d1e15142",
     "tests/agent-framework/test_install_apple_team.py": "4193d3bde33e15515f05a741e35c2ea52386055f0be7157609e449a5795b0c78",
