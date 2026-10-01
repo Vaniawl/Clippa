@@ -9,16 +9,19 @@ Framework v1.1.0 — generated into provider files from `agent-framework/canonic
 
 Act as `orchestrator` for ordinary user requests. Read
 `agent-framework/canonical/skills/apple-team/SKILL.md` and the orchestrator role instructions
-before routing. The user talks to one coordinator; choose only relevant specialists.
+before routing. Handle the request directly by default; zero subagents is a valid route.
 New starters default to advice per project.yaml. An explicit implementation/fix request selects
 execute within that outcome. Missing team configuration retains legacy behavior. In advice,
 return recommendations in conversation without tracked-file changes; save only when requested.
-The coordinator owns contracts, integration and coordination documents, and delegates product code.
-Inspect the actual delegation tool schema. If it supports a native named-role selector, use it.
+In execute mode the coordinator may implement and test within the approved outcome.
+Invoke a specialist only for a concrete expertise gap, useful independent parallel work,
+required independent review, or an explicit delegation request. Significant or risky changes
+need independent review; the author cannot count a self-check as independent review.
+When delegation is needed, inspect its tool schema. Use native named selection if supported.
 If it exposes only generic spawning, explicitly read the chosen canonical role and relevant
 skill entrypoints into the bounded task payload, then use real spawn/wait tools. Report this
-as role-contract adapter execution; do not claim native named discovery. If delegation itself
-is absent, report the precise capability limit and continue available independent analysis.
+as role-contract adapter execution; do not claim native named discovery. If a needed delegation tool
+is absent, report the precise capability limit and continue available independent work.
 
 ### Read the context needed for this task
 
@@ -57,7 +60,7 @@ Approved work = the current user-authorized outcome traceable to `PROJECT.md`, t
 
 ### Delegation (policies/delegation-policy.md)
 
-Use at most three concurrent workers plus coordinator when team configuration is present, respecting any lower configured or host limit. Legacy adopters without team settings retain provider defaults. Every delegation uses the task contract (`agent-framework/canonical/contracts/agent-task-contract.md`): objective, context, owned files, prohibited files, expected output, acceptance criteria, validation commands, stopping condition. Parallel writers: non-overlapping ownership or worktrees (`scripts/create-worktree.sh`). Read-only roles (reviewers, researchers, personas, rubber-duck) never edit files. Select roles from `agent-framework/catalogs/role-catalog.yaml` — only those the task needs. Load only relevant domain skills (`agent-framework/catalogs/skill-catalog.yaml`). Some tasks are bound by a workflow in `agent-framework/catalogs/workflow-catalog.yaml` (see `agent-framework/canonical/workflows/`) — its gates are binding, not optional. Inherit the user’s model and reasoning settings; do not select or downgrade a model from legacy tier metadata. Specialist subdelegation is disabled unless the contract explicitly allows it. Verify diff ownership and serialize native builds or use separate scratch directories.
+Start no workers by default; each invoked role needs a task-specific reason. Use at most three concurrent workers plus coordinator when team configuration is present, respecting any lower configured or host limit. Legacy adopters without team settings retain provider defaults. Every delegation uses the task contract (`agent-framework/canonical/contracts/agent-task-contract.md`): objective, context, owned files, prohibited files, expected output, acceptance criteria, validation commands, stopping condition. Parallel writers: non-overlapping ownership or worktrees (`scripts/create-worktree.sh`). Read-only roles (reviewers, researchers, personas, rubber-duck) never edit files. Select roles from `agent-framework/catalogs/role-catalog.yaml` — only those the task needs. Load only relevant domain skills (`agent-framework/catalogs/skill-catalog.yaml`). Some tasks are bound by a workflow in `agent-framework/catalogs/workflow-catalog.yaml` (see `agent-framework/canonical/workflows/`) — its gates are binding, not optional. Inherit the user’s model and reasoning settings; do not select or downgrade a model from legacy tier metadata. Specialist subdelegation is disabled unless the contract explicitly allows it. Verify diff ownership and serialize native builds or use separate scratch directories.
 
 ### Security (policies/security-policy.md)
 

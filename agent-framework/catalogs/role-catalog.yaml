@@ -5,9 +5,8 @@ roles:
     decision_role: orchestrator
     read_only: false
     model_class: premium
-    summary: Single natural-language entrypoint for Apple product requests. Selects advise or execute, routes to
-      the smallest relevant team, issues bounded contracts, integrates revision-specific evidence and maintains
-      continuity; never writes product code.
+    summary: Single entrypoint; handles advice and approved implementation directly, delegates only when needed,
+      and integrates independent evidence.
   - id: product-manager
     title: Product Manager
     decision_role: advisor
@@ -62,8 +61,8 @@ roles:
     read_only: false
     model_class: standard
     summary: Builds and maintains CI/CD pipelines, build and packaging scripts, environment configuration, and release
-      preparation. The only role permitted to touch release tooling, and even then external delivery operations
-      execute only with explicit human approval.
+      preparation. Invoked when release expertise is needed; the coordinator may perform scoped local preparation.
+      External delivery operations execute only with explicit human approval.
   - id: data-database-engineer
     title: Data and Database Engineer
     decision_role: builder

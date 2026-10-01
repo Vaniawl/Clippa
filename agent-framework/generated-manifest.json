@@ -13,11 +13,11 @@
     },
     ".agents/skills/apple-team/SKILL.md": {
       "mode": "full",
-      "sha256": "169e0844ae50c64e4506e40a08d8d5e6c394f61d9356c2ee2278068123d25ec1"
+      "sha256": "18b6a86054b4fe79af49d90ca7921d3090a9587135946f7921bb8cc17f9ddf62"
     },
     ".agents/skills/apple-team/references/routing.md": {
       "mode": "full",
-      "sha256": "18848e5f1c2b6986d0bba81a5f170b21d7ea9205276473ba1e445cb10bf7c09f"
+      "sha256": "bb4dd0d6ebb591369ff5015c6914fb5b452f877e5211dab12a42d7276c5751e1"
     },
     ".agents/skills/architecture-review/SKILL.md": {
       "mode": "full",
@@ -149,7 +149,7 @@
     },
     ".claude/agents/devops-release-engineer.md": {
       "mode": "full",
-      "sha256": "3101f4538669b1119867b66c628a4ad0b7d945e743203139e9034bc2b812ed34"
+      "sha256": "cf9808f5709016e4516d9025060410fee6b9c1343d700b8d364e6e904e1583be"
     },
     ".claude/agents/end-user-simulator.md": {
       "mode": "full",
@@ -161,7 +161,7 @@
     },
     ".claude/agents/implementation-engineer.md": {
       "mode": "full",
-      "sha256": "22f27dbaff4fbbbc0c1a2ce5731e7a1a127e3cafbe2e85e2afec0fd794d478d2"
+      "sha256": "ae9d79ea8b80a568ffa1939c7bca5aac7cae822d00310bf292db4d5d4e8990ce"
     },
     ".claude/agents/integration-architect.md": {
       "mode": "full",
@@ -173,7 +173,7 @@
     },
     ".claude/agents/orchestrator.md": {
       "mode": "full",
-      "sha256": "dc4589b3ae9cc7e06e77283da53dce59dd78c1b7c0acded46fa4f5154d3fd758"
+      "sha256": "de16fb8f5288f8a6c24e7e3ffbf3c63cc087ff996fb3d2786c51886f57f0e792"
     },
     ".claude/agents/performance-reliability-engineer.md": {
       "mode": "full",
@@ -229,11 +229,11 @@
     },
     ".claude/skills/apple-team/SKILL.md": {
       "mode": "full",
-      "sha256": "169e0844ae50c64e4506e40a08d8d5e6c394f61d9356c2ee2278068123d25ec1"
+      "sha256": "18b6a86054b4fe79af49d90ca7921d3090a9587135946f7921bb8cc17f9ddf62"
     },
     ".claude/skills/apple-team/references/routing.md": {
       "mode": "full",
-      "sha256": "18848e5f1c2b6986d0bba81a5f170b21d7ea9205276473ba1e445cb10bf7c09f"
+      "sha256": "bb4dd0d6ebb591369ff5015c6914fb5b452f877e5211dab12a42d7276c5751e1"
     },
     ".claude/skills/architecture-review/SKILL.md": {
       "mode": "full",
@@ -341,7 +341,7 @@
     },
     ".codex/agents/devops-release-engineer.toml": {
       "mode": "full",
-      "sha256": "2f9a5b39e641db2d577d3a401bcfff2a39d3eab0107281e55222c2c886a112a0"
+      "sha256": "cc9eef05040a853803fb6a6ea025d584b6ef3a846f49e39f4d25de162f89dd06"
     },
     ".codex/agents/end-user-simulator.toml": {
       "mode": "full",
@@ -353,7 +353,7 @@
     },
     ".codex/agents/implementation-engineer.toml": {
       "mode": "full",
-      "sha256": "aab010e238f7be56e49749a0137aaf253b66569b16679fad83572212358e5950"
+      "sha256": "ed6c91a23e65a387fe2cf303fa70d58e535529a1534dc38a2da5ce0bed2998d5"
     },
     ".codex/agents/integration-architect.toml": {
       "mode": "full",
@@ -365,7 +365,7 @@
     },
     ".codex/agents/orchestrator.toml": {
       "mode": "full",
-      "sha256": "47485e74bcbab728d4d82f8839705277910e8b4b00abc4d79f5d435a3d334662"
+      "sha256": "f1aa2071db2a847d55ff5078e868f45bb2fe66231c4761c93bafd9d71f819732"
     },
     ".codex/agents/performance-reliability-engineer.toml": {
       "mode": "full",
@@ -437,7 +437,7 @@
     },
     ".kimi-code/agents/devops-release-engineer.md": {
       "mode": "full",
-      "sha256": "e4484faebc7155f068ae8bc7f57225e4cae4ff8c2d5f7a3ba9fbced061ba02b0"
+      "sha256": "b8031c3bb99ea1799fd172faa3570702571fffa8cd645791690813b6fa4e75c3"
     },
     ".kimi-code/agents/end-user-simulator.md": {
       "mode": "full",
@@ -449,7 +449,7 @@
     },
     ".kimi-code/agents/implementation-engineer.md": {
       "mode": "full",
-      "sha256": "66f0625867afc5df10b8238c55e92b7f9c9d7a4a5486e59cafcb87a69e2e0569"
+      "sha256": "efd84a25ab1b4f08ddfc076d826eb8f218a83ebd747d1a2967ed63c056de2af6"
     },
     ".kimi-code/agents/integration-architect.md": {
       "mode": "full",
@@ -461,7 +461,7 @@
     },
     ".kimi-code/agents/orchestrator.md": {
       "mode": "full",
-      "sha256": "82aca37057f60cbb69f33e75955287fef789153e18806899e8ac7858560c3941"
+      "sha256": "3326858782cb4fbd3cf5a65f3a0e799506fb97b3288a40b5ab16e6b509abc995"
     },
     ".kimi-code/agents/performance-reliability-engineer.md": {
       "mode": "full",
@@ -521,7 +521,7 @@
     },
     ".opencode/agents/devops-release-engineer.md": {
       "mode": "full",
-      "sha256": "1dc121817163b6ddb8ce3f049db93ad47a7f66f79c4543d212f8f4388eae6d2f"
+      "sha256": "401e366e3c0aefcb2932cbb29eeab49f3da1bcf925e80251f241fa7bf73cef8f"
     },
     ".opencode/agents/end-user-simulator.md": {
       "mode": "full",
@@ -533,7 +533,7 @@
     },
     ".opencode/agents/implementation-engineer.md": {
       "mode": "full",
-      "sha256": "5492c0e754f443e77b9e31df06bdeb877467de5b91bd729a953b16ad5c5c5f2b"
+      "sha256": "69df498e9523ba602b086e494ffcfd32cc2273b98e0b18484665423a791e4d0e"
     },
     ".opencode/agents/integration-architect.md": {
       "mode": "full",
@@ -545,7 +545,7 @@
     },
     ".opencode/agents/orchestrator.md": {
       "mode": "full",
-      "sha256": "7cf95e8edbc29219fc8cca4b4e23aa2b0a68dc6b27164dd184f8c58ca21ab47f"
+      "sha256": "90cb0b421c9082ec36bd22ad3da71300e00e76666a8cb2698bdcd4898f27545a"
     },
     ".opencode/agents/performance-reliability-engineer.md": {
       "mode": "full",
@@ -589,7 +589,7 @@
     },
     "AGENTS.md": {
       "mode": "block",
-      "sha256": "17b4635f31b2df39fa5bece846270fc4e86cdfb948b32cda1f47a6c47c366dba"
+      "sha256": "677498eef882fed9b845e90a84d209039129769a52f3d1c3c827129dde0010ae"
     },
     "CLAUDE.md": {
       "mode": "block",

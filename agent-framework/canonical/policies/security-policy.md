@@ -16,7 +16,7 @@ Canonical source: `agent-framework/canonical/policies/security-policy.md`. Compl
 - Read-only roles (reviewers, rubber-duck, personas, researchers) get read/search tools only. Bash, when unavoidable, is restricted to read-only commands.
 - Research roles get web access but no implementation writes.
 - Writer roles get write access limited to their owned files/component.
-- Only the devops-release-engineer role touches release tooling, and only with approval.
+- The coordinator may prepare local release tooling within explicitly approved task ownership; invoke devops-release-engineer when specialist expertise is needed. External delivery requires explicit human approval.
 
 ## Network and command policy
 

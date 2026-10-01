@@ -1,39 +1,52 @@
 ---
 name: apple-team
-description: Coordinate an Apple product request through discovery, design, implementation, review, or marketing using bounded role contracts. Use at the main coordinator entrypoint; specialists load their own domain skills.
+description: Handle Apple product requests through one coordinator; invoke specialists only for needed expertise, useful independent work or independent review.
 ---
 
 
 <!-- GENERATED from agent-framework/canonical/skills/apple-team/SKILL.md — edit the canonical source, then run: python3 scripts/agent-framework/render.py -->
 # Apple Team
 
-## Trigger and inputs
-Use when coordinating a natural-language iOS/macOS product request. Read PROJECT/vision and the relevant approved BACKLOG item when product context matters; architecture/ADRs for structural decisions, threat model for trust boundaries, test strategy for test work, and the latest relevant handover on resume. Verify the checkout and evidence revisions. Framework-only tasks use the contract and affected framework sources, without an Apple-domain audit. Inputs are the request, approved outcome (if any), product constraints and available runtime capabilities. Inspect repository facts before asking questions. Batch independent context reads and revision/status/diff checks; retain already confirmed context instead of reloading it. Specialists load their task methods; the coordinator reads role authority and selects methods without duplicating a specialist’s full domain audit.
+Use when handling natural-language Apple product requests. Read only task-relevant PROJECT/vision,
+approved BACKLOG, ADRs, test strategy or threat model; on resume verify the relevant handover
+and checkout revision. Framework-only work skips Apple-domain audits. Retain confirmed context.
 
-For actual Codex/OpenAI questions, select the already-installed openai-docs skill when available.
-For SwiftUI code review, select installed swiftui-pro when available. These optional external
-methods do not replace role authority or independent gates, are not bundled here, and never
-require global installation. Tool names in role configuration are permissions, not proof of
-callable web/docs access or sandbox enforcement; inspect the session capabilities.
+## Work directly; delegate when needed
 
-## Select the mode and route
-Use `agent_framework.team.default_mode` when present. New starters default to `advise`; absent settings preserve legacy policy. An explicit request to implement, fix, or execute an agreed result authorizes `execute` for that outcome. Advice returns in the conversation and changes no tracked product files; saving a recommendation requires an explicit request or agreed execution scope.
+The main coordinator handles the request itself by default. Zero subagents is a valid route
+for advice and authorized implementation. Load the domain methods needed for your actual
+work; consult [routing.md](references/routing.md) when a specialist responsibility is needed.
+Do not load every role, skill or lifecycle stage to decide a simple request.
 
-Read [routing.md](references/routing.md) for the task's route. Give one recommended result; show alternatives only for a material tradeoff. Bundle unresolved product questions. Do not add analytics, subscriptions, onboarding or a backend merely to fill a checklist.
+Invoke specialists only for a concrete expertise gap, useful independent parallel work,
+risk-required independent review, or explicit user delegation. Record one short reason for
+an invoked role. Significant/risky changes require independent review under the
+[delegation policy](../../policies/delegation-policy.md); author self-checks are not independent.
+Low-risk edits and contained recommendations may finish directly with relevant evidence.
 
-## Coordinate execution
-Inspect actual delegation tool fields before selecting native named agents. If no named-role
-selector exists but spawning is available, load the selected canonical role instructions and
-relevant skills explicitly into the task payload and spawn/wait for a real worker. This is a
-role-contract adapter: normalize task names to the host grammar (for example hyphens to underscores), while keeping the canonical role ID in the task. Disclose native named discovery as unavailable/unverified. If spawning
-is unavailable, report the exact capability blocker and continue independent available work.
-Use the canonical task contract and evidence policy instead of repeating them here. Read the selected canonical role before issuing or presenting its contract; validate its write authority first. A worktree resolves file overlap, not role permissions: designer owns UX documents/resources, while product-code edits go to the engineer. Pass only relevant context, required skills, dependencies, approved result, capability requirements, base revision, owned/prohibited files and retry limit. Specialists cannot delegate by default. Use at most three concurrent workers, or the configured/environment lower limit. Inherit the user's model; role model-class fields are legacy metadata, not permission to downgrade it.
+When delegating, read the selected role's authority and use the
+[task contract](../../contracts/agent-task-contract.md) with only relevant context and methods.
+Use actual native role selection when exposed, or explicitly pass role instructions to real
+spawn/wait tools and disclose the role-contract adapter. Missing required delegation is a
+blocker for that gate; continue independent work without inventing a completed review.
+Ownership is verified through the diff. Writers have disjoint files/worktrees; serialize
+native builds in one checkout. Inherit the user's model and reasoning; at most three workers
+or the lower project/host limit, with specialist subdelegation disabled by default.
 
-Inspect the actual diff against ownership; file ownership is a contract, not a provider sandbox. Parallel writers need disjoint files or worktrees. Serialize native builds/tests in one checkout or assign separate scratch directories. Independent reviewers get the task, criteria, diff, revision and raw evidence, with author conclusions labeled as claims. Return findings to the responsible writer, then review the revised change. Resolve Blocking findings; fix Important findings or record an explicit rationale and residual-risk decision. Architecture conflicts go to the architect; product-direction changes go through PM and the owner.
+## Authorization and completion
 
-After approval, run implementation, review, tests, corrections and relevant documentation without asking again for these steps. Stop at the agreed outcome; do not consume the whole backlog. After two identical failures change the hypothesis or return the precise blocker, while continuing independent work. External delivery, a direction change or necessary scope expansion requires its own authorization under repository policy.
+Use configured advise/execute mode; explicit implementation requests authorize execute for
+that outcome. Advice writes no tracked product files. Direct implementation obeys the same
+scope, relevant Apple methods, failure-path checks and evidence obligations as a worker.
+Complete the approved outcome through applicable checks, needed review, corrections and docs;
+stop at that outcome. Product direction, scope expansion and external actions retain their
+approval boundaries. After two identical failures change the approach or state the blocker.
 
-## Output and verification
-Return a team summary: outcome, recommendation or changed behavior, participating roles, criteria linked to evidence, unresolved risks and NOT RUN checks. Distinguish generated configuration, preflight capability and live execution evidence. During approved execution maintain a compact handover with goal, mode, decisions, revision, completed evidence, blockers and next step; raw logs remain in ignored artifacts. On resume verify revision and continue from the last evidenced state.
+Return the result, relevant evidence and material unknowns. Mention participating specialists
+when any were invoked; do not create an empty-team report or list unrelated stages. During
+execution keep a compact handover when continuity needs it; raw logs stay ignored. Separate
+structural/preflight evidence from live execution; NOT RUN remains explicit.
 
-Stop when the requested recommendation or bounded execution is complete, or when further dependent work requires a specific missing decision/access. Never claim success from a role's narrative alone.
+For actual Codex/OpenAI questions use installed openai-docs when available; for SwiftUI code
+review use installed swiftui-pro when available. These optional methods need no global
+installation and grant no extra permissions. Never infer tool access from a role's tool list.

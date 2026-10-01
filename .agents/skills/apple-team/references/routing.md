@@ -1,19 +1,31 @@
-# Routing an Apple product request
+# Invoke specialists only when needed
 
-| Request | Minimal route | Deliverable |
+The default route is the coordinator working directly with relevant skills. This table is a
+responsibility guide, not a list of mandatory calls. Invoke only the role whose expertise,
+independent work or review is needed for the current outcome.
+
+| Need | Available specialist | Result |
 | --- | --- | --- |
-| New idea | PM + market researcher; designer after problem framing | Product brief, evidence gaps, next falsifiable probe |
-| Develop a feature proposal | PM + designer; architect for structural changes | UX specification and bounded implementation recommendation |
-| Implement agreed option | Engineer → independent reviewer; QA for integration/runtime gaps | Changed behavior with revision-specific evidence |
-| Fix a bug | QA/reproducer → engineer → independent reviewer | Cause, minimal fix and regression evidence |
-| Professional UI/design | Designer proposal; execute only when requested | Applicable state/recovery specification, then visual/accessibility evidence |
-| Prepare promotion | Marketing + researcher + growth analyst | Positioning, local materials and experiment plan |
-| Release readiness | Release engineer + relevant quality reviewers | Go / Conditional Go / No-Go with reasons; no automatic publication |
+| Unresolved product framing or priorities | product-manager | Problem, audience, value and observable success |
+| Substantial external market/technical evidence | market-opportunity-researcher or deep-researcher | Sourced findings and explicit unknowns |
+| Complex flows, visual system or UX expertise | ui-ux-designer | Applicable states, recovery and adaptive specification |
+| Structural decisions or changed contracts | software-architect; integration/data roles when relevant | ADR and compatibility decision |
+| Useful independent implementation slice | implementation-engineer | Scoped changes and actual validation evidence |
+| Significant/risky implementation or an explicit review request | code-reviewer; relevant security/accessibility reviewer | Independent findings on the actual changed revision |
+| Missing reproduction or distinct runtime/failure coverage | qa-test-engineer | Reproduction and regression/runtime evidence |
+| Measured performance concern | performance-reliability-engineer | Measurements and bounded optimization |
+| Positioning, launch or measurement expertise | marketing/growth roles as needed | Substantiated materials, metrics or experiment interpretation |
+| Packaging/signing/delivery readiness expertise | devops-release-engineer | Readiness evidence; no automatic publication |
+| Consequential disputed claim | skeptical-reviewer | Falsification and evidence limits |
 
-Add accessibility for meaningful UI, security/privacy for changed trust boundaries, performance for measured concerns, and skeptical review for complex decisions/final milestones. Integration, data, technical research and persona simulation are optional specialists. Do not invoke every role. Persona simulation is hypothesis generation; interviews and TestFlight feedback require real supplied data.
+A typo, simple known calculation, contained advice or routine scoped edit can finish with
+zero workers. A one-line authorization or data-loss change can still need independent review:
+judge consequences, not size. If the coordinator authors a significant/risky change, invoke
+an independent reviewer after implementation; an extra implementation worker is not required.
+If the reviewer finds a defect, the author fixes it and the corrected revision is reviewed.
 
-Role IDs remain provider-neutral: product-manager, market-opportunity-researcher, ui-ux-designer, software-architect, implementation-engineer, code-reviewer, qa-test-engineer, accessibility-reviewer, performance-reliability-engineer, security-privacy-reviewer, product-marketing-strategist, growth-analyst, devops-release-engineer, technical-writer and skeptical-reviewer. Select method skills separately from role permissions.
-
-For a fully specified, small pure-function change with existing reproducible tests, use one writer and one independent reviewer. Do not add a third worker solely to repeat the same deterministic checks. QA joins for missing reproduction, integration/runtime evidence or independent failure-path coverage. Keep routing proportional.
-
-A contained UX advice request can use one designer and coordinator integration. Add independent skeptical review for a complex or consequential decision, and implementation/accessibility review for executed UI. Do not make a second advice reviewer automatic when the scope and evidence gaps are already clear.
+Do not summon QA just to repeat existing deterministic tests, a researcher without a research
+question, or a designer/reviewer for every recommendation. Do not turn a marketing request
+into automatic research+growth fan-out. Methods and applicable quality obligations remain
+binding regardless of whether work is direct or delegated. Persona simulations remain
+hypotheses; interviews, TestFlight results and metric outcomes require real supplied data.

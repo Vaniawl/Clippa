@@ -4,7 +4,23 @@ Canonical source: `agent-framework/canonical/policies/delegation-policy.md`.
 
 ## When to delegate
 
-For projects with team configuration, use the smaller of three workers, `max_parallel_workers`, and host capacity, plus one coordinator. Missing settings preserve legacy provider concurrency behavior. Delegate when work is genuinely independent and the delegation overhead is smaller than the work. Avoid unnecessary fan-out for trivial edits: the coordinator may issue one bounded writer task. Do not delegate work whose scope is still materially ambiguous or which requires unresolved coordinator context.
+Default to direct work with zero subagents. Invoke a role only for a concrete expertise gap,
+useful independent parallel work, required independent review, or an explicit user delegation
+request. Task size and a role's presence in the catalog are not sufficient reasons. Keep the
+reason brief and pass only context needed for that responsibility.
+
+Significant or risky changes require independent review, including changed authorization,
+privacy/trust boundaries, persistence/migrations, concurrency/cancellation, public contracts,
+or complex user-visible behavior. Judge risk by consequences, not line count. The coordinator
+may implement directly but cannot independently approve its own work. Routine low-risk edits
+and contained advice may finish with focused checks and no workers. If a required reviewer is
+unavailable, retain the open gate and report the precise blocker; do not label self-checks
+independent or ship around it.
+
+For projects with team configuration use the smaller of three workers, max_parallel_workers,
+and host capacity, plus the coordinator. This is a ceiling, never a target. Missing settings
+preserve legacy provider concurrency behavior. Do not delegate materially ambiguous scope or
+work that merely repeats the main agent's investigation.
 
 ## Task definition
 
@@ -13,8 +29,8 @@ Every delegated task MUST be expressed using the agent task contract (`agent-fra
 ## Ownership and isolation
 
 - Parallel writers must own non-overlapping file sets, or work in separate Git worktrees (`scripts/create-worktree.sh`).
-- Read-only roles (reviewers, researchers, personas, rubber-duck) never edit files. If a read-only role concludes an edit is needed, it reports the finding; the orchestrator assigns it to a writer role.
-- `write_ownership: reports-only` permits only the report/coordination artifact named in `expected_output`, when execute mode authorizes saving and the role explicitly permits writing. `read_only: true` forbids all repository writes; return the report in conversation or assign saving to technical-writer. Role prohibitions take precedence over this ownership label.
+- Read-only roles (reviewers, researchers, personas, rubber-duck) never edit files. If a read-only role concludes an edit is needed, it reports the finding; the coordinator handles an authorized fix directly or assigns it to a needed writer; the read-only reviewer never edits.
+- `write_ownership: reports-only` permits only the report/coordination artifact named in `expected_output`, when execute mode authorizes saving and the role explicitly permits writing. `read_only: true` forbids all repository writes; return the report in conversation; authorized saving may be handled directly by the coordinator or a needed technical-writer. Role prohibitions take precedence over this ownership label.
 - No unbounded recursive delegation: a subagent may delegate only when its task contract explicitly permits it.
 - Avoid duplicate whole-repository investigations; scope each investigator to a distinct area or question.
 

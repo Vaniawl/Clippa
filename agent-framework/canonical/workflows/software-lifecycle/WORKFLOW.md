@@ -3,8 +3,8 @@ id: software-lifecycle
 title: Software Lifecycle Workflow
 description: >
   Full product lifecycle from discovery through user validation. The orchestrator
-  drives the workflow, delegates each stage to the minimal set of roles the current
-  task actually requires, and enforces the agent task contract, evidence policy,
+  handles applicable stages directly and invokes specialists only for a concrete
+  need, enforcing delegated task contracts, evidence policy,
   and scope-control policy at every gate.
 roles:
   - orchestrator
@@ -31,7 +31,7 @@ roles:
 entry_criteria:
   - A product idea, approved backlog item, or change request exists.
   - "Scope anchors are readable: PROJECT.md, docs/product/product-vision.md, BACKLOG.md."
-  - The orchestrator has read the delegation, evidence, scope-control, and autonomy policies.
+  - Applicable delegation, evidence, scope-control and autonomy obligations are respected; read their detail only when needed.
 exit_criteria:
   - Requested recommendation delivered in advise mode, or agreed execution outcome meets relevant Definition of Done with evidence, or
   - the work is handed over per the handover contract with an explicit blocker class.
@@ -41,15 +41,15 @@ exit_criteria:
 
 Load `apple-team` in the main coordinator context. Select advise/execute from the request and team settings. Advice returns in conversation without tracked product writes. Implementation approval covers the complete bounded implementation/review/test/correction cycle; it does not authorize the entire backlog or external delivery. At most three workers run concurrently, reduced by project/environment limits; models inherit the user settings.
 
-The orchestrator selects **only the roles the current task requires**. Most tasks
-touch a few stages, not all fifteen. Any stage may be **skipped with a recorded
-reason** (e.g., "Stage 4 UX: skipped — no user-facing surface changed") in the
-task log or handover. Skipping silently is a workflow violation; skipping with a
-recorded reason is normal operation.
+The coordinator handles work directly by default and invokes specialists only for a concrete
+need under the delegation policy. The stages below describe responsibilities and applicable
+quality gates, not mandatory subagent calls or a fifteen-stage checklist. Direct work follows
+the same applicable methods and evidence obligations. Significant/risky changes need an
+independent reviewer; ordinary self-checks do not meet that requirement.
 
-Stage order is the default flow; the orchestrator may run independent stages in
-parallel (e.g., 8 Security, 9 Accessibility, 10 Performance) when their inputs
-are ready and writers do not overlap.
+Select only stages applicable to the requested outcome. Record a reason only when an expected
+or risk-relevant gate is inapplicable/unavailable; do not enumerate all unrelated stages.
+Independent needed work may run in parallel when inputs are ready and writers do not overlap.
 
 ---
 
@@ -78,7 +78,7 @@ are ready and writers do not overlap.
 - **Inputs:** Requirements; `docs/architecture/overview.md`; existing ADRs; threat model.
 - **Outputs:** Architecture decision(s) recorded as ADR(s) in `docs/adr/`; updated overview if structure changes.
 - **Gate:** ADR approved before implementation starts. No silent dependency additions or public-contract changes (scope-control policy).
-- **Delegation notes:** The skeptical-reviewer receives the ADR draft as input and returns findings, never edits.
+- **Delegation notes:** When independent claim review is needed, the skeptical-reviewer receives the ADR draft and returns findings, never edits.
 
 ## Stage 4 — UX
 
@@ -86,8 +86,8 @@ are ready and writers do not overlap.
 - **Role(s):** ui-ux-designer (lead); accessibility-reviewer (early consult, read-only).
 - **Inputs:** Requirements; design-system tokens; personas from `agent-framework/canonical/personas/`.
 - **Outputs:** UX specification using `apple-experience-design`, `product-copy` and templates/ux-spec.md: intent, primary action, navigation, applicable states/recovery, real/long content, accessibility, appearance, motion and adaptive layout.
-- **Gate:** Every user-visible requirement has a specified flow including failure states; accessibility consult recorded.
-- **Skip condition example:** No user-facing surface changed — record and continue.
+- **Gate:** Every user-visible requirement has a specified flow including failure states; accessibility criteria covered; an independent consult is recorded when risk or the request requires it.
+- **Applicability:** User-facing behavior changes; otherwise omit this stage.
 
 ## Stage 5 — Implementation
 
@@ -95,7 +95,7 @@ are ready and writers do not overlap.
 - **Role(s):** implementation-engineer (writer); data-database-engineer for schema/migrations; integration-architect for external integrations; code-reviewer at the gate (independent, read-only).
 - **Inputs:** Requirements, ADRs, UX specs; an agent task contract per delegated slice.
 - **Outputs:** Code changes within `owned_files`; migrations with rollback notes; change referencing its backlog item (traceability).
-- **Gate:** Review of the specific changed revision passed after findings/corrections; architecture conformance checked against ADRs (deviations are Blocking); no changes outside owned files; task-level DoD lines met with evidence.
+- **Gate:** Applicable independent review of the specific changed revision passed after findings/corrections; low-risk changes may finish with focused author validation when no independent gate is required. Author self-checks are never independent review. Architecture conformance checked against ADRs (deviations are Blocking); no changes outside owned files; task-level DoD lines met with evidence.
 - **Delegation notes:** Parallel implementation writers MUST have non-overlapping `owned_files` or separate worktrees (`scripts/create-worktree.sh`). The orchestrator re-runs or cites validation commands before integrating — a subagent's success claim is not evidence.
 
 ## Stage 6 — Unit testing
@@ -131,7 +131,7 @@ are ready and writers do not overlap.
 - **Inputs:** UI changes, UX specs, accessibility-user persona.
 - **Outputs:** Findings with severity and affected requirement.
 - **Gate:** No Blocking accessibility findings on changed UI; slice-level DoD accessibility line satisfied or `N/A` with reason.
-- **Skip condition example:** No UI changed — record and continue.
+- **Applicability:** Affected UI; otherwise omit this stage.
 
 ## Stage 10 — Performance
 
@@ -140,7 +140,7 @@ are ready and writers do not overlap.
 - **Inputs:** Integrated change; stated performance expectations from requirements; observability output.
 - **Outputs:** Measured results (commands + numbers), regressions filed, capacity/limit notes.
 - **Gate:** Measurements recorded per evidence policy; regressions either fixed or explicitly accepted by the product-owner in `Risks and debt`.
-- **Skip condition example:** Documentation-only change — record and continue.
+- **Applicability:** Measured performance concerns or relevant regressions; otherwise omit this stage.
 
 ## Stage 11 — Documentation
 
@@ -209,7 +209,7 @@ These routes are selected only when the request calls for them; they do not exte
    release, and Definition-of-Done gates. `NOT RUN` is never `PASS`; stub scripts
    count as `NOT RUN`.
 4. **Minimal role selection.** The orchestrator engages only the roles the current
-   task requires. Skipped stages get a recorded reason; unrecorded skips fail review.
+   task requires. Direct work with zero subagents is valid. Record only relevant gate exclusions; unrelated stages need no skip report.
 5. **Scope control at every stage.** Work outside owned files, unapproved
    dependencies, or behavior not traceable to an approved requirement stops the
    thread and lands in `BACKLOG.md` `Candidates` (scope-control policy).

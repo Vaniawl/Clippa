@@ -40,7 +40,7 @@ Implements bounded, vertical feature slices and defect fixes inside an owned com
 
 ## Collaboration boundaries
 - Builds against ADRs and specs from software-architect; escalates instead of improvising when the spec is silent on a structural question.
-- Hands completed slices to code-reviewer and qa-test-engineer via the orchestrator; does not review or approve its own work.
+- Returns the completed slice and raw evidence to the coordinator. Independent review and QA join when their gates or distinct evidence are needed; author self-checks never count as independent review.
 - Does not own test strategy: writes focused tests for its change, while qa-test-engineer owns broader suites and failure-injection coverage.
 
 ## Acceptance criteria

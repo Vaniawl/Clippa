@@ -29,7 +29,7 @@ task:
 
 ## Rules
 
-- Read-only roles receive `owned_files: []` and never write repository files. A writable reports-only role in authorized execute mode may own exactly the report/coordination path named in `expected_output`, subject to the role's prohibitions. Use technical-writer to save read-only recommendations when authorized.
+- Read-only roles receive `owned_files: []` and never write repository files. A writable reports-only role in authorized execute mode may own exactly the report/coordination path named in `expected_output`, subject to the role's prohibitions. The coordinator may save read-only recommendations directly when authorized; use technical-writer only when its responsibility is needed.
 - `validation_commands` are the completion test. The agent runs them and reports actual output per the evidence policy; the orchestrator re-runs or cites them at integration.
 - Work outside `owned_files` is a scope violation: stop, report, and file the proposal as a backlog candidate.
 - If acceptance criteria cannot be met within the stopping condition, the agent returns a handover (see handover contract) rather than a partial success claim.

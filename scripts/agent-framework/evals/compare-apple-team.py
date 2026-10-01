@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Opt-in solo/team trials on identical isolated fixtures; never a native Apple UI proof."""
+"""Opt-in on-demand trials, or explicit solo/team benchmarks; never a native Apple UI proof."""
 from __future__ import annotations
 
 import argparse
 import hashlib
 import importlib.util
 import json
+import re
 import secrets
 import yaml
 from pathlib import Path
@@ -125,6 +126,74 @@ def routing_passes(proof, expected_roles):
     return set(proof.get('roles_observed', [])) == set(expected_roles)
 
 
+def spawn_attempts(events):
+    """Count attempted calls, including failures and wrappers without child evidence.
+
+    Completed workers are positive team evidence; absence of completed workers
+    is insufficient evidence that the coordinator avoided delegation.
+    """
+    attempts = set()
+    for item in smoke.collaboration_items(events):
+        if item.get('tool') in ('spawn_agent', 'spawnAgent'):
+            attempts.add(str(item.get('id') or f'collaboration-{len(attempts)}'))
+    for index, event in enumerate(events):
+        item = event.get('params', {}).get('item', event.get('item', {}))
+        if (event.get('method') != 'rawResponseItem/completed'
+                or item.get('type') != 'function_call'):
+            continue
+        name = item.get('name', '').rsplit('.', 1)[-1]
+        arguments = item.get('arguments', '')
+        direct = name in ('spawn_agent', 'spawnAgent')
+        wrapped = name == 'exec' and isinstance(arguments, str) and re.search(
+            r'\b(?:spawn_agent|spawnAgent)\s*\(', arguments)
+        if direct or wrapped:
+            attempts.add(str(item.get('call_id') or item.get('id') or f'raw-{index}'))
+    return sorted(attempts)
+
+
+def direct_proof_passes(proof, attempts):
+    """Parent verification is a self-check, never an independent review."""
+    return (proof.get('turn_completed', False) and not attempts
+            and not proof.get('explicit_model_overrides')
+            and not proof.get('explicit_reasoning_overrides'))
+
+
+def parent_turn_completed(events):
+    """These trials use app-server transport; only its identified parent counts.
+
+    Legacy CLI turn.completed items do not prove the parent thread or a
+    successful status, and cannot certify this transport's completion gate.
+    """
+    parent = next((event.get('result', {}).get('thread', {}).get('id')
+                   for event in events if event.get('id') == 2
+                   and event.get('result', {}).get('thread', {}).get('id')), None)
+    return bool(parent) and any(
+        event.get('method') == 'turn/completed'
+        and event.get('params', {}).get('threadId') == parent
+        and event.get('params', {}).get('turn', {}).get('status') == 'completed'
+        for event in events)
+
+
+def trial_prompt(case, mode, root):
+    prompt = case['request'] + ' This is a fully specified isolated trial. Use no external actions or model overrides. PYTHONDONTWRITEBYTECODE=1 for all Python commands. No saved coordination documents. '
+    if mode == 'solo':
+        prompt += 'For this comparison act as the single specialist directly. Do not spawn subagents. Complete and verify only this outcome. '
+    elif mode == 'adaptive':
+        prompt += ('Work directly as the main agent. Call a subagent only when this task needs specific expertise, '
+                   'useful independent parallel work, or an independent review justified by its complexity or risk. '
+                   'Decide from the actual task whether delegation is needed; routine self-checks may be performed directly '
+                   'and must not be described as independent review. Complete and verify the bounded outcome. ')
+    else:
+        prompt += 'This is an explicitly requested forced-team benchmark. Pass the absolute fixture path ' + str(root) + ' and relevant approved requirements into every worker contract. This fixture has no native Apple target; immutable checks are Python only. Act as the coordinator and use real subagents with inherited models. Choose the smallest appropriate route from the canonical role catalog and current request; implementation needs independent review after the writer finishes. Do not implement the requested work yourself. '
+        task_mode = 'execute' if case['file'] else 'advise'
+        prompt += f'Before issuing each contract read the canonical role and relevant skills. Use native role selection if exposed; otherwise generic spawn task_name=<role_with_hyphens_replaced_by_underscores> with role instructions and required relevant skills explicitly in the message. Contracts specify mode={task_mode}, approved outcome, context, ownership, prohibited files, output, criteria, validation commands, current revision, dependencies, retry_limit=2, may_delegate=false and stop after this outcome. Reviewers/QA must independently inspect and verify the final revision. QA may run tests but owns no source files here. Use fork_turns=none with minimal explicit task context and wait for completed results. '
+    if case['file']:
+        prompt += 'Run python3 -B -m unittest test_behavior.py before claiming completion. '
+        if mode == 'team':
+            prompt += 'Review and QA receive only the task, diff and actual test output, not author conclusions as facts. '
+    return prompt
+
+
 def apple_domain_observations(events):
     """Separate executed commands from ambiguous code-mode argument mentions."""
     reads = set()
@@ -191,15 +260,7 @@ def trial(source, case_name, mode, cli, timeout, artifacts):
         subprocess.run(['git', '-c', 'user.name=Team Trials', '-c', 'user.email=trials@example.invalid', 'commit', '-qm', 'Fixture baseline'], cwd=root, check=True, capture_output=True)
         baseline = smoke.snapshot(root)
         fixture_digest = hashlib.sha256(json.dumps(baseline, sort_keys=True).encode()).hexdigest()
-        prompt = case['request'] + ' This is a fully specified isolated trial. Use no external actions or model overrides. PYTHONDONTWRITEBYTECODE=1 for all Python commands. No saved coordination documents. '
-        if mode == 'solo':
-            prompt += 'For this comparison act as the single specialist directly. Do not spawn subagents. Complete and verify only this outcome. '
-        else:
-            prompt += 'Pass the absolute fixture path ' + str(root) + ' and relevant approved requirements into every worker contract. This fixture has no native Apple target; immutable checks are Python only. Act as the coordinator and use real subagents with inherited models. Choose the smallest appropriate route from the canonical role catalog and current request; implementation needs independent review after the writer finishes. Do not implement the requested work yourself. '
-            task_mode = 'execute' if case['file'] else 'advise'
-            prompt += f'Before issuing each contract read the canonical role and relevant skills. Use native role selection if exposed; otherwise generic spawn task_name=<role_with_hyphens_replaced_by_underscores> with role instructions and required relevant skills explicitly in the message. Contracts specify mode={task_mode}, approved outcome, context, ownership, prohibited files, output, criteria, validation commands, current revision, dependencies, retry_limit=2, may_delegate=false and stop after this outcome. Reviewers/QA must independently inspect and verify the final revision. QA may run tests but owns no source files here. Use fork_turns=none with minimal explicit task context and wait for completed results. '
-        if case['file']:
-            prompt += 'Run python3 -B -m unittest test_behavior.py before claiming completion. Review and QA receive only the task, diff and actual test output, not author conclusions as facts. '
+        prompt = trial_prompt(case, mode, root)
         try:
             result = smoke.run_appserver(cli, root, prompt, timeout)
             code, stdout, stderr = result.returncode, result.stdout, result.stderr
@@ -216,6 +277,7 @@ def trial(source, case_name, mode, cli, timeout, artifacts):
         permitted = [case['file']] if case['file'] else []
         collaboration = smoke.collaboration_items(events)
         spawns = [e for e in collaboration if e.get('tool') in ('spawn_agent', 'spawnAgent') and e.get('status') in ('completed', 'success')]
+        attempts = spawn_attempts(events)
         final = '\n'.join(e.get('item', e.get('params', {}).get('item', {})).get('text', '') for e in events if (e.get('type') == 'item.completed' or e.get('method') == 'item/completed') and e.get('item', e.get('params', {}).get('item', {})).get('type') in ('agent_message', 'agentMessage'))
         artifacts.mkdir(parents=True, exist_ok=True)
         (artifacts / f'{case_name}-{mode}.jsonl').write_text(stdout)
@@ -235,8 +297,14 @@ def trial(source, case_name, mode, cli, timeout, artifacts):
         markers = list(expected_markers.values())
         review_markers = tuple(markers[:2]) if len(markers) >= 2 else None
         proof = smoke.verify_events(events, markers, role_markers=expected_markers, review_markers=review_markers)
-        orchestration = team_proof_passes(proof, len(case['roles'])) if mode == 'team' else not spawns
-        routing = routing_passes(proof, case['roles']) if mode == 'team' else not spawns
+        if mode != 'team':
+            proof['turn_completed'] = parent_turn_completed(events)
+        orchestration = team_proof_passes(proof, len(case['roles'])) if mode == 'team' else direct_proof_passes(proof, attempts)
+        # These small, fully specified fixtures have no concrete delegation need.
+        # Expected worker roles remain exclusive to the forced-team evaluator.
+        routing = routing_passes(proof, case['roles']) if mode == 'team' else not attempts
+        unnecessary_delegation = mode != 'team' and bool(attempts)
+        invalid_override = bool(proof.get('explicit_model_overrides') or proof.get('explicit_reasoning_overrides'))
         domain_observations = apple_domain_observations(events)
         domain_reads = domain_observations['commands']
         domain_check = 'NOT APPLICABLE'
@@ -247,11 +315,13 @@ def trial(source, case_name, mode, cli, timeout, artifacts):
             domain_check = 'NOT VERIFIED' if domain_observations['unverified_mentions'] else 'PASS'
         return {'case': case_name, 'mode': mode, 'fixture_digest': fixture_digest, 'source_digest_before_copy': source_digest_before_copy, 'exit_code': code,
                 'elapsed_seconds': round(time.monotonic() - started, 2), 'ownership': 'PASS' if not set(changes) - set(permitted) else 'FAIL',
-                'behavior': behavior, 'orchestration': 'PASS' if orchestration and code == 0 else 'NOT VERIFIED',
-                'routing': 'PASS' if routing and code == 0 else 'NOT VERIFIED',
+                'behavior': behavior, 'orchestration': 'FAIL' if unnecessary_delegation or invalid_override else ('PASS' if orchestration and code == 0 else 'NOT VERIFIED'),
+                'routing': 'FAIL' if unnecessary_delegation else ('PASS' if routing and code == 0 else 'NOT VERIFIED'),
                 'expected_roles': case['roles'] if mode == 'team' else [], 'observed_roles': proof.get('roles_observed', []),
                 'apple_domain_commands': domain_reads, 'apple_domain_unverified_mentions': domain_observations['unverified_mentions'],
                 'apple_domain_read_check': domain_check, 'completed_worker_ids': proof.get('completed_worker_ids', []), 'spawn_count': len({e.get('id') for e in spawns}),
+                'spawn_attempt_count': len(attempts), 'parent_turn_completed': proof.get('turn_completed', False),
+                'independent_review_sequence': proof.get('independent_review_sequence', False),
                 'explicit_model_overrides': proof.get('explicit_model_overrides', []), 'explicit_reasoning_overrides': proof.get('explicit_reasoning_overrides', []),
                 'changed_files': changes, 'user_clarifications': 0, 'repeated_explanations': 0,
                 'usage': [e.get('params', {}).get('tokenUsage') for e in events if e.get('method') == 'thread/tokenUsage/updated'][-1:],
@@ -265,9 +335,11 @@ def main():
     parser.add_argument('--timeout', type=int, default=300)
     parser.add_argument('--artifacts-dir', type=Path, default=REPO_ROOT / 'agent-framework/runs/team-comparison')
     parser.add_argument('--case', choices=(*CASES, 'all'), default='all')
+    parser.add_argument('--mode', choices=('adaptive', 'comparison'), default='adaptive',
+                        help='On-demand policy by default; comparison explicitly forces paired solo/team benchmarks')
     args = parser.parse_args()
     if not args.live:
-        print(json.dumps({'status': 'NOT RUN', 'cases': list(CASES), 'reason': 'Opt in with --live for actual model calls'}))
+        print(json.dumps({'status': 'NOT RUN', 'mode': args.mode, 'cases': list(CASES), 'reason': 'Opt in with --live for actual model calls'}))
         return 0
     cli = shutil.which('codex')
     if not cli:
@@ -278,14 +350,14 @@ def main():
     source_digest_at_start = smoke.source_digest(args.root)
     results = []
     for case in CASES if args.case == 'all' else (args.case,):
-        for mode in ('solo', 'team'):
+        for mode in (('adaptive',) if args.mode == 'adaptive' else ('solo', 'team')):
             result = trial(args.root, case, mode, cli, args.timeout, args.artifacts_dir)
             results.append(result)
             print(json.dumps(result), flush=True)
-    failed = any(r['exit_code'] != 0 or r['ownership'] != 'PASS' or r['orchestration'] == 'FAIL' or r['behavior'] == 'FAIL' for r in results)
+    failed = any(r['exit_code'] != 0 or r['ownership'] != 'PASS' or r['orchestration'] == 'FAIL' or r.get('routing') == 'FAIL' or r['behavior'] == 'FAIL' for r in results)
     unresolved = any(r['orchestration'] != 'PASS' or r.get('routing') != 'PASS' or r.get('apple_domain_read_check') == 'NOT VERIFIED' or r['behavior'] not in ('PASS',) for r in results)
-    report = {'status': 'FAIL' if failed else ('NEEDS REVIEW' if unresolved else 'PASS'), 'cli_version': version, 'transport': 'app-server raw events', 'source_revision': subprocess.run(['git', '-C', str(args.root), 'rev-parse', 'HEAD'], capture_output=True, text=True).stdout.strip(), 'source_content_digest_at_start': source_digest_at_start, 'source_content_digest_at_end': smoke.source_digest(args.root), 'results': results,
-              'limitations': ['Small Python fixtures are not native Apple feature/cancellation/UI validation.', 'Expected role IDs are external evaluator criteria; user prompts do not prescribe role selection. All catalog roles carry anonymous result markers.', 'One run per case; no statistical claim about team quality.', 'User counts are zero because scenarios are fully specified and noninteractive.', 'Advice acceptance needs rubric review of actual answer artifacts.', 'CLI turn usage may not expose total child usage or effective model.']}
+    report = {'status': 'FAIL' if failed else ('NEEDS REVIEW' if unresolved else 'PASS'), 'mode': args.mode, 'cli_version': version, 'transport': 'app-server raw events', 'source_revision': subprocess.run(['git', '-C', str(args.root), 'rev-parse', 'HEAD'], capture_output=True, text=True).stdout.strip(), 'source_content_digest_at_start': source_digest_at_start, 'source_content_digest_at_end': smoke.source_digest(args.root), 'results': results,
+              'limitations': ['Small Python fixtures are not native Apple feature/cancellation/UI validation.', 'Adaptive fixtures are deliberately bounded and need no workers; they do not measure justified delegation on complex work.', 'Expected team role IDs are external evaluator criteria; user prompts do not prescribe role selection. Only forced-team trials mark all catalog roles.', 'One run per case; no statistical claim about team quality.', 'User counts are zero because scenarios are fully specified and noninteractive.', 'Advice acceptance needs rubric review of actual answer artifacts.', 'CLI turn usage may not expose total child usage or effective model.']}
     (args.artifacts_dir / 'report.json').write_text(json.dumps(report, indent=2))
     return 1 if failed else (2 if unresolved else 0)
 
