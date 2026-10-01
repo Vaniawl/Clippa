@@ -1,0 +1,22 @@
+{
+  "$comment": "GENERATED — DO NOT EDIT. Run scripts/agent-framework/design-tokens/generate.py.",
+  "colors": [
+    {
+      "$comment": "token=brand.color.secondary; source=www/assets/css/custom.css:10 | portal/assets/css/portal.css:5; status=extracted",
+      "color": {
+        "color-space": "srgb",
+        "components": {
+          "alpha": "1.000",
+          "blue": "0xF6",
+          "green": "0x82",
+          "red": "0x3B"
+        }
+      },
+      "idiom": "universal"
+    }
+  ],
+  "info": {
+    "author": "generated",
+    "version": 1
+  }
+}

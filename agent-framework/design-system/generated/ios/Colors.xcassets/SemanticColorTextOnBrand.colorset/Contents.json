@@ -1,0 +1,83 @@
+{
+  "$comment": "GENERATED — DO NOT EDIT. Run scripts/agent-framework/design-tokens/generate.py.",
+  "colors": [
+    {
+      "$comment": "token=semantic.color.text-on-brand; source=www/index.php:14 (hero), portal/includes/header.php:143 (active nav); status=extracted",
+      "color": {
+        "color-space": "srgb",
+        "components": {
+          "alpha": "1.000",
+          "blue": "0xFF",
+          "green": "0xFF",
+          "red": "0xFF"
+        }
+      },
+      "idiom": "universal"
+    },
+    {
+      "$comment": "token=semantic.color.text-on-brand; source=tokens/dark.json; status=proposed-derived",
+      "appearances": [
+        {
+          "appearance": "luminosity",
+          "value": "dark"
+        }
+      ],
+      "color": {
+        "color-space": "srgb",
+        "components": {
+          "alpha": "1.000",
+          "blue": "0xFF",
+          "green": "0xFF",
+          "red": "0xFF"
+        }
+      },
+      "idiom": "universal"
+    },
+    {
+      "$comment": "token=semantic.color.text-on-brand; source=tokens/high-contrast.json; status=proposed-derived",
+      "appearances": [
+        {
+          "appearance": "contrast",
+          "value": "high"
+        }
+      ],
+      "color": {
+        "color-space": "srgb",
+        "components": {
+          "alpha": "1.000",
+          "blue": "0xFF",
+          "green": "0xFF",
+          "red": "0xFF"
+        }
+      },
+      "idiom": "universal"
+    },
+    {
+      "$comment": "token=semantic.color.text-on-brand; source=tokens/high-contrast.json; status=proposed-derived",
+      "appearances": [
+        {
+          "appearance": "luminosity",
+          "value": "dark"
+        },
+        {
+          "appearance": "contrast",
+          "value": "high"
+        }
+      ],
+      "color": {
+        "color-space": "srgb",
+        "components": {
+          "alpha": "1.000",
+          "blue": "0xFF",
+          "green": "0xFF",
+          "red": "0xFF"
+        }
+      },
+      "idiom": "universal"
+    }
+  ],
+  "info": {
+    "author": "generated",
+    "version": 1
+  }
+}

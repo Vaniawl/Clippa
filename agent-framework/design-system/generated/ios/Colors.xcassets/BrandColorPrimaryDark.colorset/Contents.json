@@ -1,0 +1,22 @@
+{
+  "$comment": "GENERATED — DO NOT EDIT. Run scripts/agent-framework/design-tokens/generate.py.",
+  "colors": [
+    {
+      "$comment": "token=brand.color.primary-dark; source=www/assets/css/custom.css:9 | www/partials/header.php:67; status=extracted",
+      "color": {
+        "color-space": "srgb",
+        "components": {
+          "alpha": "1.000",
+          "blue": "0x45",
+          "green": "0x2A",
+          "red": "0x15"
+        }
+      },
+      "idiom": "universal"
+    }
+  ],
+  "info": {
+    "author": "generated",
+    "version": 1
+  }
+}

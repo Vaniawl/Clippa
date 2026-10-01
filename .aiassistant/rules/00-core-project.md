@@ -1,0 +1,4 @@
+<!-- GENERATED from agent-framework/canonical/policies/ — edit the canonical source, then run: python3 scripts/agent-framework/render.py -->
+<!-- intended activation: always — set the rule type in the JetBrains AI Assistant UI; in-file activation metadata is not supported. -->
+
+Follow PROJECT.md, approved ADRs, and active acceptance criteria. Priorities: correctness/data integrity, security/privacy, recoverability/observability, testability/maintainability, performance/UX. Continue autonomously through the approved requested outcome, then stop; the full backlog requires a separate request (agent-framework/canonical/policies/autonomy-policy.md). Unrelated ideas go to BACKLOG.md Candidates — never implemented without approval. Definition of Done: acceptance criteria met with evidence per criterion (agent-framework/canonical/contracts/definition-of-done-contract.md); claims without evidence are invalid. Full core instructions: the AGENTS.md managed block.

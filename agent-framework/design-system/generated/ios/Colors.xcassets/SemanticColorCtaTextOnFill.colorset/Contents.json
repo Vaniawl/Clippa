@@ -1,0 +1,83 @@
+{
+  "$comment": "GENERATED — DO NOT EDIT. Run scripts/agent-framework/design-tokens/generate.py.",
+  "colors": [
+    {
+      "$comment": "token=semantic.color.cta-text-on-fill; source=design-system/tokens/base.json brand.color.logo-ink | design-system/cross-platform-standard.md section 1; status=approved-derived; resolved-from=brand.color.logo-ink",
+      "color": {
+        "color-space": "srgb",
+        "components": {
+          "alpha": "1.000",
+          "blue": "0x15",
+          "green": "0x18",
+          "red": "0x23"
+        }
+      },
+      "idiom": "universal"
+    },
+    {
+      "$comment": "token=semantic.color.cta-text-on-fill; source=tokens/dark.json; status=proposed-derived; resolved-from=brand.color.logo-ink",
+      "appearances": [
+        {
+          "appearance": "luminosity",
+          "value": "dark"
+        }
+      ],
+      "color": {
+        "color-space": "srgb",
+        "components": {
+          "alpha": "1.000",
+          "blue": "0x15",
+          "green": "0x18",
+          "red": "0x23"
+        }
+      },
+      "idiom": "universal"
+    },
+    {
+      "$comment": "token=semantic.color.cta-text-on-fill; source=tokens/high-contrast.json; status=proposed-derived",
+      "appearances": [
+        {
+          "appearance": "contrast",
+          "value": "high"
+        }
+      ],
+      "color": {
+        "color-space": "srgb",
+        "components": {
+          "alpha": "1.000",
+          "blue": "0xFF",
+          "green": "0xFF",
+          "red": "0xFF"
+        }
+      },
+      "idiom": "universal"
+    },
+    {
+      "$comment": "token=semantic.color.cta-text-on-fill; source=tokens/high-contrast.json; status=proposed-derived",
+      "appearances": [
+        {
+          "appearance": "luminosity",
+          "value": "dark"
+        },
+        {
+          "appearance": "contrast",
+          "value": "high"
+        }
+      ],
+      "color": {
+        "color-space": "srgb",
+        "components": {
+          "alpha": "1.000",
+          "blue": "0xFF",
+          "green": "0xFF",
+          "red": "0xFF"
+        }
+      },
+      "idiom": "universal"
+    }
+  ],
+  "info": {
+    "author": "generated",
+    "version": 1
+  }
+}
