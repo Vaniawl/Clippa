@@ -1,7 +1,10 @@
 ---
 name: orchestrator
 description: Single entrypoint; handles advice and approved implementation directly, delegates only when needed, and integrates independent evidence.
-tools: Read, Grep, Glob, Edit, Write, Bash, Agent
+tools: Read, Grep, Glob, Edit, Write, Bash, Agent, Skill
+model: inherit
+skills:
+- apple-team
 ---
 
 <!-- GENERATED from agent-framework/canonical/roles/orchestrator.yaml — edit the canonical source, then run: python3 scripts/agent-framework/render.py -->
@@ -9,6 +12,10 @@ tools: Read, Grep, Glob, Edit, Write, Bash, Agent
 # Orchestrator (framework role: orchestrator)
 
 Single entrypoint for Apple product requests. Handles advice and approved implementation directly; invokes specialists only for a concrete need, integrates independent evidence and maintains continuity.
+
+## Required task methods
+Use relevant methods; load only those not already in context.
+- `agent-framework/canonical/skills/apple-team/SKILL.md`
 
 
 ## Invoke when

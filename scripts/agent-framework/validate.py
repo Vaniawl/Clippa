@@ -20,6 +20,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _lib import FRAMEWORK_DIR, REPO_ROOT  # noqa: E402
+from _markdown import invalid_local_links  # noqa: E402
 
 try:
     import yaml
@@ -678,11 +679,43 @@ def check_secrets():
                 break
 
 
+def check_markdown_links():
+    """Validate framework-owned resources without auditing unrelated adopter docs."""
+    roots = [FRAMEWORK_DIR / 'canonical', FRAMEWORK_DIR / 'templates']
+    documents = set()
+    for root in roots:
+        if root.exists():
+            documents.update(root.rglob('*.md'))
+    manifest = FRAMEWORK_DIR / 'generated-manifest.json'
+    try:
+        records = json.loads(manifest.read_text()).get('files', {})
+        if isinstance(records, dict):
+            for relative in records:
+                if (isinstance(relative, str) and relative.endswith('.md')
+                        and relative.startswith(('.agents/skills/', '.claude/skills/'))):
+                    if '..' in Path(relative).parts:
+                        err('unsafe managed Markdown path')
+                    else:
+                        documents.add(REPO_ROOT / relative)
+    except (OSError, ValueError, AttributeError):
+        pass  # manifest structure/presence is checked by the existing gates
+    for path in sorted(documents):
+        if not path.resolve().is_relative_to(REPO_ROOT.resolve()):
+            err('framework Markdown path escapes the repository')
+            continue
+        if not path.is_file():
+            err(f'{path.relative_to(REPO_ROOT)}: missing managed Markdown file')
+            continue
+        for target in invalid_local_links(path.read_text(encoding='utf-8'), path, REPO_ROOT):
+            err(f'{path.relative_to(REPO_ROOT)}: missing or unsafe Markdown resource {target!r}')
+
+
 def main() -> int:
     check_structure()
     role_ids = check_roles()
     skill_ids = check_skills()
     check_role_skill_refs(skill_ids)
+    check_markdown_links()
     check_personas()
     check_workflows(role_ids)
     check_matrix()

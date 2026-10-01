@@ -53,7 +53,7 @@ class TeamRuntimeTests(unittest.TestCase):
             self.assertNotIn('select the model per the delegation policy tiering rules', data['developer_instructions'])
         for path in (self.repo / '.claude/agents').glob('*.md'):
             frontmatter = path.read_text().split('---')[1]
-            self.assertNotIn('model', yaml.safe_load(frontmatter))
+            self.assertEqual(yaml.safe_load(frontmatter)['model'], 'inherit')
 
     def test_legacy_missing_team_retains_existing_concurrency_and_claude_tiering(self):
         path = self.repo / 'project.yaml'

@@ -68,6 +68,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from _lib import FRAMEWORK_DIR, REPO_ROOT  # noqa: E402
+from _markdown import rebase_skill_links  # noqa: E402
 
 try:
     import yaml
@@ -182,12 +183,17 @@ def as_str(x) -> str:
 def role_brief(r: dict, model_note: str = "") -> str:
     def bullets(key):
         return "\n".join(f"- {as_str(x)}" for x in r.get(key, []))
-    ro = "\n**Read-only role: never edit repository files. Report findings; the orchestrator assigns fixes to a writer role.**" if r["read_only"] else ""
+    ro = "\n**Read-only role: never edit repository files. Report findings; the coordinator handles authorized fixes directly or assigns a needed writer.**" if r["read_only"] else ""
     br = "\nBash access is restricted to read-only commands (tests, checks, inspection) — never state-changing commands." if "bash-readonly" in r["permitted_tools"] else ""
+    methods = ''
+    if r.get('skills_default'):
+        methods = '\n## Required task methods\nUse relevant methods; load only those not already in context.\n' + '\n'.join(
+            f'- `agent-framework/canonical/skills/{skill}/SKILL.md`'
+            for skill in r['skills_default']) + '\n'
     return f"""# {r['title']} (framework role: {r['id']})
 
 {r['purpose'].strip()}
-{ro}{br}
+{ro}{br}{methods}
 
 ## Invoke when
 {bullets('invoke_when')}
@@ -265,7 +271,7 @@ class Renderer:
 
 ## Claude Code specifics (generated)
 
-- Framework roles are installed as subagents in `.claude/agents/` (generated from `agent-framework/canonical/roles/`). Delegate through them; the orchestrator pattern and task contract apply.
+- Framework roles are available in `.claude/agents/` (generated from `agent-framework/canonical/roles/`). Work directly by default; use a subagent only for a concrete task-specific need, with the task contract.
 - Plan-first triggers are defined once in the autonomy policy (digest in the AGENTS.md managed block imported above). Routine bounded edits need no plan phase.
 - `.claude/settings.json` permissions enforce the security policy (no force-push, no secret reads). Do not weaken them without approval; validate.py pins the security-critical subset.
 - Skills live in `.claude/skills/` (generated). Load only domain skills relevant to the task.
@@ -283,6 +289,8 @@ class Renderer:
                     rel = f.relative_to(src_dir)
                     out = f"{target_root}/{name}/{rel.as_posix()}"
                     text = f.read_text(encoding="utf-8")
+                    if f.suffix == '.md':
+                        text = rebase_skill_links(text, f, REPO_ROOT / out, src_dir, REPO_ROOT)
                     if rel.name == "SKILL.md":
                         fm, body = split_frontmatter_raw(text)
                         note = f"\n<!-- {GEN_NOTE.format(src=f'agent-framework/canonical/skills/{name}/SKILL.md')} -->\n"
@@ -311,6 +319,14 @@ class Renderer:
                   "tools": ", ".join(tools)}
             if self.team is None:
                 fm["model"] = CLAUDE_MODEL[r["model_class"]]
+            else:
+                fm['model'] = 'inherit'
+            # Role methods preload only when the role is actually invoked.
+            # Conditional domain skills remain discoverable through Skill.
+            fm['tools'] += ', Skill'
+            core_methods = [skill for skill in r.get('skills_default', []) if skill in self.skills]
+            if core_methods:
+                fm['skills'] = core_methods
             fm_text = yaml.safe_dump(fm, sort_keys=False, default_flow_style=False,
                                      width=10000, allow_unicode=False).strip()
             self.full_files[f".claude/agents/{r['id']}.md"] = (
@@ -357,11 +373,6 @@ network_access = false
             # Role responsibility is inherited from canonical YAML; skills provide
             # procedures. Do not inject provider model-tier instructions.
             brief = re.sub(r" · Model class:.*", "", brief)
-            skills = r.get("skills_default", [])
-            if skills:
-                brief += "\n## Required task methods\n" + "\n".join(
-                    f"- Load `agent-framework/canonical/skills/{skill}/SKILL.md` when relevant to the task."
-                    for skill in skills) + "\n"
             brief += ("\nFollow the coordinator's task contract, including mode, owned/prohibited files, "
                       "acceptance criteria, revision, retry budget, and stopping condition. "
                       "File ownership is a contract checked against the diff, not a filesystem sandbox. "

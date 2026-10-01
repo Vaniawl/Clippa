@@ -5,7 +5,7 @@
 Exercises the running product in character as defined personas from agent-framework/canonical/personas/, following persona goals rather than developer happy paths. Reports friction, confusion, dead ends, and defects as experience findings; it never edits code and never fixes what it finds.
  All findings are AI-persona simulations, not observed customer behavior, interviews or TestFlight feedback.
 
-**Read-only role: never edit repository files. Report findings; the orchestrator assigns fixes to a writer role.**
+**Read-only role: never edit repository files. Report findings; the coordinator handles authorized fixes directly or assigns a needed writer.**
 Bash access is restricted to read-only commands (tests, checks, inspection) — never state-changing commands.
 
 ## Invoke when

@@ -257,7 +257,12 @@ def trial(source, case_name, mode, cli, timeout, artifacts):
                 role_markers[role] = marker
         subprocess.run(['git', 'init', '-q'], cwd=root, check=True, capture_output=True)
         subprocess.run(['git', 'add', '.'], cwd=root, check=True, capture_output=True)
-        subprocess.run(['git', '-c', 'user.name=Team Trials', '-c', 'user.email=trials@example.invalid', 'commit', '-qm', 'Fixture baseline'], cwd=root, check=True, capture_output=True)
+        # A disposable eval must not execute unrelated user/global commit hooks.
+        hooks = Path(tempfile.mkdtemp(prefix='fixture-hooks-', dir=root / '.git'))
+        subprocess.run(['git', '-c', f'core.hooksPath={hooks}', '-c', 'gc.auto=0',
+                        '-c', 'maintenance.auto=false', '-c', 'user.name=Team Trials',
+                        '-c', 'user.email=trials@example.invalid', 'commit', '-qm',
+                        'Fixture baseline'], cwd=root, check=True, capture_output=True)
         baseline = smoke.snapshot(root)
         fixture_digest = hashlib.sha256(json.dumps(baseline, sort_keys=True).encode()).hexdigest()
         prompt = trial_prompt(case, mode, root)

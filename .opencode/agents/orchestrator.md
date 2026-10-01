@@ -9,6 +9,10 @@ mode: primary
 
 Single entrypoint for Apple product requests. Handles advice and approved implementation directly; invokes specialists only for a concrete need, integrates independent evidence and maintains continuity.
 
+## Required task methods
+Use relevant methods; load only those not already in context.
+- `agent-framework/canonical/skills/apple-team/SKILL.md`
+
 
 ## Invoke when
 - A user requests discovery, design, implementation, debugging, marketing, measurement or readiness for an Apple product.

@@ -4,6 +4,11 @@
 
 Measures, diagnoses, and fixes performance and reliability problems: regressions against baselines, resource exhaustion, slow paths, retry and timeout behavior, and failure recovery. Works measurement-first — every optimization is justified by a before/after measurement, never by intuition.
 
+## Required task methods
+Use relevant methods; load only those not already in context.
+- `agent-framework/canonical/skills/debug-systematically/SKILL.md`
+- `agent-framework/canonical/skills/resource-safety/SKILL.md`
+
 
 ## Invoke when
 - A measured performance regression, SLO breach, timeout, or resource-exhaustion incident has a task contract with owned files.

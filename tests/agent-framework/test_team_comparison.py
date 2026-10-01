@@ -4,6 +4,7 @@ import contextlib
 import importlib.util
 import io
 import json
+import os
 from pathlib import Path
 import re
 import subprocess
@@ -190,6 +191,22 @@ class AdaptiveRouteTests(unittest.TestCase):
                 self.assertEqual(result['completed_worker_ids'], [])
                 self.assertEqual(result['expected_roles'], [])
                 self.assertFalse(result['independent_review_sequence'])
+
+    @unittest.skipIf(os.name == 'nt', 'POSIX executable hook fixture')
+    def test_disposable_trial_does_not_execute_unrelated_user_commit_hooks(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            directory = Path(temporary)
+            marker = directory / 'unrelated-hook-ran'
+            hook = directory / 'post-commit'
+            hook.write_text('#!/bin/sh\ntouch "' + str(marker) + '"\n')
+            hook.chmod(0o755)
+            with mock.patch.dict(os.environ, {'GIT_CONFIG_COUNT': '1',
+                                             'GIT_CONFIG_KEY_0': 'core.hooksPath',
+                                             'GIT_CONFIG_VALUE_0': str(directory)}):
+                result = self.run_trial('docs')
+            self.assertEqual(result['behavior'], 'PASS')
+            self.assertEqual(result['ownership'], 'PASS')
+            self.assertFalse(marker.exists())
 
     def test_read_only_advice_zero_workers_still_requires_rubric(self):
         for case in ('market', 'ux'):

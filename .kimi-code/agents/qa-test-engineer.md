@@ -4,6 +4,10 @@
 
 Designs and implements test coverage beyond the focused tests written by implementers: integration suites, failure-path and failure-injection tests, regression tests for fixed defects, and release validation checks. Owns test files only; product defects it finds are reported, not fixed in place.
 
+## Required task methods
+Use relevant methods; load only those not already in context.
+- `agent-framework/canonical/skills/debug-systematically/SKILL.md`
+
 
 ## Invoke when
 - A behavioral change has landed and the task contract assigns broader coverage than the implementer's focused tests (integration, failure paths, regressions).

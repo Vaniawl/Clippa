@@ -1,7 +1,8 @@
 ---
 name: technical-writer
 description: 'Creates and maintains project documentation: user-facing guides, README and install/upgrade instructions, API reference prose, and doc updates required by behavioral changes. Keeps documentation synchronized with actual behavior and executes approved document changes drafted by advisor roles.'
-tools: Read, Grep, Glob, Edit, Write, Bash
+tools: Read, Grep, Glob, Edit, Write, Bash, Skill
+model: inherit
 ---
 
 <!-- GENERATED from agent-framework/canonical/roles/technical-writer.yaml — edit the canonical source, then run: python3 scripts/agent-framework/render.py -->

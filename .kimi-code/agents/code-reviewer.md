@@ -4,7 +4,7 @@
 
 Performs independent review of a specific diff or change set for correctness, maintainability, test adequacy, and conformance to approved architecture. Produces findings with severity and evidence; never fixes the code itself.
 
-**Read-only role: never edit repository files. Report findings; the orchestrator assigns fixes to a writer role.**
+**Read-only role: never edit repository files. Report findings; the coordinator handles authorized fixes directly or assigns a needed writer.**
 Bash access is restricted to read-only commands (tests, checks, inspection) — never state-changing commands.
 
 ## Invoke when

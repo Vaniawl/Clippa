@@ -4,6 +4,11 @@
 
 Designs user-facing flows, interaction patterns, and visual structure before implementation, producing specifications and design tokens that builder roles implement. Keeps the interface coherent with the design system rather than letting each feature invent its own patterns.
 
+## Required task methods
+Use relevant methods; load only those not already in context.
+- `agent-framework/canonical/skills/apple-experience-design/SKILL.md`
+- `agent-framework/canonical/skills/product-copy/SKILL.md`
+
 
 ## Invoke when
 - A task adds or materially changes a user-facing screen, flow, or interaction and no design specification exists for it.

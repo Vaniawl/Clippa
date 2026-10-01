@@ -9,6 +9,10 @@ mode: subagent
 
 Designs and implements persistence changes: schemas, migrations, data-access code, and data-integrity constraints, always with a tested forward and rollback path. Treats data integrity as the top priority and never runs destructive migrations without explicit approval.
 
+## Required task methods
+Use relevant methods; load only those not already in context.
+- `agent-framework/canonical/skills/debug-systematically/SKILL.md`
+
 
 ## Invoke when
 - A task contract assigns schema changes, new migrations, data-access-layer code, or query/index work within an owned persistence component.

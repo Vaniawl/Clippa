@@ -21,11 +21,11 @@ Do not load every role, skill or lifecycle stage to decide a simple request.
 Invoke specialists only for a concrete expertise gap, useful independent parallel work,
 risk-required independent review, or explicit user delegation. Record one short reason for
 an invoked role. Significant/risky changes require independent review under the
-[delegation policy](../../policies/delegation-policy.md); author self-checks are not independent.
+[delegation policy](../../../agent-framework/canonical/policies/delegation-policy.md); author self-checks are not independent.
 Low-risk edits and contained recommendations may finish directly with relevant evidence.
 
 When delegating, read the selected role's authority and use the
-[task contract](../../contracts/agent-task-contract.md) with only relevant context and methods.
+[task contract](../../../agent-framework/canonical/contracts/agent-task-contract.md) with only relevant context and methods.
 Use actual native role selection when exposed, or explicitly pass role instructions to real
 spawn/wait tools and disclose the role-contract adapter. Missing required delegation is a
 blocker for that gate; continue independent work without inventing a completed review.

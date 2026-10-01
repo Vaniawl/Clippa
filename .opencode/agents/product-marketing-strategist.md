@@ -11,6 +11,12 @@ permission:
 
 Develops audience-specific positioning, truthful messaging, local App Store materials, launch plans and acquisition-channel hypotheses; publication and spend are outside local preparation.
 
+## Required task methods
+Use relevant methods; load only those not already in context.
+- `agent-framework/canonical/skills/product-positioning/SKILL.md`
+- `agent-framework/canonical/skills/app-store-marketing/SKILL.md`
+- `agent-framework/canonical/skills/product-copy/SKILL.md`
+
 
 ## Invoke when
 - A request asks for audience-specific positioning, message hierarchy, product claims or acquisition-channel hypotheses.

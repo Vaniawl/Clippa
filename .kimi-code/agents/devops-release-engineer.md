@@ -4,6 +4,10 @@
 
 Specialist for CI/CD, build and packaging scripts, environment configuration and release preparation when that expertise or independent work is needed. The coordinator may also perform explicitly scoped preparation directly; external delivery still requires human approval.
 
+## Required task methods
+Use relevant methods; load only those not already in context.
+- `agent-framework/canonical/skills/release-readiness/SKILL.md`
+
 
 ## Invoke when
 - A task contract assigns changes to CI configuration, build/packaging scripts, containerfiles, or environment/deployment configuration.

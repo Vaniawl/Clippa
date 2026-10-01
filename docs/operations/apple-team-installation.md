@@ -1,6 +1,24 @@
 # Apple-team installation evidence
 
-## Current update — on-demand agents (2026-10-01)
+## Current update — Markdown and provider methods (2026-10-01)
+
+Payload: `4e8338c095facc13bef232035b77618890698ec3` from Vaniawl/ios-starter. Installed skill resource links are repaired;
+Claude roles expose core methods through `skills`/`Skill` and explicitly inherit models for
+team-configured projects. All provider briefs identify relevant methods. Agents remain
+on demand; read-only roles gain no editing authority, and custom skills/provider settings
+are preserved. Guarded preview/install, validation/drift/preflight and unchanged reinstall
+are checked before delivery. Existing native/CI files are byte-identical to the saved baseline.
+
+Source verification: 268 framework tests PASS (six skips), 45 bootstrap tests PASS,
+34 deterministic evals PASS; all 19 installed skills validate. Independent review approved.
+Codex 0.159.3 actually discovers all 19 project skills and completes the isolated README
+case with zero workers (33.57 s). Claude 2.1.201 live trial is UNAVAILABLE: not logged in;
+no login or global model change was made. Named role execution, other-provider acceptance
+and product UI/manual checks remain NOT VERIFIED / NOT RUN. Current-head hosted CI is
+separate. [Source evidence](https://github.com/Vaniawl/ios-starter/blob/4e8338c095facc13bef232035b77618890698ec3/docs/operations/apple-team-provider-methods.md).
+
+
+## Previous update — on-demand agents (2026-10-01)
 
 Payload: `0c71336b69dd1e3cb04bb3f2be01056b0fd537c9` from Vaniawl/ios-starter. The coordinator works directly by
 default; zero workers is valid. Specialists join for concrete expertise, useful independent
