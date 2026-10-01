@@ -19,6 +19,11 @@ APPLE_ROLES = (
     "security-privacy-reviewer", "devops-release-engineer", "ui-ux-designer",
 )
 APPLE_SKILLS = ("ios-development", "ios-testing", "ios-quality", "macos-development")
+IS_TEMPLATE_SOURCE = (REPO_ROOT / "agent-framework/.framework-source").is_file() or (
+    (REPO_ROOT / "scripts/bootstrap.py").is_file()
+    and not (REPO_ROOT / ".project-initialized").exists()
+    and not (REPO_ROOT / ".project-initialized").is_symlink()
+)
 
 
 class AppleProductEngineeringTests(unittest.TestCase):
@@ -37,6 +42,14 @@ class AppleProductEngineeringTests(unittest.TestCase):
 
     def test_apple_policy_is_reachable_from_provider_entrypoints(self):
         repo = self.make_repository()
+        # Reachability covers every Apple specialization, independently of the
+        # host app's platform-specific opt-in skill selection.
+        metadata_path = repo / "project.yaml"
+        metadata = yaml.safe_load(metadata_path.read_text(encoding="utf-8")) or {}
+        framework = metadata.setdefault("agent_framework", {})
+        framework["skills"] = list(dict.fromkeys(framework.get("skills", []) + list(APPLE_SKILLS)))
+        metadata_path.write_text(yaml.safe_dump(metadata, sort_keys=False), encoding="utf-8")
+        aliases = framework.get("opencode", {}).get("role_aliases", {})
         self.assert_success(render(repo))
         self.assertTrue((repo / POLICY).is_file())
         self.assertIn(POLICY, (repo / "AGENTS.md").read_text(encoding="utf-8"))
@@ -53,9 +66,10 @@ class AppleProductEngineeringTests(unittest.TestCase):
                 )
                 self.assertIn(POLICY, codex["developer_instructions"])
                 for directory in (".claude", ".kimi-code", ".opencode"):
+                    profile = aliases.get(role, role) if directory == ".opencode" else role
                     self.assertIn(
                         POLICY,
-                        (repo / f"{directory}/agents/{role}.md").read_text(encoding="utf-8"),
+                        (repo / f"{directory}/agents/{profile}.md").read_text(encoding="utf-8"),
                     )
         for skill in (*APPLE_SKILLS, "ui-ux-review"):
             for directory in (".agents", ".claude"):
@@ -73,6 +87,10 @@ class AppleProductEngineeringTests(unittest.TestCase):
         self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
         self.assertIn(POLICY, result.stdout + result.stderr)
 
+    @unittest.skipUnless(
+        IS_TEMPLATE_SOURCE,
+        "Bootstrap profile creation belongs to the template source, not initialized adopters.",
+    )
     def test_bootstrap_preserves_policy_and_routing_for_every_apple_profile(self):
         for platform in ("ios", "macos", "multiplatform"):
             with self.subTest(platform=platform):

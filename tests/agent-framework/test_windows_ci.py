@@ -16,6 +16,11 @@ import yaml
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 WORKFLOW = REPO_ROOT / ".github" / "workflows" / "quality.yml"
+IS_TEMPLATE_SOURCE = (REPO_ROOT / "agent-framework/.framework-source").is_file() or (
+    (REPO_ROOT / "scripts/bootstrap.py").is_file()
+    and not (REPO_ROOT / ".project-initialized").exists()
+    and not (REPO_ROOT / ".project-initialized").is_symlink()
+)
 
 
 def assert_windows_framework_contract(workflow: dict) -> None:
@@ -51,6 +56,10 @@ def assert_windows_framework_contract(workflow: dict) -> None:
     assert "bash" not in commands.lower()
 
 
+@unittest.skipUnless(
+    IS_TEMPLATE_SOURCE,
+    "Windows workflow contract belongs to the template source; adopter CI is project-owned.",
+)
 class TestWindowsFrameworkCI(unittest.TestCase):
     def workflow(self) -> dict:
         return yaml.safe_load(WORKFLOW.read_text(encoding="utf-8"))

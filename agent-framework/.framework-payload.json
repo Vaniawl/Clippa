@@ -2,7 +2,7 @@
   "framework_version": "1.1.4",
   "template": "ios-starter",
   "source_url": "https://github.com/Vaniawl/ios-starter.git",
-  "source_commit": "70e79b5c47b2e55c00b715c7d176a6b615875488",
+  "source_commit": "5052dfd449b62864dac1bb0c0bc24dbc7c110ea2",
   "baseline_commits": [
     "e25257e02b609e8abd5e164d1ae6c01fed5f0ff0",
     "eac38651a507dfbec78a106eef1ed5c81fd8de20"
@@ -256,10 +256,10 @@
     "scripts/create-worktree.sh": "e331c0e57ac66a1a9500c25a93398d0c6893ddce0d2c1372a66801118eafd087",
     "tests/agent-framework/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "tests/agent-framework/_helpers.py": "1d98e637095f0e6cfb725245bcaeeef158862a8e546e8927f182d1fbf531a826",
-    "tests/agent-framework/test_apple_product_engineering.py": "6f9678769fcd15a6db364f79bb8010e51c7082c09946cf6a92e55a4e2d8faef1",
+    "tests/agent-framework/test_apple_product_engineering.py": "62c0ec3dc5af64530bf032615f29c0b838a66422d4b05056a85462f1457c6634",
     "tests/agent-framework/test_design_tokens.py": "5276423a68045e5674fb455e4fb81fbbbc899b06a6c1220432769298d10bb99d",
     "tests/agent-framework/test_generated_artifacts.py": "7c311dc6d352b530f68743ff39d5b7b248b74f57200f707ab944b606d1e15142",
-    "tests/agent-framework/test_install_apple_team.py": "bf7dd463a0f2a37148e368afb3ad54ea9c30b0ba5f0005d11fd046cc170698a3",
+    "tests/agent-framework/test_install_apple_team.py": "4193d3bde33e15515f05a741e35c2ea52386055f0be7157609e449a5795b0c78",
     "tests/agent-framework/test_local_model_benchmark.py": "92bce66f4551dd6acb890ec0b09a3d09fc8ceee6190b6dc14618f684ddcfb61f",
     "tests/agent-framework/test_project_opencode.py": "e86e4dc99de3e0a1cff24a92a905f3a3e4a72460aac40480779c147a48fafc12",
     "tests/agent-framework/test_provider_shims.py": "7e5faa95cf960ad8da27b0808c79749dedfbb68f27bd9e7945835072b03e796f",
@@ -269,7 +269,7 @@
     "tests/agent-framework/test_team_runtime.py": "4609daa7d2123902489fdd50746f619bb980c1c533ddc9f9ed8f1269bcf6595f",
     "tests/agent-framework/test_update_framework.py": "b469b2d77fa22f3a5f2f24d21d542903776f4345fea3d302ce2360c970ac0b60",
     "tests/agent-framework/test_validate_gates.py": "cbbacb448f3fe8330df620453e48417d0fc91e8056f1b762403c4cf9a392b36e",
-    "tests/agent-framework/test_windows_ci.py": "0109b6d98bdc6ae971efc70688f4992f09b57316523385b58e087a9eb032a08f"
+    "tests/agent-framework/test_windows_ci.py": "fbc7e904922ac4791a3cddccae51207c7b77e458b5a4673036bf9a7ebf9b59f0"
   },
   "scaffold": {}
 }

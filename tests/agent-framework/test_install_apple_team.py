@@ -41,11 +41,17 @@ class InstallerTests(unittest.TestCase):
                 dst = cls.source / rel
                 dst.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(src, dst)
-        for rel in ("AGENTS.md", "CLAUDE.md", ".claude/settings.json", installer.PAYLOAD_MANIFEST):
+        for rel in ("AGENTS.md", "CLAUDE.md", ".claude/settings.json"):
             if (REPO / rel).is_file():
                 dst = cls.source / rel
                 dst.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(REPO / rel, dst)
+        # Adoption ledgers legitimately prove the current framework bytes. A
+        # regression fixture must not inherit that permission from its host app:
+        # only the explicit ancestor and synthetic vendor hash below are proof.
+        put(cls.source, installer.PAYLOAD_MANIFEST, json.dumps({
+            "framework_version": "fixture", "files": {}, "scaffold": {},
+        }))
         cls.git("init", "-q")
         cls.git("add", ".")
         cls.git("-c", "user.name=Installer Test", "-c", "user.email=installer@example.invalid", "commit", "-qm", "Committed fixture")
