@@ -7,56 +7,28 @@ description: Use when asked to review native iOS accessibility, performance, mem
 <!-- GENERATED from agent-framework/canonical/skills/ios-quality/SKILL.md — edit the canonical source, then run: python3 scripts/agent-framework/render.py -->
 # iOS quality review
 
-Read `agent-framework/canonical/policies/apple-product-engineering.md` from the repository
-root for the Apple product-quality bar. Use its visual, interaction, motion, accessibility,
-platform, and final self-review criteria for affected surfaces, together with the native
-Apple procedure in `ui-ux-review`. Judge usable product behavior, not compilation alone.
+Use the compact Apple product-engineering router for the affected native product work.
+Load only the relevant section in [concerns.md](references/concerns.md):
 
-Inspect only areas affected by the requested change. Use separate reviewers where an
-independent gate is required; do not turn a small text change into a full release audit.
+- Accessibility/interaction: use that section and ui-ux-review's native runtime evidence
+  procedure for changed UI. Independent accessibility review remains a separate gate.
+- Performance/resource ownership: measure the reproducible scenario first; resource-safety
+  applies when resource growth or lifetime is implicated.
+- Security/privacy: inspect actual data flows, manifests and SDKs; use security-review for
+  the affected boundary. No UI matrix is required for a privacy-only question.
+- Distribution: use that section when preparing signing/release work, with the release role
+  and separately authorized external actions.
 
-## Accessibility and interaction
-
-Check VoiceOver labels, traits, order and focus after navigation, sheets and errors. Prefer
-native controls; avoid announcing every render. Exercise Dynamic Type at accessibility sizes,
-contrast in supported appearances, Reduce Motion and alternatives to color-only meaning.
-Verify tappable areas, keyboard avoidance, safe areas, and compact/iPad layouts. Record device,
-OS, text size and appearance alongside screenshots; disclose manual checks not performed.
-
-## Performance and resource ownership
-
-Measure a reproducible symptom before optimizing. Inspect expensive work in SwiftUI body,
-unstable list identity, observation invalidation scope, oversized images and unbounded caches.
-Trace task, timer, observer and subscription lifetime. Profile latency with Instruments or
-available equivalent tooling, and memory with allocations/leaks or a memgraph when needed.
-Compare the same scenario before and after; never infer a leak solely from one high RSS value.
-Run build/profiling work under repository resource bounds and keep captured output bounded.
-
-## Security and privacy
-
-Review actual collected data, purpose strings, entitlements, network transport, storage and
-logs. Keep secrets out of UserDefaults and source; use appropriate protected storage for
-credentials when credentials are an approved feature. A privacy manifest must describe the
-implemented app and its SDKs; the starter's empty manifest is not blanket compliance.
-Use security-review for trust boundaries, remote input, authentication and persistence.
-
-## Distribution
-
-Use the devops-release-engineer for signing, archives and delivery tooling. Confirm bundle ID,
-version/build, icons, supported devices, Release build and the relevant privacy declarations.
-Check current Apple submission requirements against official sources when preparing delivery.
-TestFlight/App Store upload or publication requires user authorization for that action; a
-request to review readiness alone is not upload permission. Do not invent signing identities.
-
-## Verdict
-
-Return concrete findings by severity with file/evidence, impact and required fix. Distinguish
-PASS from NOT RUN and NOT ASSESSED. A Simulator build does not prove device signing, archive,
-App Store validation, accessibility on device, or production network behavior.
+Do not turn a small text change into a full release audit. A Simulator build proves neither
+manual accessibility nor signing/archive/submission readiness. An uninspected empty privacy
+manifest does not establish no data collection. Return concrete findings with evidence,
+impact and correction; distinguish PASS, NOT RUN and NOT ASSESSED.
 
 ## Research when needed
 
-For version-sensitive Apple or Swift behavior, use official documentation or installed SDK
-interfaces. If the active role lacks the `web` tool and local evidence is insufficient,
-request a deep-researcher task via the orchestrator. Mark unresolved behavior UNKNOWN and
-continue independent work; do not guess support or add a dependency to avoid verification.
+Use applicable supplied/local primary sources or actually available web/docs tools permitted
+by the active role and task. Callable tools do not expand authority, and role permissions
+do not provision access. If the active role lacks the `web` tool or permission and local
+evidence is insufficient, request a deep-researcher task via the orchestrator when available,
+or mark the claim UNKNOWN and continue independent work. Do not guess current support,
+simulate research or add a dependency to avoid verification.

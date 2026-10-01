@@ -5,14 +5,12 @@ description: Use when asked to implement and review SwiftUI features, state owne
 
 # Native iOS development
 
-Before implementing, designing, debugging, or reviewing an Apple feature, read
-`agent-framework/canonical/policies/apple-product-engineering.md` from the repository root.
-Apply its reconnaissance → product → interaction → visual → motion → implementation →
-verification → polish workflow within the approved scope. Keep deployment targets and
-existing architecture; resolve normal design details autonomously. UI work also uses the
-native Apple procedure in `ui-ux-review`.
+Use the compact Apple product-engineering router for the affected native task. Read only
+relevant sections: state/concurrency for behavior, native interaction for UI, verification
+for affected checks. Keep existing targets/architecture; UI work uses the native ui-ux-review
+reference. Framework-only tasks do not require this domain skill.
 
-Read the product requirement and relevant ADR before changing code. Resolve platform and toolchain constraints from the existing Xcode project, xcconfig files
+Read the approved product requirement; read relevant architecture/ADRs when the change touches structural boundaries or contracts. Resolve platform and toolchain constraints from the existing Xcode project, xcconfig files
 and any package manifests. The starter uses an Xcode composition root plus a local Swift
 package; an adopting application may use another established layout. Preserve that layout
 and dependency direction unless an architecture change is explicitly in scope.
@@ -49,7 +47,9 @@ and ios-quality when the change affects accessibility, performance, or privacy.
 
 ## Research when needed
 
-For version-sensitive Apple or Swift behavior, use official documentation or installed SDK
-interfaces. If the active role lacks the `web` tool and local evidence is insufficient,
-request a deep-researcher task via the orchestrator. Mark unresolved behavior UNKNOWN and
-continue independent work; do not guess support or add a dependency to avoid verification.
+Use applicable supplied/local primary sources or actually available web/docs tools permitted
+by the active role and task. Callable tools do not expand authority, and role permissions
+do not provision access. If the active role lacks the `web` tool or permission and local
+evidence is insufficient, request a deep-researcher task via the orchestrator when available,
+or mark the claim UNKNOWN and continue independent work. Do not guess current support,
+simulate research or add a dependency to avoid verification.

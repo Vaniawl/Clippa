@@ -60,8 +60,13 @@ def run_bounded(command: list[str], timeout: float, cwd: Path | None = None):
         stop_process_group(process)
 
 
-def run_appserver(cli: str, fixture: Path, prompt: str, timeout: int) -> subprocess.CompletedProcess:
-    """Opt-in raw app-server transport; unlike exec JSON it retains code-mode calls."""
+def run_appserver(cli: str, fixture: Path, prompt: str | None, timeout: int,
+                  queries: list[dict] | None = None, read_only: bool = False) -> subprocess.CompletedProcess:
+    """Raw transport, or read-only session queries without a model turn.
+
+    Query responses may contain private configuration. Callers must redact them;
+    never persist or print this transport's raw query responses.
+    """
     command = [cli, "app-server", "--stdio", "--strict-config", "-c",
                f'projects.{json.dumps(str(fixture))}.trust_level="trusted"']
     process = subprocess.Popen(command, cwd=fixture, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
@@ -85,7 +90,7 @@ def run_appserver(cli: str, fixture: Path, prompt: str, timeout: int) -> subproc
     def send(message):
         process.stdin.write(json.dumps(message) + "\n")
         process.stdin.flush()
-    def receive(expected_id=None, complete_thread=None):
+    def receive(expected_id=None, complete_thread=None, allow_error=False):
         while True:
             remaining = deadline - time.monotonic()
             if remaining <= 0:
@@ -98,6 +103,8 @@ def run_appserver(cli: str, fixture: Path, prompt: str, timeout: int) -> subproc
                 raise RuntimeError("app-server terminated before completed turn")
             if expected_id is not None and message.get("id") == expected_id:
                 if "error" in message:
+                    if allow_error:
+                        return {"query_error_code": message["error"].get("code")}
                     raise RuntimeError(str(message["error"]))
                 return message.get("result", {})
             if (complete_thread and message.get("method") == "turn/completed"
@@ -110,10 +117,19 @@ def run_appserver(cli: str, fixture: Path, prompt: str, timeout: int) -> subproc
              "capabilities": {"experimentalApi": True}}})
         receive(expected_id=1)
         send({"method": "initialized", "params": {}})
-        send({"id": 2, "method": "thread/start", "params": {"cwd": str(fixture), "sandbox": "workspace-write",
-             "approvalPolicy": "never", "experimentalRawEvents": True, "ephemeral": False}})
+        send({"id": 2, "method": "thread/start", "params": {"cwd": str(fixture), "sandbox": "read-only" if queries is not None or read_only else "workspace-write",
+             "approvalPolicy": "never", "experimentalRawEvents": queries is None, "ephemeral": queries is not None or read_only}})
         started = receive(expected_id=2)
         thread_id = started["thread"]["id"]
+        if queries is not None:
+            results = {}
+            for request_id, query in enumerate(queries, 3):
+                params = dict(query.get("params", {}))
+                if query.get("thread_scoped"):
+                    params["threadId"] = thread_id
+                send({"id": request_id, "method": query["method"], "params": params})
+                results[query["method"]] = receive(expected_id=request_id, allow_error=True)
+            return subprocess.CompletedProcess(command, 0, json.dumps(results), "")
         send({"id": 3, "method": "turn/start", "params": {"threadId": thread_id,
              "input": [{"type": "text", "text": prompt, "text_elements": []}]}})
         receive(expected_id=3)
@@ -121,8 +137,10 @@ def run_appserver(cli: str, fixture: Path, prompt: str, timeout: int) -> subproc
         failed = terminal.get("turn", {}).get("status") != "completed"
         return subprocess.CompletedProcess(command, int(failed), "".join(lines), "".join(errors))
     except BaseException as exc:
-        exc.output = "".join(lines)
-        exc.stderr = "".join(errors)
+        # Query traces can include effective credentials/headers. Even timeout
+        # exceptions must not hand them to a report/artifact writer.
+        exc.output = "" if queries is not None else "".join(lines)
+        exc.stderr = "" if queries is not None else "".join(errors)
         raise
     finally:
         stop_process_group(process)
@@ -215,7 +233,8 @@ def verify_events(events: list[dict], markers: list[str], role_markers: dict[str
     if role_markers:
         role_propagated = all(any(
             marker in str(completed_workers.get(worker, ""))
-            for item in spawned if str(item.get("agentPath", "")).endswith("/" + role.replace("-", "_"))
+            for item in spawned if (str(item.get("agentPath", "")).rsplit("/", 1)[-1].replace("_", "-") == role
+                                    or item.get("agentType", item.get("agent_type")) == role)
             for worker in item.get("receiver_thread_ids", item.get("receiverThreadIds", [])) if worker in completed_ids)
             for role, marker in role_markers.items())
     # Certify the actual author -> reviewer order, including retries. A QA or
@@ -266,6 +285,9 @@ def verify_events(events: list[dict], markers: list[str], role_markers: dict[str
                                for worker in item.get("receiver_thread_ids", item.get("receiverThreadIds", [])))]
     sequential_review = bool(author_ids and author_terminals and reviewer_spawns and
                              any(index > max(author_terminals + author_spawns) for index in reviewer_spawns))
+    observed_roles = sorted({str(item.get("agentPath", "")).rsplit("/", 1)[-1].replace("_", "-")
+                             if item.get("agentPath") else (item.get("agentType") or item.get("agent_type") or "unknown")
+                             for item in spawned})
     return {"real_spawn": bool(spawned), "real_wait": bool(waited), "turn_completed": completed,
             "workers_completed": bool(receiver_ids) and receiver_ids <= completed_ids and not bool(receiver_ids & failed_workers),
             "completed_worker_ids": sorted(completed_ids), "failed_worker_ids": sorted(failed_workers & receiver_ids),
@@ -277,6 +299,7 @@ def verify_events(events: list[dict], markers: list[str], role_markers: dict[str
                                             for item in spawned if item.get("reasoning_effort", item.get("reasoningEffort"))],
             "spawned_receiver_ids": sorted(receiver_ids), "independent_review_sequence": sequential_review,
             "tools_observed": sorted({item.get("tool", "") for item in items}),
+            "roles_observed": observed_roles,
             "agent_types_observed": sorted({item.get("agentType") for item in spawned if item.get("agentType")})}
 
 
@@ -459,10 +482,12 @@ def main() -> int:
     digest = source_digest(args.root)
     results = [run_case(args.root.resolve(), scenario, args.timeout, args.artifacts_dir, args.selection, args.transport) for scenario in scenarios]
     named_verified = args.selection != "adapter" and named_discovery_verified(results)
+    execution = ("PASS" if all(result["status"] == "PASS" for result in results)
+                 else "BLOCKED" if all(result["status"] in ("PASS", "BLOCKED") for result in results) else "FAIL")
     report = {"cli_version": version, "source_revision": revision, "source_content_digest": digest, "role_selection": args.selection,
               "transport": args.transport, "results": results,
               "native_named_discovery": "PASS" if named_verified else "NOT VERIFIED",
-              "native_execution": "PASS" if all(result["status"] == "PASS" for result in results) else "FAIL"}
+              "native_execution": execution}
     if args.artifacts_dir:
         args.artifacts_dir.mkdir(parents=True, exist_ok=True)
         (args.artifacts_dir / "smoke-report.json").write_text(json.dumps(report, indent=2) + "\n")

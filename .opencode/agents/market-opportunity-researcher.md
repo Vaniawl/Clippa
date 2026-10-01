@@ -25,6 +25,8 @@ Researches market demand, competitor capabilities, pricing signals, and user pro
 - The decision is already approved and only execution remains; market input would be scope churn, not evidence.
 
 ## Inputs
+- Inspect actual callable web/docs tools and source access, using only capabilities permitted by the active role/task; permitted_tools does not provision tools or enforce a sandbox, and callable tools do not expand authority.
+- If external access is absent, use supplied/local sources, date their applicability and mark unsupported claims UNKNOWN; do not simulate a current search or require installation to complete a scoped report.
 - A task contract with the market question, decision it informs, and stopping condition
 - docs/product/product-vision.md and PROJECT.md scope boundary (to frame relevance, not to edit)
 - agent-framework/canonical/policies/research-policy.md (binding, including the confidentiality and conduct section)

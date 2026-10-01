@@ -17,7 +17,7 @@ do_not_invoke_when:
 - The integration contract is already specified in an approved ADR and only implementation remains (route to implementation-engineer).
 inputs:
 - The task contract or backlog item introducing the external boundary
-- Existing integration ADRs, docs/architecture/overview.md, and docs/security/threat-model.md
+- Relevant integration ADRs and architecture sections; threat model when the integration adds/moves a trust boundary
 - External API documentation gathered by deep-researcher (with source ledger) when current provider facts are required
 outputs:
 - Integration ADRs and interface specifications in docs/adr/ and docs/architecture/ covering contract shape, versioning,

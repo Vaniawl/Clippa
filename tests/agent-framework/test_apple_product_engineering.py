@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import shutil
+import re
 import sys
 import tomllib
 import unittest
@@ -13,6 +14,7 @@ from _helpers import EXCLUDE, REPO_ROOT, check_drift, render, run, scratch_dir, 
 import yaml
 
 POLICY = "agent-framework/canonical/policies/apple-product-engineering.md"
+REFERENCE = "agent-framework/canonical/policies/apple-product-engineering-reference.md"
 APPLE_ROLES = (
     "orchestrator", "software-architect", "implementation-engineer", "code-reviewer",
     "qa-test-engineer", "accessibility-reviewer", "performance-reliability-engineer",
@@ -52,6 +54,7 @@ class AppleProductEngineeringTests(unittest.TestCase):
         aliases = framework.get("opencode", {}).get("role_aliases", {})
         self.assert_success(render(repo))
         self.assertTrue((repo / POLICY).is_file())
+        self.assertTrue((repo / REFERENCE).is_file())
         self.assertIn(POLICY, (repo / "AGENTS.md").read_text(encoding="utf-8"))
         self.assertIn("@AGENTS.md", (repo / "CLAUDE.md").read_text(encoding="utf-8"))
         self.assertIn("AGENTS.md", (repo / ".kimi-code/AGENTS.md").read_text(encoding="utf-8"))
@@ -74,18 +77,30 @@ class AppleProductEngineeringTests(unittest.TestCase):
         for skill in (*APPLE_SKILLS, "ui-ux-review"):
             for directory in (".agents", ".claude"):
                 with self.subTest(skill=skill, provider=directory):
-                    self.assertIn(
-                        POLICY,
-                        (repo / f"{directory}/skills/{skill}/SKILL.md").read_text(encoding="utf-8"),
-                    )
+                    package = repo / f"{directory}/skills/{skill}"
+                    entrypoint = package / "SKILL.md"
+                    self.assertTrue(entrypoint.is_file())
+                    # Split procedures must remain reachable after provider
+                    # packaging, without requiring the entire guide inline.
+                    for link in re.findall(r"\]\((references/[^)]+)\)", entrypoint.read_text()):
+                        self.assertTrue((package / link).is_file(), link)
+                    for reference in (repo / f"agent-framework/canonical/skills/{skill}/references").rglob("*"):
+                        if reference.is_file():
+                            relative = reference.relative_to(repo / f"agent-framework/canonical/skills/{skill}")
+                            self.assertEqual((package / relative).read_bytes(), reference.read_bytes())
         self.assert_success(check_drift(repo))
 
-    def test_missing_master_policy_fails_validation(self):
+    def test_missing_router_or_reference_fails_validation(self):
         repo = self.make_repository()
-        (repo / POLICY).unlink()
-        result = validate(repo)
-        self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
-        self.assertIn(POLICY, result.stdout + result.stderr)
+        for relative in (POLICY, REFERENCE):
+            with self.subTest(missing=relative):
+                path = repo / relative
+                content = path.read_bytes()
+                path.unlink()
+                result = validate(repo)
+                self.assertEqual(result.returncode, 1, result.stdout + result.stderr)
+                self.assertIn(relative, result.stdout + result.stderr)
+                path.write_bytes(content)
 
     @unittest.skipUnless(
         IS_TEMPLATE_SOURCE,
@@ -101,6 +116,7 @@ class AppleProductEngineeringTests(unittest.TestCase):
                     if path.is_file()
                 }
                 agents_before = (repo / "AGENTS.md").read_bytes()
+                self.assertIn(Path(REFERENCE), before)
                 self.assert_success(run(["git", "init", "-q", "-b", "main"], repo))
                 self.assert_success(run(["git", "add", "."], repo))
                 self.assert_success(run([

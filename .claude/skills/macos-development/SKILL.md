@@ -7,11 +7,10 @@ description: Use when implementing, testing, or reviewing a native macOS or Mac 
 <!-- GENERATED from agent-framework/canonical/skills/macos-development/SKILL.md — edit the canonical source, then run: python3 scripts/agent-framework/render.py -->
 # macOS and Mac Catalyst development
 
-Read `agent-framework/canonical/policies/apple-product-engineering.md` from the repository
-root before Apple product decisions. Apply its workflow and desktop interaction criteria:
-pointer, hover, keyboard, focus, selection, commands, navigation, resizing, and window
-ownership. UI verification uses the native Apple procedure in `ui-ux-review`; a stretched
-iPad layout is not evidence of a native desktop experience.
+Use the compact Apple product-engineering router and only task-relevant sections. For
+changed desktop UI select pointer, keyboard/focus, navigation, resizing and window ownership;
+for model-only work select state/concurrency. UI verification uses ui-ux-review's native
+reference; a stretched iPad layout does not establish native desktop interaction.
 
 Read the existing Xcode targets, shared schemes, build settings and product requirements.
 Distinguish a native macOS app from a Mac Catalyst build and from an iPad app merely allowed
@@ -56,7 +55,9 @@ current official documentation only when that delivery work is requested.
 
 ## Research when needed
 
-For version-sensitive Apple or Swift behavior, use official documentation or installed SDK
-interfaces. If the active role lacks the `web` tool and local evidence is insufficient,
-request a deep-researcher task via the orchestrator. Mark unresolved behavior UNKNOWN and
-continue independent work; do not guess support or add a dependency to avoid verification.
+Use applicable supplied/local primary sources or actually available web/docs tools permitted
+by the active role and task. Callable tools do not expand authority, and role permissions
+do not provision access. If the active role lacks the `web` tool or permission and local
+evidence is insufficient, request a deep-researcher task via the orchestrator when available,
+or mark the claim UNKNOWN and continue independent work. Do not guess current support,
+simulate research or add a dependency to avoid verification.

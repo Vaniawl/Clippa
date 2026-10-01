@@ -18,10 +18,10 @@ SPEC.loader.exec_module(COMPARISON)
 
 
 class ComparisonGateTests(unittest.TestCase):
-    def evaluate(self, behavior, orchestration):
+    def evaluate(self, behavior, orchestration, routing='PASS'):
         with tempfile.TemporaryDirectory() as temporary:
             result = {'case': 'feature', 'mode': 'team', 'exit_code': 0, 'ownership': 'PASS',
-                      'behavior': behavior, 'orchestration': orchestration}
+                      'behavior': behavior, 'orchestration': orchestration, 'routing': routing}
             with mock.patch.object(sys, 'argv', ['compare', '--live', '--case', 'feature', '--artifacts-dir', temporary]), \
                  mock.patch.object(COMPARISON.shutil, 'which', return_value='/bin/codex-fixture'), \
                  mock.patch.object(COMPARISON.subprocess, 'run', return_value=subprocess.CompletedProcess([], 0, 'fixture-version')), \
@@ -45,6 +45,51 @@ class ComparisonGateTests(unittest.TestCase):
 
     def test_complete_measured_evidence_passes(self):
         self.assertEqual(self.evaluate('PASS', 'PASS'), (0, 'PASS'))
+
+    def test_completed_wrong_route_cannot_pass(self):
+        self.assertEqual(self.evaluate('PASS', 'PASS', 'NOT VERIFIED'), (2, 'NEEDS REVIEW'))
+
+
+class AutomaticRoutingTests(unittest.TestCase):
+    def test_correct_routes_and_unnecessary_specialists(self):
+        for case in ('docs', 'market', 'feature'):
+            expected = COMPARISON.CASES[case]['roles']
+            self.assertTrue(COMPARISON.routing_passes({'roles_observed': expected}, expected))
+            self.assertFalse(COMPARISON.routing_passes({'roles_observed': ['ui-ux-designer']}, expected))
+            self.assertFalse(COMPARISON.routing_passes({'roles_observed': expected + ['software-architect']}, expected))
+
+    def test_policy_mentions_are_not_apple_domain_reads(self):
+        prose = {'method': 'item/completed', 'params': {'item': {'type': 'agentMessage',
+                 'text': 'No need for apple-product-engineering-reference.md here.'}}}
+        self.assertEqual(COMPARISON.apple_domain_commands([prose]), [])
+        command = {'method': 'item/completed', 'params': {'item': {'type': 'commandExecution',
+                   'command': 'cat agent-framework/canonical/policies/apple-product-engineering-reference.md'}}}
+        self.assertTrue(COMPARISON.apple_domain_commands([command]))
+
+    def test_delegation_instructions_are_not_file_reads(self):
+        message = 'Correct README typo. Do not load apple-product-engineering-reference.md'
+        delegation = {'method': 'rawResponseItem/completed', 'params': {'item': {
+            'type': 'function_call', 'name': 'spawn_agent', 'arguments': json.dumps({'message': message})}}}
+        self.assertEqual(COMPARISON.apple_domain_commands([delegation]), [])
+        self.assertEqual(COMPARISON.apple_domain_observations([delegation])['unverified_mentions'], [])
+        wrapper = {'method': 'rawResponseItem/completed', 'params': {'item': {
+            'type': 'function_call', 'name': 'functions.exec',
+            'arguments': 'await tools.spawn_agent({message: ' + json.dumps(message) + '})'}}}
+        self.assertEqual(COMPARISON.apple_domain_commands([wrapper]), [])
+        self.assertEqual(COMPARISON.apple_domain_observations([wrapper])['unverified_mentions'],
+                         ['apple-product-engineering-reference.md'])
+
+    def test_market_advice_mutation_is_reported_as_ownership_failure(self):
+        with tempfile.TemporaryDirectory() as artifacts:
+            def write_during_advice(cli, root, prompt, timeout):
+                # A provider that ignores advise mode cannot obtain an ownership
+                # pass even if it claims the advice was read-only in its answer.
+                (root / 'unapproved.txt').write_text('unexpected tracked product work')
+                return subprocess.CompletedProcess([], 0, '', '')
+            with mock.patch.object(COMPARISON.smoke, 'run_appserver', side_effect=write_during_advice):
+                result = COMPARISON.trial(ROOT, 'market', 'team', '/unused', 20, Path(artifacts))
+            self.assertEqual(result['ownership'], 'FAIL')
+            self.assertIn('unapproved.txt', result['changed_files'])
 
 
 class UXRoleSequenceTests(unittest.TestCase):

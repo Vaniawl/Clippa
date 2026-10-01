@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import importlib.util
+import io
 import json
 from pathlib import Path
 import shutil
@@ -117,6 +118,108 @@ class TeamRuntimeTests(unittest.TestCase):
             role.write_text('broken = [')
             report = checker.preflight(self.repo)
             self.assertEqual(report['checks']['agents']['status'], 'FAIL')
+
+    def test_session_inventory_separates_configuration_and_availability_without_secrets(self):
+        checker = module('team_inventory', 'check-team.py')
+        payload = {'config/read': {'config': {'web_search': 'live', 'mcp_servers': {
+            'docs': {'url': 'https://invalid/?token=PRIVATE', 'http_headers': {'Authorization': 'SECRET'}}}}},
+            'mcpServerStatus/list': {'data': [
+                {'name': 'docs', 'runtimeStatus': 'connected', 'authStatus': 'oAuth', 'tools': {'fetch_docs': {'secret': 'PRIVATE'}}},
+                {'name': 'offline', 'runtimeStatus': 'failed', 'authStatus': 'unknown', 'tools': {'cached_tool': {}}}], 'nextCursor': None}}
+        transport = mock.Mock()
+        transport.run_appserver.return_value = checker.subprocess.CompletedProcess([], 0, json.dumps(payload), '')
+        with mock.patch.object(checker, 'smoke_tools', return_value=transport):
+            report = checker.session_inventory('/unused', self.repo)
+        self.assertEqual(report['mcp_servers'][0]['available_tools'], ['fetch_docs'])
+        self.assertEqual(report['mcp_servers'][1]['available_tools'], [])
+        self.assertEqual(report['web_search']['available'], 'NOT VERIFIED')
+        self.assertEqual(report['web_search']['live_retrieval'], 'NOT RUN')
+        self.assertNotIn('SECRET', json.dumps(report))
+        self.assertNotIn('PRIVATE', json.dumps(report))
+        self.assertNotIn('http_headers', json.dumps(report))
+
+    def test_final_prose_empty_tools_and_error_results_do_not_prove_retrieval(self):
+        checker = module('team_retrieval', 'check-team.py')
+        source = ('https://learn.chatgpt.com/docs/agent-configuration/subagents\n# Subagents\n'
+                  'Every standalone custom agent file must define name, description, and developer_instructions. '
+                  'These fields identify the custom agent, explain when to use it, and supply its behavioral instructions.')
+        def event(item):
+            return {'method': 'item/completed', 'params': {'item': item}}
+        self.assertEqual(checker.retrieval_evidence([event({'type': 'agentMessage', 'text': source})])['status'], 'NOT VERIFIED')
+        item = {'type': 'mcpToolCall', 'status': 'completed', 'server': 'docs', 'tool': 'fetch_docs',
+                'result': {'content': [{'type': 'text', 'text': source}]}}
+        self.assertEqual(checker.retrieval_evidence([event(item)])['status'], 'VERIFIED')
+        item['tool'] = 'search_docs'
+        self.assertEqual(checker.retrieval_evidence([event(item)])['status'], 'NOT VERIFIED')
+        item['tool'] = 'fetch_docs'
+        item['result']['isError'] = True
+        self.assertEqual(checker.retrieval_evidence([event(item)])['status'], 'NOT VERIFIED')
+        item['result'] = {'content': []}
+        self.assertEqual(checker.retrieval_evidence([event(item)])['status'], 'NOT VERIFIED')
+
+    def test_search_metadata_cannot_certify_page_retrieval(self):
+        checker = module('team_retrieval_metadata', 'check-team.py')
+        metadata = {'results': [{'url': 'https://learn.chatgpt.com/docs/agent-configuration/subagents',
+                    'title': 'Standalone subagents configuration',
+                    'snippet': 'Standalone custom agents have name, description, developer_instructions. Search index excerpt only; the source page has not been retrieved.',
+                    'score': 0.94}]}
+        item = {'type': 'mcpToolCall', 'status': 'completed', 'server': 'docs',
+                'tool': 'retrieve_search_results', 'result': {'content': [{'type': 'text', 'text': json.dumps(metadata)}]}}
+        def evidence():
+            return checker.retrieval_evidence([{'method': 'item/completed', 'params': {'item': item}}])['status']
+        self.assertEqual(evidence(), 'NOT VERIFIED')
+        # A known page tool returning search metadata is also insufficient.
+        item['tool'] = 'fetch_openai_doc'
+        self.assertEqual(evidence(), 'NOT VERIFIED')
+        document = {'url': metadata['results'][0]['url'], 'markdown': '# Subagents\n\nEvery standalone custom agent defines name, description, and developer_instructions.\n'}
+        item['result']['content'][0]['text'] = json.dumps(document)
+        self.assertEqual(evidence(), 'VERIFIED')
+        document['markdown'] = 'Standalone custom agents have name, description, and developer_instructions.'
+        item['result']['content'][0]['text'] = json.dumps(document)
+        self.assertEqual(evidence(), 'NOT VERIFIED')
+
+    def test_retrieved_page_requires_explicit_exact_official_origin(self):
+        checker = module('team_retrieval_origin', 'check-team.py')
+        official = 'https://learn.chatgpt.com/docs/agent-configuration/subagents'
+        body = '# Subagents\nEvery standalone custom agent defines name, description and developer_instructions.'
+        item = {'type': 'mcpToolCall', 'status': 'completed', 'server': 'docs', 'tool': 'fetch_openai_doc',
+                'result': {'content': [{'type': 'text', 'text': ''}]}}
+        def evidence(text):
+            item['result']['content'][0]['text'] = text
+            return checker.retrieval_evidence([{'method': 'item/completed', 'params': {'item': item}}])['status']
+        self.assertEqual(evidence(json.dumps({'url': official, 'markdown': body})), 'VERIFIED')
+        for url in ('https://attacker.invalid/learn.chatgpt.com/docs/agent-configuration/subagents',
+                    'https://attacker.invalid/?source=' + official,
+                    'https://learn.chatgpt.com/?source=' + official,
+                    'http://learn.chatgpt.com/docs/agent-configuration/subagents'):
+            with self.subTest(url=url):
+                self.assertEqual(evidence(json.dumps({'url': url, 'markdown': body})), 'NOT VERIFIED')
+        self.assertEqual(evidence(body + '\nRelated documentation: ' + official), 'NOT VERIFIED')
+        self.assertEqual(evidence('Source: ' + official + '\n' + body), 'VERIFIED')
+
+    def test_session_query_does_not_start_model_turn_or_expose_failed_trace(self):
+        smoke = module('team_query_transport', 'smoke-team.py')
+        process = mock.Mock()
+        process.stdin = io.StringIO()
+        process.stdout = io.StringIO('\n'.join(json.dumps(message) for message in [
+            {'id': 1, 'result': {}}, {'id': 2, 'result': {'thread': {'id': 'ephemeral'}}},
+            {'id': 3, 'result': {'data': []}},
+        ]) + '\n')
+        process.stderr = io.StringIO('')
+        with mock.patch.object(smoke.subprocess, 'Popen', return_value=process), mock.patch.object(smoke, 'stop_process_group'):
+            smoke.run_appserver('/unused', self.repo, None, 5, queries=[{'method': 'mcpServerStatus/list', 'thread_scoped': True}])
+        requests = [json.loads(line) for line in process.stdin.getvalue().splitlines()]
+        self.assertNotIn('turn/start', [request.get('method') for request in requests])
+        start = next(request for request in requests if request.get('method') == 'thread/start')
+        self.assertTrue(start['params']['ephemeral'])
+        self.assertEqual(start['params']['sandbox'], 'read-only')
+        process.stdout = io.StringIO('{"private":"SECRET"}\n')
+        process.stderr = io.StringIO('private SECRET')
+        with mock.patch.object(smoke.subprocess, 'Popen', return_value=process), mock.patch.object(smoke, 'stop_process_group'):
+            with self.assertRaises(RuntimeError) as raised:
+                smoke.run_appserver('/unused', self.repo, None, 5, queries=[])
+        self.assertEqual(raised.exception.output, '')
+        self.assertEqual(raised.exception.stderr, '')
 
     def test_smoke_requires_real_events_not_narrative(self):
         smoke = module('team_smoke', 'smoke-team.py')

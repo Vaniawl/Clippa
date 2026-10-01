@@ -31,7 +31,7 @@ Consult these before relying on this file, and prefer current official docs over
 - OpenAPI Specification (latest): https://spec.openapis.org/oas/latest.html (verified, accessed 2026-07-18 — latest published version at access time: 3.2.0, published 2025-09-19).
 - HTTP semantics: RFC 9110 (https://www.rfc-editor.org/rfc/rfc9110 — canonical RFC editor URL; existence well-established, not re-fetched on access date).
 
-If the role executing this skill lacks the `web` tool (only the `deep-researcher` and `market-opportunity-researcher` roles hold it), it must not cite official-source claims from memory. Instead, it requests the lookup as a deep-researcher task via the orchestrator, per `agent-framework/canonical/policies/research-policy.md`, and marks the item `UNKNOWN` until the research report returns.
+Use actually available web/docs tools only when permitted by the active role and task, or applicable supplied/local primary sources. A role's permitted_tools list does not provision access or enforce a sandbox; callable tools do not expand authority. If the active role lacks the `web` tool or permission and local evidence is insufficient, request a deep-researcher task via the orchestrator when available, or mark the claim UNKNOWN; do not cite current official-source claims from memory or simulate a lookup.
 
 ## Version awareness
 

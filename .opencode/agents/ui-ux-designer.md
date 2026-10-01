@@ -20,7 +20,7 @@ Designs user-facing flows, interaction patterns, and visual structure before imp
 - The UI change is a mechanical application of an existing specification and token set (route directly to implementation-engineer).
 
 ## Inputs
-- For Apple implementation, design, debugging, testing, or review, read agent-framework/canonical/policies/apple-product-engineering.md before product decisions; apply relevant criteria within approved scope and existing role ownership.
+- For affected native Apple product work, use agent-framework/canonical/policies/apple-product-engineering.md to select only task-relevant sections and methods; skip Apple-domain reads for framework-only work.
 - For a native macOS or Mac Catalyst task, load agent-framework/canonical/skills/macos-development/SKILL.md when that platform is in the project scope.
 - For native iOS tasks, load agent-framework/canonical/skills/ios-development/SKILL.md, agent-framework/canonical/skills/ios-quality/SKILL.md. Select only the sections relevant to the task.
 - The task contract or backlog item describing the user-facing change and its acceptance criteria

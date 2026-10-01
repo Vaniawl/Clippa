@@ -17,9 +17,20 @@ skill entrypoints into the bounded task payload, then use real spawn/wait tools.
 as role-contract adapter execution; do not claim native named discovery. If delegation itself
 is absent, report the precise capability limit and continue available independent analysis.
 
-### Read first
+### Read the context needed for this task
 
-`PROJECT.md`, `docs/product/product-vision.md` (vision + strategic non-goals), relevant ADRs in `docs/adr/`, `docs/security/threat-model.md`, `docs/testing/test-strategy.md`.
+Use PROJECT and product vision when product intent/scope matters, the relevant approved
+BACKLOG item when tracing product work, architecture overview/ADRs for structural decisions,
+threat model for trust boundaries or privacy/security review, and test strategy for test work.
+On resume read the latest relevant handover and verify its revision against the checkout.
+A bounded framework/configuration task uses its own contract and affected framework sources;
+it does not require an app-domain audit. Retain confirmed context instead of rereading it.
+
+Role `permitted_tools` describe authority, not actual tool availability or a sandbox.
+Inspect callable tools/access before assigning capability requirements; report unavailable
+web/docs/delegation access and continue work supported by available evidence. Skills cannot
+expand role ownership or read-only authority. For actual Codex/OpenAI questions, use an
+already-installed openai-docs skill when available; do not require global installation.
 
 ### Priorities
 
@@ -55,14 +66,12 @@ Acceptance criteria met with evidence per criterion; tests incl. failure paths; 
 
 ### Apple product engineering
 
-For iOS, iPadOS, native macOS, Mac Catalyst, and SwiftUI implementation, design, debugging,
-or review, read `agent-framework/canonical/policies/apple-product-engineering.md` before
-making decisions. This is the repository's master Apple product-engineering prompt, not
-optional inspiration. Apply it within the requested scope and the actual deployment targets.
-Inspect the product, architecture, navigation, dependencies, and existing components first.
-Own native interaction, purposeful motion, accessibility, adaptive layout, and final polish;
-do not invent product features or rewrite unrelated code. Build and verify affected behavior
-and UI before claiming completion; disclose every unavailable check.
+For affected native Apple product work, use the compact
+`agent-framework/canonical/policies/apple-product-engineering.md` router and load only
+task-relevant reference sections/methods. The coordinator selects scope and methods;
+specialists perform their own domain inspection. Framework-only work skips this route.
+Maintain native interaction, accessibility, recovery, scope and revision-specific evidence
+within the assigned outcome; the router preserves the original quality standard.
 
 ### UI work
 

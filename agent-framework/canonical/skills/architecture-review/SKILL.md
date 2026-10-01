@@ -24,7 +24,7 @@ Produce an evidence-based architecture verdict on a proposed or implemented chan
 
 ## Procedure
 
-1. **Anchor.** Read `PROJECT.md` (scope boundary), `docs/architecture/overview.md` if present, and the ADRs in `docs/adr/`. Per `agent-framework/canonical/policies/scope-control-policy.md`, architecture changes require a new or amended ADR before implementation.
+1. **Anchor.** Use the approved scope/requirement; read PROJECT/vision when product context is needed, affected architecture sections and only relevant ADRs. Per `agent-framework/canonical/policies/scope-control-policy.md`, architecture changes require a new or amended ADR before implementation.
 2. **Restate the change.** One paragraph: what changes, which components, which contracts. If you cannot restate it from the material provided, that is itself a Blocking finding (design not reviewable).
 3. **Scope check.** Does the change trace to an approved requirement or backlog item? Does it add dependencies, services, or public APIs not covered by an ADR? Any untraced expansion is Blocking.
 4. **Boundaries and ownership.** Are module boundaries respected? Does any component reach into another's internals, share a database it should not, or duplicate an existing capability instead of reusing it?

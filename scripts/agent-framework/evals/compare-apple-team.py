@@ -24,6 +24,20 @@ smoke = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(smoke)
 
 CASES = {
+    'docs': {
+        'file': 'README.md',
+        'source': 'This applicaton keeps notes locally.\n',
+        'request': 'Correct only the spelling typo in README.md. Preserve its meaning. This is a documentation edit, with no app behavior, native UI, architecture or product change. Only README.md may change.',
+        'tests': "import unittest\nfrom pathlib import Path\nclass Checks(unittest.TestCase):\n    def test_document(self):\n        self.assertEqual(Path('README.md').read_text(), 'This application keeps notes locally.\\n')\n",
+        'roles': ['technical-writer'],
+        'forbidden_domain_reads': True,
+    },
+    'market': {
+        'file': None,
+        'request': 'Give market advice about an offline focus timer for university students. Compare the supplied alternatives: phone Clock is already installed; paper timers require no account. No customer interviews, conversion data or willingness-to-pay evidence exist. Identify what is supported versus unknown and recommend one next market-validation step. Advice only: no files, product implementation, design work, empirical claims or external actions.',
+        'roles': ['market-opportunity-researcher'],
+        'forbidden_domain_reads': True,
+    },
     'feature': {
         'file': 'filter_items.py',
         'source': 'def filter_items(items, query):\n    raise NotImplementedError\n',
@@ -106,6 +120,38 @@ def team_proof_passes(proof, role_count):
             and not proof.get("explicit_reasoning_overrides"))
 
 
+def routing_passes(proof, expected_roles):
+    """Expected roles live only in the evaluator, never in the user prompt."""
+    return set(proof.get('roles_observed', [])) == set(expected_roles)
+
+
+def apple_domain_observations(events):
+    """Separate executed commands from ambiguous code-mode argument mentions."""
+    reads = set()
+    ambiguous = set()
+    paths = ('apple-product-engineering-reference.md', 'ios-development/', 'ios-quality/',
+             'ios-testing/', 'macos-development/', 'references/native-apple.md')
+    for event in events:
+        item = event.get('params', {}).get('item', event.get('item', {}))
+        command = item.get('command', '') if (item.get('type') == 'commandExecution'
+                   and (event.get('method') == 'item/completed' or event.get('type') == 'item.completed')) else ''
+        if event.get('method') == 'rawResponseItem/completed' and item.get('type') == 'function_call':
+            # Raw function arguments are not execution results. A wrapper may
+            # contain delegation prose saying not to read a file. Preserve
+            # code-mode ambiguity separately; never count it as a file read.
+            if item.get('name') in ('functions.exec', 'exec'):
+                arguments = item.get('arguments', '')
+                if isinstance(arguments, str):
+                    ambiguous.update(path for path in paths if path in arguments)
+        if isinstance(command, str):
+            reads.update(path for path in paths if path in command)
+    return {'commands': sorted(reads), 'unverified_mentions': sorted(ambiguous)}
+
+
+def apple_domain_commands(events):
+    return apple_domain_observations(events)['commands']
+
+
 def trial(source, case_name, mode, cli, timeout, artifacts):
     case = CASES[case_name]
     started = time.monotonic()
@@ -131,8 +177,10 @@ def trial(source, case_name, mode, cli, timeout, artifacts):
             (root / 'test_behavior.py').write_text(case['tests'])
         role_markers = {}
         if mode == 'team':
-            for role in case['roles']:
-                path = root / f'agent-framework/canonical/roles/{role}.yaml'
+            # Mark every discoverable role identically so the coordinator cannot
+            # infer the evaluator's expected route from which roles have markers.
+            for path in sorted((root / 'agent-framework/canonical/roles').glob('*.yaml')):
+                role = path.stem
                 definition = yaml.safe_load(path.read_text())
                 marker = 'TRIAL_ROLE_' + secrets.token_hex(8)
                 definition['notes'] = str(definition.get('notes', '')) + f'\nFor this isolated trial return {marker} in the final specialist result.'
@@ -147,8 +195,9 @@ def trial(source, case_name, mode, cli, timeout, artifacts):
         if mode == 'solo':
             prompt += 'For this comparison act as the single specialist directly. Do not spawn subagents. Complete and verify only this outcome. '
         else:
-            prompt += 'Pass the absolute fixture path ' + str(root) + ' and relevant approved requirements into every worker contract. This fixture has no native Apple target; code checks are Python only. Act as the coordinator and use real subagents with inherited models. Do not implement code yourself. Use these roles in sequence: ' + ', '.join(case['roles']) + '. '
-            prompt += 'Before issuing each contract read the canonical role and relevant skills. Use native role selection if exposed; otherwise generic spawn task_name=<role_with_hyphens_replaced_by_underscores> with role instructions and required relevant skills explicitly in the message. Contracts specify mode (advise for UX, execute otherwise), approved outcome, context, ownership, prohibited files, output, criteria, validation commands, current revision, dependencies, retry_limit=2, may_delegate=false and stop after this outcome. Reviewers/QA must independently inspect and verify the final revision. QA may run tests but owns no source files here. Use fork_turns=none with minimal explicit task context and wait for completed results. '
+            prompt += 'Pass the absolute fixture path ' + str(root) + ' and relevant approved requirements into every worker contract. This fixture has no native Apple target; immutable checks are Python only. Act as the coordinator and use real subagents with inherited models. Choose the smallest appropriate route from the canonical role catalog and current request; implementation needs independent review after the writer finishes. Do not implement the requested work yourself. '
+            task_mode = 'execute' if case['file'] else 'advise'
+            prompt += f'Before issuing each contract read the canonical role and relevant skills. Use native role selection if exposed; otherwise generic spawn task_name=<role_with_hyphens_replaced_by_underscores> with role instructions and required relevant skills explicitly in the message. Contracts specify mode={task_mode}, approved outcome, context, ownership, prohibited files, output, criteria, validation commands, current revision, dependencies, retry_limit=2, may_delegate=false and stop after this outcome. Reviewers/QA must independently inspect and verify the final revision. QA may run tests but owns no source files here. Use fork_turns=none with minimal explicit task context and wait for completed results. '
         if case['file']:
             prompt += 'Run python3 -B -m unittest test_behavior.py before claiming completion. Review and QA receive only the task, diff and actual test output, not author conclusions as facts. '
         try:
@@ -182,13 +231,27 @@ def trial(source, case_name, mode, cli, timeout, artifacts):
                 behavior = 'BLOCKED: evaluator exceeded 20s'
         else:
             behavior = 'NEEDS HUMAN RUBRIC REVIEW'
-        markers = list(role_markers.values())
+        expected_markers = {role: role_markers[role] for role in case['roles']} if mode == 'team' else {}
+        markers = list(expected_markers.values())
         review_markers = tuple(markers[:2]) if len(markers) >= 2 else None
-        proof = smoke.verify_events(events, markers, role_markers=role_markers, review_markers=review_markers)
+        proof = smoke.verify_events(events, markers, role_markers=expected_markers, review_markers=review_markers)
         orchestration = team_proof_passes(proof, len(case['roles'])) if mode == 'team' else not spawns
+        routing = routing_passes(proof, case['roles']) if mode == 'team' else not spawns
+        domain_observations = apple_domain_observations(events)
+        domain_reads = domain_observations['commands']
+        domain_check = 'NOT APPLICABLE'
+        if case.get('forbidden_domain_reads') and domain_reads:
+            routing = False
+            domain_check = 'FAIL'
+        elif case.get('forbidden_domain_reads'):
+            domain_check = 'NOT VERIFIED' if domain_observations['unverified_mentions'] else 'PASS'
         return {'case': case_name, 'mode': mode, 'fixture_digest': fixture_digest, 'source_digest_before_copy': source_digest_before_copy, 'exit_code': code,
                 'elapsed_seconds': round(time.monotonic() - started, 2), 'ownership': 'PASS' if not set(changes) - set(permitted) else 'FAIL',
-                'behavior': behavior, 'orchestration': 'PASS' if orchestration and code == 0 else 'NOT VERIFIED', 'expected_roles': case['roles'] if mode == 'team' else [], 'completed_worker_ids': proof.get('completed_worker_ids', []), 'spawn_count': len({e.get('id') for e in spawns}),
+                'behavior': behavior, 'orchestration': 'PASS' if orchestration and code == 0 else 'NOT VERIFIED',
+                'routing': 'PASS' if routing and code == 0 else 'NOT VERIFIED',
+                'expected_roles': case['roles'] if mode == 'team' else [], 'observed_roles': proof.get('roles_observed', []),
+                'apple_domain_commands': domain_reads, 'apple_domain_unverified_mentions': domain_observations['unverified_mentions'],
+                'apple_domain_read_check': domain_check, 'completed_worker_ids': proof.get('completed_worker_ids', []), 'spawn_count': len({e.get('id') for e in spawns}),
                 'explicit_model_overrides': proof.get('explicit_model_overrides', []), 'explicit_reasoning_overrides': proof.get('explicit_reasoning_overrides', []),
                 'changed_files': changes, 'user_clarifications': 0, 'repeated_explanations': 0,
                 'usage': [e.get('params', {}).get('tokenUsage') for e in events if e.get('method') == 'thread/tokenUsage/updated'][-1:],
@@ -220,9 +283,9 @@ def main():
             results.append(result)
             print(json.dumps(result), flush=True)
     failed = any(r['exit_code'] != 0 or r['ownership'] != 'PASS' or r['orchestration'] == 'FAIL' or r['behavior'] == 'FAIL' for r in results)
-    unresolved = any(r['orchestration'] != 'PASS' or r['behavior'] not in ('PASS',) for r in results)
+    unresolved = any(r['orchestration'] != 'PASS' or r.get('routing') != 'PASS' or r.get('apple_domain_read_check') == 'NOT VERIFIED' or r['behavior'] not in ('PASS',) for r in results)
     report = {'status': 'FAIL' if failed else ('NEEDS REVIEW' if unresolved else 'PASS'), 'cli_version': version, 'transport': 'app-server raw events', 'source_revision': subprocess.run(['git', '-C', str(args.root), 'rev-parse', 'HEAD'], capture_output=True, text=True).stdout.strip(), 'source_content_digest_at_start': source_digest_at_start, 'source_content_digest_at_end': smoke.source_digest(args.root), 'results': results,
-              'limitations': ['Small Python fixtures are not native Apple feature/cancellation/UI validation.', 'Minimal code route uses engineer+reviewer; bounded UX advice uses one designer. Earlier additional-review pilots exceeded 300s; preserve those failures.', 'One run per case; no statistical claim about team quality.', 'User counts are zero because scenarios are fully specified and noninteractive.', 'UX acceptance needs rubric review of actual answer artifacts.', 'CLI turn usage may not expose total child usage or effective model.']}
+              'limitations': ['Small Python fixtures are not native Apple feature/cancellation/UI validation.', 'Expected role IDs are external evaluator criteria; user prompts do not prescribe role selection. All catalog roles carry anonymous result markers.', 'One run per case; no statistical claim about team quality.', 'User counts are zero because scenarios are fully specified and noninteractive.', 'Advice acceptance needs rubric review of actual answer artifacts.', 'CLI turn usage may not expose total child usage or effective model.']}
     (args.artifacts_dir / 'report.json').write_text(json.dumps(report, indent=2))
     return 1 if failed else (2 if unresolved else 0)
 

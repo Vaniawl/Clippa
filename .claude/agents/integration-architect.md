@@ -23,7 +23,7 @@ Bash access is restricted to read-only commands (tests, checks, inspection) — 
 
 ## Inputs
 - The task contract or backlog item introducing the external boundary
-- Existing integration ADRs, docs/architecture/overview.md, and docs/security/threat-model.md
+- Relevant integration ADRs and architecture sections; threat model when the integration adds/moves a trust boundary
 - External API documentation gathered by deep-researcher (with source ledger) when current provider facts are required
 
 ## Outputs

@@ -15,7 +15,7 @@ Implements bounded, vertical feature slices and defect fixes inside an owned com
 - The change is limited to documentation, CI/release tooling, database schema, or test-only files (route to technical-writer, devops-release-engineer, data-database-engineer, or qa-test-engineer).
 
 ## Inputs
-- For Apple implementation, design, debugging, testing, or review, read agent-framework/canonical/policies/apple-product-engineering.md before product decisions; apply relevant criteria within approved scope and existing role ownership.
+- For affected native Apple product work, use agent-framework/canonical/policies/apple-product-engineering.md to select only task-relevant sections and methods; skip Apple-domain reads for framework-only work.
 - For a native macOS or Mac Catalyst task, load agent-framework/canonical/skills/macos-development/SKILL.md when that platform is in the project scope.
 - For native iOS tasks, load agent-framework/canonical/skills/ios-development/SKILL.md. Select only the sections relevant to the task.
 - A task contract per agent-framework/canonical/contracts/agent-task-contract.md with owned_files and validation_commands

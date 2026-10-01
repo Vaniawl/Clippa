@@ -34,7 +34,7 @@ Consult official Worksoft sources FIRST and prefer them over this file:
 
 Record URL, version, and access date for every claim.
 
-If the role executing this skill lacks the `web` tool (only the `deep-researcher` and `market-opportunity-researcher` roles hold it), it must not cite official-source claims from memory. Instead, it requests the lookup as a deep-researcher task via the orchestrator, per `agent-framework/canonical/policies/research-policy.md`, and marks the item `UNKNOWN` until the research report returns.
+Use actually available web/docs tools only when permitted by the active role and task, or applicable supplied/local primary sources. A role's permitted_tools list does not provision access or enforce a sandbox; callable tools do not expand authority. If the active role lacks the `web` tool or permission and local evidence is insufficient, request a deep-researcher task via the orchestrator when available, or mark the claim UNKNOWN; do not cite current official-source claims from memory or simulate a lookup.
 
 ## Version awareness
 

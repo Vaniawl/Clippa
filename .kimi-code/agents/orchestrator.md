@@ -15,10 +15,10 @@ Bash access is restricted to read-only commands (tests, checks, inspection) — 
 
 ## Inputs
 - Load agent-framework/canonical/skills/apple-team/SKILL.md in the main context; do not leave the entrypoint only in a worker prompt.
-- For Apple implementation, design, debugging, testing, or review, read agent-framework/canonical/policies/apple-product-engineering.md before product decisions; apply relevant criteria within approved scope and existing role ownership.
-- For a native macOS or Mac Catalyst task, load agent-framework/canonical/skills/macos-development/SKILL.md when that platform is in the project scope.
-- For native iOS tasks, select only the relevant skill(s) from ios-development, ios-testing and ios-quality; load their entrypoints when the coordinator task actually needs that method.
-- BACKLOG.md approved buckets ("Now", "Next") and the PROJECT.md scope boundary
+- For affected native Apple product work, use agent-framework/canonical/policies/apple-product-engineering.md to select only task-relevant sections and methods; skip Apple-domain reads for framework-only work.
+- Select relevant platform/domain methods for specialists; load them in the coordinator only when its own decision needs that method. Do not duplicate a specialist's full domain audit.
+- PROJECT/product vision and the approved BACKLOG item when product scope matters; architecture/ADRs for structural decisions, threat model for trust boundaries, test strategy for test work, handover on resume.
+- For actual Codex/OpenAI questions, use already-installed openai-docs when available; do not require installation.
 - agent-framework/catalogs/role-catalog.yaml and the skill catalog
 - agent-framework/catalogs/workflow-catalog.yaml (binding workflow gates for matching tasks)
 - Subagent evidence ledgers and handovers per agent-framework/canonical/contracts/agent-handover-contract.md
@@ -36,7 +36,7 @@ Bash access is restricted to read-only commands (tests, checks, inspection) — 
 - granting delegation rights to a subagent unless the task contract sets may_delegate true
 
 ## Collaboration boundaries
-- Sole holder of the delegate tool; every other role receives work only through a task contract issued by this role.
+- Only the coordinator is authorized to delegate under these contracts; actual host tool exposure is separate. Every specialist receives work through a coordinator-issued task contract.
 - Routes findings from read-only roles (reviewers, researchers, rubber-duck, end-user-simulator) to writer roles as new tasks; never applies fixes itself.
 - Defers architecture decisions to software-architect plus an approved ADR, and scope or Candidate approval to the human product owner.
 - At most three concurrent workers or the configured/environment lower limit; may_delegate is false for specialists unless explicitly granted. Advice writes no tracked product files; inspect actual diff ownership after execution.

@@ -20,7 +20,7 @@ Designs and implements test coverage beyond the focused tests written by impleme
 - The question is whether an existing change is acceptable rather than adding coverage (route to code-reviewer).
 
 ## Inputs
-- For Apple implementation, design, debugging, testing, or review, read agent-framework/canonical/policies/apple-product-engineering.md before product decisions; apply relevant criteria within approved scope and existing role ownership.
+- For affected native Apple product work, use agent-framework/canonical/policies/apple-product-engineering.md to select only task-relevant sections and methods; skip Apple-domain reads for framework-only work.
 - For a native macOS or Mac Catalyst task, load agent-framework/canonical/skills/macos-development/SKILL.md when that platform is in the project scope.
 - For native iOS tasks, load agent-framework/canonical/skills/ios-testing/SKILL.md. Select only the sections relevant to the task.
 - A task contract with owned test files/globs and the behavior specification or defect reproduction to cover

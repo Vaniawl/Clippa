@@ -9,11 +9,11 @@
     },
     ".agents/skills/apple-experience-design/SKILL.md": {
       "mode": "full",
-      "sha256": "ed778f9fdcf5443cb33c724221cfd78236c181845f84c7de1ebfbeea32369e73"
+      "sha256": "1bd8660a6992b7ddb938932d019fe15da99429e45c18798de6be8f069c6c443e"
     },
     ".agents/skills/apple-team/SKILL.md": {
       "mode": "full",
-      "sha256": "8bab5fa2646b0afac4c07a4a1ba1d8b8da70f0c2f532896260207843716e3e51"
+      "sha256": "169e0844ae50c64e4506e40a08d8d5e6c394f61d9356c2ee2278068123d25ec1"
     },
     ".agents/skills/apple-team/references/routing.md": {
       "mode": "full",
@@ -21,7 +21,7 @@
     },
     ".agents/skills/architecture-review/SKILL.md": {
       "mode": "full",
-      "sha256": "d9606c80ff9df2bc5eba3861fcb44178775652652d30d1f6bd0c2e31d87dcd8a"
+      "sha256": "c6575ae2559a96a566797cf9a358b07585b7a87fc8fae5e39af3e808475d865c"
     },
     ".agents/skills/debug-systematically/SKILL.md": {
       "mode": "full",
@@ -33,19 +33,31 @@
     },
     ".agents/skills/ios-development/SKILL.md": {
       "mode": "full",
-      "sha256": "9671b2df921abb260ee2601db0eafe827df7aef7d4688b54f0f44fac1f6aee01"
+      "sha256": "28f44ad6c923b7e6a8064bf625e6ca0fcd718a316b86b8d3fe0ebde6dd37f8b7"
     },
     ".agents/skills/ios-quality/SKILL.md": {
       "mode": "full",
-      "sha256": "e0b4f1d239b4bc7b70db309b26ade74ff9c7103dd1836351690e2adcca0a81ae"
+      "sha256": "e1af8b895fe0f783637a2d5425e54d148ca9032a3ab1267e98c45fee92885192"
+    },
+    ".agents/skills/ios-quality/references/concerns.md": {
+      "mode": "full",
+      "sha256": "4362260a8ddeb4e8b811df06cb473ba513e033558b812564fa1e1db411f26e98"
     },
     ".agents/skills/ios-testing/SKILL.md": {
       "mode": "full",
-      "sha256": "c24ba5c6e5897ea8e896528e075b18fd688914aa491f144c105adc99d4c530cd"
+      "sha256": "f267a42a3faf45ee3334036a8799d8e8a3d2c06cbb9951ecdc16831c1208df77"
+    },
+    ".agents/skills/ios-testing/references/native-execution.md": {
+      "mode": "full",
+      "sha256": "cf71ad1be8f2f85393f252933cac73532744d15287fb2d2b4d8e210b2d27e6f4"
+    },
+    ".agents/skills/ios-testing/references/test-selection.md": {
+      "mode": "full",
+      "sha256": "4787b0b2a5b951919c87ec343ac97dc721cb5405391deb97543d39701ade9691"
     },
     ".agents/skills/macos-development/SKILL.md": {
       "mode": "full",
-      "sha256": "4d8fc750c905fdcf7667f73d174d9c5a6ef1e69ffd46ccde5e27f6dbdd58db81"
+      "sha256": "cec89aa7285059a7ff156c097bc3c28969c26644723ef84f48f836169f7dd091"
     },
     ".agents/skills/market-validation/SKILL.md": {
       "mode": "full",
@@ -65,7 +77,7 @@
     },
     ".agents/skills/product-measurement/SKILL.md": {
       "mode": "full",
-      "sha256": "d42fc3d2bcf0966785af73c72d80f165de0515074281a7a49ac6c6ecf001aded"
+      "sha256": "85bc4be2a77fdb0b275e4a4aa07e2ec092dc45d27f0c0137977ac8681570cfa2"
     },
     ".agents/skills/product-positioning/SKILL.md": {
       "mode": "full",
@@ -85,7 +97,15 @@
     },
     ".agents/skills/ui-ux-review/SKILL.md": {
       "mode": "full",
-      "sha256": "84be3c7536482aa17d9f0adb41fa5d08293c76636bf5efae7637d741c941d22d"
+      "sha256": "b1224d4f2470b8bb2d56ef94307d41ea65046b46bb7e7bdcd901e099e19d598c"
+    },
+    ".agents/skills/ui-ux-review/references/native-apple.md": {
+      "mode": "full",
+      "sha256": "c9df811311eb14967b8f5ac817f15266330768ff4e797374e6c234e031feb50b"
+    },
+    ".agents/skills/ui-ux-review/references/web-branded.md": {
+      "mode": "full",
+      "sha256": "9224d826b1faa17ec39783c88e13058d804fd314947a7523b5c09a0e0c6d4bcc"
     },
     ".aiassistant/rules/00-core-project.md": {
       "mode": "full",
@@ -93,7 +113,7 @@
     },
     ".aiassistant/rules/apple-product-engineering.md": {
       "mode": "full",
-      "sha256": "4d3050506842324a25fb983ce46027833f3c43bd0904a8fd7b7d643cdc8955bf"
+      "sha256": "da48e7b544e51159beb7abe1071d75041fbed6c3aafe4a1961308c21e8b525d0"
     },
     ".aiassistant/rules/scope-and-delegation.md": {
       "mode": "full",
@@ -113,11 +133,11 @@
     },
     ".claude/agents/accessibility-reviewer.md": {
       "mode": "full",
-      "sha256": "5404276315d1e16df6eed58bec708de55a294102a396777debf19e56d19bacb6"
+      "sha256": "4591e1313d44cc9567558500ef451f3db04e3a449cfe918b1eaad708aa33828b"
     },
     ".claude/agents/code-reviewer.md": {
       "mode": "full",
-      "sha256": "5293e95ca98eb2e475e9513eccb3a74b0899137532782d68f1de93931da903f2"
+      "sha256": "b4947f1c2ef54e033e0036c8bc3d5930946db173d939f50844b838420b4666e5"
     },
     ".claude/agents/data-database-engineer.md": {
       "mode": "full",
@@ -125,11 +145,11 @@
     },
     ".claude/agents/deep-researcher.md": {
       "mode": "full",
-      "sha256": "8002593297c349ef8fd58a79f0eb97b17460899b0a9a65fc902857bc3bfec806"
+      "sha256": "d931fceb1a3e00b21b2f9d9235343bd87a52fd7f70b2f798ffef5be470853097"
     },
     ".claude/agents/devops-release-engineer.md": {
       "mode": "full",
-      "sha256": "eac2cbf28f552c2458dc320bdd557d9dd93bddc4a4343f83c8bf76ef339382ca"
+      "sha256": "3101f4538669b1119867b66c628a4ad0b7d945e743203139e9034bc2b812ed34"
     },
     ".claude/agents/end-user-simulator.md": {
       "mode": "full",
@@ -137,27 +157,27 @@
     },
     ".claude/agents/growth-analyst.md": {
       "mode": "full",
-      "sha256": "ffeeba6a6ac460e26964fa165b34099ebb447abc8e7c5a97971576c2c407acab"
+      "sha256": "74a70ff952de4bd751e4f11498962cfb7230b019637709107b5f719426f43925"
     },
     ".claude/agents/implementation-engineer.md": {
       "mode": "full",
-      "sha256": "75113853f662c5351a158285eb7f8527ef6d9887d8d05eb697d787b55b3054b9"
+      "sha256": "22f27dbaff4fbbbc0c1a2ce5731e7a1a127e3cafbe2e85e2afec0fd794d478d2"
     },
     ".claude/agents/integration-architect.md": {
       "mode": "full",
-      "sha256": "8f8f904f38b8f1d25f7e17f89bcacc45377dffb91da51e6a7e92d54e1fc85aed"
+      "sha256": "10cfd4d26892a73b18234b77d5828dac1ae51f46aa28e0f2d86583f0be590b05"
     },
     ".claude/agents/market-opportunity-researcher.md": {
       "mode": "full",
-      "sha256": "62a894e32987c505865feed5e12115fa6f27edd655098aac4c080a0bdf71c5c0"
+      "sha256": "528b190da061943ce64109f5830a76469901925d658b699b429e0100470a2cfd"
     },
     ".claude/agents/orchestrator.md": {
       "mode": "full",
-      "sha256": "b85b7c3438acf8e2606b682c56bfe0b7b927a24119c5c70d00564157bbdbcbc3"
+      "sha256": "dc4589b3ae9cc7e06e77283da53dce59dd78c1b7c0acded46fa4f5154d3fd758"
     },
     ".claude/agents/performance-reliability-engineer.md": {
       "mode": "full",
-      "sha256": "aac59afd22d61efcea523b9a16294e27a34d695412d0124a5fdd6ac88b913440"
+      "sha256": "9a233feaaf200c9fc1512c3fccbe044cc00ecf945ca268f15d374ea88472232b"
     },
     ".claude/agents/product-manager.md": {
       "mode": "full",
@@ -165,11 +185,11 @@
     },
     ".claude/agents/product-marketing-strategist.md": {
       "mode": "full",
-      "sha256": "d5fe4bf605165598b8e87fd22d53f3ac9c4b4ab00f7f1ea38c0c494e43758cf3"
+      "sha256": "4fa1c675f376feb283b884adb4e1d65262e9e23957ebcee1aef3203816851a63"
     },
     ".claude/agents/qa-test-engineer.md": {
       "mode": "full",
-      "sha256": "2d53cd202af2d7504e3dd3560f12a2b30a0694b2f0fa3ad901eefd1ecf4d4ff7"
+      "sha256": "bb2e87a18eb804422243fb0cfb80d890f32fe454a01532e03d3d18a547528dc3"
     },
     ".claude/agents/rubber-duck.md": {
       "mode": "full",
@@ -177,7 +197,7 @@
     },
     ".claude/agents/security-privacy-reviewer.md": {
       "mode": "full",
-      "sha256": "5a7ad79ec4c2d4d88fea77a83453d7fe01763f3e22a121b5959ce1aff3296c5f"
+      "sha256": "b9237191dc0f9bd3e9ac1f3ef51b1042c248cc6a7638dceadf0bbe08ea24e0c6"
     },
     ".claude/agents/skeptical-reviewer.md": {
       "mode": "full",
@@ -185,7 +205,7 @@
     },
     ".claude/agents/software-architect.md": {
       "mode": "full",
-      "sha256": "dabb3f328da2c8c4f0470c57c0d99a5fbaf672b950c198fb8587e005d5135966"
+      "sha256": "0afb365d2164e677003bc2b1abee5586d2fe5704e985a4c006bad4ccfe4922ee"
     },
     ".claude/agents/technical-writer.md": {
       "mode": "full",
@@ -193,7 +213,7 @@
     },
     ".claude/agents/ui-ux-designer.md": {
       "mode": "full",
-      "sha256": "89ea9b9f2e812636a8f0635114a978b0d17ba559a4ad7d920309c8e747261460"
+      "sha256": "cc00f92ebebf108275b55e5a58c917485f0a4f7aee1fdd00c3f964fb3d6cf4bd"
     },
     ".claude/rules/agent-framework.md": {
       "mode": "full",
@@ -205,11 +225,11 @@
     },
     ".claude/skills/apple-experience-design/SKILL.md": {
       "mode": "full",
-      "sha256": "ed778f9fdcf5443cb33c724221cfd78236c181845f84c7de1ebfbeea32369e73"
+      "sha256": "1bd8660a6992b7ddb938932d019fe15da99429e45c18798de6be8f069c6c443e"
     },
     ".claude/skills/apple-team/SKILL.md": {
       "mode": "full",
-      "sha256": "8bab5fa2646b0afac4c07a4a1ba1d8b8da70f0c2f532896260207843716e3e51"
+      "sha256": "169e0844ae50c64e4506e40a08d8d5e6c394f61d9356c2ee2278068123d25ec1"
     },
     ".claude/skills/apple-team/references/routing.md": {
       "mode": "full",
@@ -217,7 +237,7 @@
     },
     ".claude/skills/architecture-review/SKILL.md": {
       "mode": "full",
-      "sha256": "d9606c80ff9df2bc5eba3861fcb44178775652652d30d1f6bd0c2e31d87dcd8a"
+      "sha256": "c6575ae2559a96a566797cf9a358b07585b7a87fc8fae5e39af3e808475d865c"
     },
     ".claude/skills/debug-systematically/SKILL.md": {
       "mode": "full",
@@ -229,19 +249,31 @@
     },
     ".claude/skills/ios-development/SKILL.md": {
       "mode": "full",
-      "sha256": "9671b2df921abb260ee2601db0eafe827df7aef7d4688b54f0f44fac1f6aee01"
+      "sha256": "28f44ad6c923b7e6a8064bf625e6ca0fcd718a316b86b8d3fe0ebde6dd37f8b7"
     },
     ".claude/skills/ios-quality/SKILL.md": {
       "mode": "full",
-      "sha256": "e0b4f1d239b4bc7b70db309b26ade74ff9c7103dd1836351690e2adcca0a81ae"
+      "sha256": "e1af8b895fe0f783637a2d5425e54d148ca9032a3ab1267e98c45fee92885192"
+    },
+    ".claude/skills/ios-quality/references/concerns.md": {
+      "mode": "full",
+      "sha256": "4362260a8ddeb4e8b811df06cb473ba513e033558b812564fa1e1db411f26e98"
     },
     ".claude/skills/ios-testing/SKILL.md": {
       "mode": "full",
-      "sha256": "c24ba5c6e5897ea8e896528e075b18fd688914aa491f144c105adc99d4c530cd"
+      "sha256": "f267a42a3faf45ee3334036a8799d8e8a3d2c06cbb9951ecdc16831c1208df77"
+    },
+    ".claude/skills/ios-testing/references/native-execution.md": {
+      "mode": "full",
+      "sha256": "cf71ad1be8f2f85393f252933cac73532744d15287fb2d2b4d8e210b2d27e6f4"
+    },
+    ".claude/skills/ios-testing/references/test-selection.md": {
+      "mode": "full",
+      "sha256": "4787b0b2a5b951919c87ec343ac97dc721cb5405391deb97543d39701ade9691"
     },
     ".claude/skills/macos-development/SKILL.md": {
       "mode": "full",
-      "sha256": "4d8fc750c905fdcf7667f73d174d9c5a6ef1e69ffd46ccde5e27f6dbdd58db81"
+      "sha256": "cec89aa7285059a7ff156c097bc3c28969c26644723ef84f48f836169f7dd091"
     },
     ".claude/skills/market-validation/SKILL.md": {
       "mode": "full",
@@ -261,7 +293,7 @@
     },
     ".claude/skills/product-measurement/SKILL.md": {
       "mode": "full",
-      "sha256": "d42fc3d2bcf0966785af73c72d80f165de0515074281a7a49ac6c6ecf001aded"
+      "sha256": "85bc4be2a77fdb0b275e4a4aa07e2ec092dc45d27f0c0137977ac8681570cfa2"
     },
     ".claude/skills/product-positioning/SKILL.md": {
       "mode": "full",
@@ -281,15 +313,23 @@
     },
     ".claude/skills/ui-ux-review/SKILL.md": {
       "mode": "full",
-      "sha256": "84be3c7536482aa17d9f0adb41fa5d08293c76636bf5efae7637d741c941d22d"
+      "sha256": "b1224d4f2470b8bb2d56ef94307d41ea65046b46bb7e7bdcd901e099e19d598c"
+    },
+    ".claude/skills/ui-ux-review/references/native-apple.md": {
+      "mode": "full",
+      "sha256": "c9df811311eb14967b8f5ac817f15266330768ff4e797374e6c234e031feb50b"
+    },
+    ".claude/skills/ui-ux-review/references/web-branded.md": {
+      "mode": "full",
+      "sha256": "9224d826b1faa17ec39783c88e13058d804fd314947a7523b5c09a0e0c6d4bcc"
     },
     ".codex/agents/accessibility-reviewer.toml": {
       "mode": "full",
-      "sha256": "74cc96e18220e4130e159c05a515de54256f4fc6207a31e8a2701123d7e9b034"
+      "sha256": "460ad1f30b81243ff707737e3f2f091364172389bdb24239f5592f7c79f27724"
     },
     ".codex/agents/code-reviewer.toml": {
       "mode": "full",
-      "sha256": "b8d5c3879e4a00c064b7053fa181ba8709e7e81588c73d759ea8bab3c53f9b60"
+      "sha256": "e70f6fa0adb1e8485841ea538d8e06ad02bf8efda0c867b4b9d3ce333acb258f"
     },
     ".codex/agents/data-database-engineer.toml": {
       "mode": "full",
@@ -297,11 +337,11 @@
     },
     ".codex/agents/deep-researcher.toml": {
       "mode": "full",
-      "sha256": "7e4213170e13524c7edb8adf2eab3feed368558f9bf1bb105009aee0716217a8"
+      "sha256": "e0581c37f1afc8613351350c33d9248baabe6441d66148461dccf1991aa98602"
     },
     ".codex/agents/devops-release-engineer.toml": {
       "mode": "full",
-      "sha256": "05b6b60742fae1a822bcdfa95530f488703a225ee6df9c1bd643e8265983906e"
+      "sha256": "2f9a5b39e641db2d577d3a401bcfff2a39d3eab0107281e55222c2c886a112a0"
     },
     ".codex/agents/end-user-simulator.toml": {
       "mode": "full",
@@ -309,27 +349,27 @@
     },
     ".codex/agents/growth-analyst.toml": {
       "mode": "full",
-      "sha256": "d2287aa10afde755af7d90450a80f5ab47bb273943636321dc17e2e44aeedfd3"
+      "sha256": "1ea240ff917ff748c0bad4e6cc46504eb31624ebb09f1c2dc7aae41ddbf213fa"
     },
     ".codex/agents/implementation-engineer.toml": {
       "mode": "full",
-      "sha256": "2b12d0d07606c0af7f45e521cc5cf53ce38e8008a0d893e49061b3d5bb531d2e"
+      "sha256": "aab010e238f7be56e49749a0137aaf253b66569b16679fad83572212358e5950"
     },
     ".codex/agents/integration-architect.toml": {
       "mode": "full",
-      "sha256": "4905284ba45a0df3eab7bf866f40dafc2a2bc52ecbef1df0fc98a4916f37759d"
+      "sha256": "70b6020aae80006ee3c1e3d80798df84b19e75c76996e37f9518d8ca8c8090ce"
     },
     ".codex/agents/market-opportunity-researcher.toml": {
       "mode": "full",
-      "sha256": "05e6f6eefecab9dc653ff34334d1d6612f0c17c9ac9d3dc595dbd8f06eff26dc"
+      "sha256": "7e53a666a18db85b45ded937b89334731159162c0bd41808c9314842f06ca3f7"
     },
     ".codex/agents/orchestrator.toml": {
       "mode": "full",
-      "sha256": "a38a60cef4a0b3ab47dcad827751af64995346d98e69a2adce234f8dd5bc5bcd"
+      "sha256": "47485e74bcbab728d4d82f8839705277910e8b4b00abc4d79f5d435a3d334662"
     },
     ".codex/agents/performance-reliability-engineer.toml": {
       "mode": "full",
-      "sha256": "affe12078f9320d722cd00e278938dea00dd5299537bc0b812cbcd202c2cf914"
+      "sha256": "b39c12ff5a251fb24b419e8d93cfa1eb250770ac243413e6283661ef260b6554"
     },
     ".codex/agents/product-manager.toml": {
       "mode": "full",
@@ -337,11 +377,11 @@
     },
     ".codex/agents/product-marketing-strategist.toml": {
       "mode": "full",
-      "sha256": "decdfdb6dbf65ee25f7890dea2de059b3de228c20d6a594248eda1a13ccff814"
+      "sha256": "8e34d8fad73b44e9efcf812daa40e34d5c9ab20620912ec7ec2752f2c3bfba42"
     },
     ".codex/agents/qa-test-engineer.toml": {
       "mode": "full",
-      "sha256": "ab39e2304488d54ae19bdd268f1ba20acc48979b6a2cd5215299bd040f87fb8a"
+      "sha256": "8e98896d70f1e4cb569dd29ee74caf81385c74828c89b5d080f789e0cfe2bdfc"
     },
     ".codex/agents/rubber-duck.toml": {
       "mode": "full",
@@ -349,7 +389,7 @@
     },
     ".codex/agents/security-privacy-reviewer.toml": {
       "mode": "full",
-      "sha256": "2d72313214577d17caba30350612fedeebc41eddda845eb75e12e6be71f172bd"
+      "sha256": "59b1a6239c19ee10301e9686f6276893a61eeaf4024f557f8782f163c5e42df1"
     },
     ".codex/agents/skeptical-reviewer.toml": {
       "mode": "full",
@@ -357,7 +397,7 @@
     },
     ".codex/agents/software-architect.toml": {
       "mode": "full",
-      "sha256": "6277c079ff3b9442e3b4f4af2bfcc4c350cadd20275fdc05b314c2b82eb1554e"
+      "sha256": "ebfa039fdf3ed39c4f16afa90d07c38f74d48c88096eef323a8d7cd58112d381"
     },
     ".codex/agents/technical-writer.toml": {
       "mode": "full",
@@ -365,7 +405,7 @@
     },
     ".codex/agents/ui-ux-designer.toml": {
       "mode": "full",
-      "sha256": "49eb19af467aa69c670bed219d28d59a2eb35cba58d5275f88a4ef73c70acd40"
+      "sha256": "fb44df452c9f9cdfb037f27b14ed6164743474cdbb5ac1446c84b743f76a6210"
     },
     ".codex/config.toml": {
       "mode": "full",
@@ -381,11 +421,11 @@
     },
     ".kimi-code/agents/accessibility-reviewer.md": {
       "mode": "full",
-      "sha256": "0ca66f8a3b60b3e8a3713189a00e0aae628f6cef9cc6ddfe630edf01ddfe4d59"
+      "sha256": "0df146b2d20d6628d0db5bf8ca4bfeab381624db6d4f3cfa27b6e1acb3d841a7"
     },
     ".kimi-code/agents/code-reviewer.md": {
       "mode": "full",
-      "sha256": "44bcde51eefa77dcb23694b47ed60d90095caf16368e01713f4bf71d20ca6011"
+      "sha256": "ab2679a9bc969542a67d7d9aad31cfaef3b70893eaf9b04b0571c176696e02fe"
     },
     ".kimi-code/agents/data-database-engineer.md": {
       "mode": "full",
@@ -393,11 +433,11 @@
     },
     ".kimi-code/agents/deep-researcher.md": {
       "mode": "full",
-      "sha256": "e82434dab3e27d3d75f8faaf8c6e39080626f485c4f1d035cc9b3a2c6ca83d2d"
+      "sha256": "81c2710e858cbe5287b623efb52a56d655b3ee5f8c17cee889b18fc67dca1d74"
     },
     ".kimi-code/agents/devops-release-engineer.md": {
       "mode": "full",
-      "sha256": "c2fd356c0029cfb3f2ee8f6a2e804677505fa078790d9001764be2d3850c86ee"
+      "sha256": "e4484faebc7155f068ae8bc7f57225e4cae4ff8c2d5f7a3ba9fbced061ba02b0"
     },
     ".kimi-code/agents/end-user-simulator.md": {
       "mode": "full",
@@ -405,27 +445,27 @@
     },
     ".kimi-code/agents/growth-analyst.md": {
       "mode": "full",
-      "sha256": "34389c409bede2d583be7edd123b5fe0d9ce4ab5b8d3f0fe81b63aa24383fe03"
+      "sha256": "df0cb17251ee7aafbed4ca384883043bc7843b9d344e533c7d3ebe00c940aa05"
     },
     ".kimi-code/agents/implementation-engineer.md": {
       "mode": "full",
-      "sha256": "78e9f52700eb443e9827f0c2630267433f7b895a7af034c3374152b01fc57492"
+      "sha256": "66f0625867afc5df10b8238c55e92b7f9c9d7a4a5486e59cafcb87a69e2e0569"
     },
     ".kimi-code/agents/integration-architect.md": {
       "mode": "full",
-      "sha256": "bf72662368b100dd647ce2aee6c5eb92da743c877a542a86e356741a034743ef"
+      "sha256": "711964c12a0868b33fb0716724269a7b3c34f87680f0f5319ebcf7376ecfe133"
     },
     ".kimi-code/agents/market-opportunity-researcher.md": {
       "mode": "full",
-      "sha256": "dcf1634b6ac014712bc038083b1abce9bcc9a66c9ee6a74921a6af060898bf75"
+      "sha256": "fb015b7c1e4435db3549209dd31bac88a24360a1d00bedc2a95d2152705e006f"
     },
     ".kimi-code/agents/orchestrator.md": {
       "mode": "full",
-      "sha256": "216f84e008281b5d80eb83049f74c0f2acb4a36c97ad8332eba8fa9e33e95547"
+      "sha256": "82aca37057f60cbb69f33e75955287fef789153e18806899e8ac7858560c3941"
     },
     ".kimi-code/agents/performance-reliability-engineer.md": {
       "mode": "full",
-      "sha256": "f050486e629543af59a0e76d08a7985e458376ffd6fa7308bddff50196cee757"
+      "sha256": "ad3a90bbc2af7e093ae0bfe516e4787e425a656958a82cf290bd0fdd024d0235"
     },
     ".kimi-code/agents/product-manager.md": {
       "mode": "full",
@@ -433,11 +473,11 @@
     },
     ".kimi-code/agents/product-marketing-strategist.md": {
       "mode": "full",
-      "sha256": "b04e60bbda228431ad8e20047cdddb1c89438701e6d89b4aa5b66b8c1457833e"
+      "sha256": "c8aa8b64fc9649bc028cf121816b3ce955b0780ecbb03565d3035c4028bcd340"
     },
     ".kimi-code/agents/qa-test-engineer.md": {
       "mode": "full",
-      "sha256": "23fb858f52549bed9b7eb38169222d76aa3aeb4a2ad5320c336d7cf615d6f0c9"
+      "sha256": "10a51e86ea4901bd497beb10a304eec1bdbcf7827d0786148ed570e8ad3e9e48"
     },
     ".kimi-code/agents/rubber-duck.md": {
       "mode": "full",
@@ -445,7 +485,7 @@
     },
     ".kimi-code/agents/security-privacy-reviewer.md": {
       "mode": "full",
-      "sha256": "57e4c6eb6f22ab7d6ee5088a5d3d0aafeb468bb7105da251d4e7e9e8faa8a193"
+      "sha256": "bdc270e8faf63d1c7a068ceabce1826d49926778e9cf717a551e52d09bd4c648"
     },
     ".kimi-code/agents/skeptical-reviewer.md": {
       "mode": "full",
@@ -453,7 +493,7 @@
     },
     ".kimi-code/agents/software-architect.md": {
       "mode": "full",
-      "sha256": "f5d42af066cd15909d78032f2340c740ebe82d440194b5657782e0a7aa009817"
+      "sha256": "1aab9e863e3c367f0d644375e3ada5bc59fc35434af14bffd96dac67431fe420"
     },
     ".kimi-code/agents/technical-writer.md": {
       "mode": "full",
@@ -461,15 +501,15 @@
     },
     ".kimi-code/agents/ui-ux-designer.md": {
       "mode": "full",
-      "sha256": "33790cd3c90e734c7a8d4c33e0ffc535e01004519db358034629fb539b7fdb82"
+      "sha256": "9403de8304570a23f23ed45ebe8f51d78e380706b636f8829a0d7f01f0ff276f"
     },
     ".opencode/agents/accessibility-reviewer.md": {
       "mode": "full",
-      "sha256": "2975a578e74de9759c7d6d057b6c68a9f16bbd64053dad595e44925c369b9d71"
+      "sha256": "228fce54fba43d7ec264bded9d990f4521223e403c02aa48d17858de09734cab"
     },
     ".opencode/agents/code-reviewer.md": {
       "mode": "full",
-      "sha256": "26a3469203336ea9f9b833e33833c997b7f4c85c56b0acb1cd1ac8a77c813bd5"
+      "sha256": "b36e50f6ab1488f82d9ce0e8fc286900354a930a24cbf2da8feecbbc8a31b209"
     },
     ".opencode/agents/data-database-engineer.md": {
       "mode": "full",
@@ -477,11 +517,11 @@
     },
     ".opencode/agents/deep-researcher.md": {
       "mode": "full",
-      "sha256": "9b98a7b1f95b21e7f7319c461675c5b0c52ad1ea8c09fc63e1d278fbfbc9e84f"
+      "sha256": "5d58e0a3c6bb260c3bed43390c809f001f54e61d58c0cb1e591a27f6895473f9"
     },
     ".opencode/agents/devops-release-engineer.md": {
       "mode": "full",
-      "sha256": "e2686dc019515529bf13246eb54874bc77e081af646fc604918b17366537ecc2"
+      "sha256": "1dc121817163b6ddb8ce3f049db93ad47a7f66f79c4543d212f8f4388eae6d2f"
     },
     ".opencode/agents/end-user-simulator.md": {
       "mode": "full",
@@ -489,27 +529,27 @@
     },
     ".opencode/agents/growth-analyst.md": {
       "mode": "full",
-      "sha256": "da2c74621e92672980bec63e62bd1eddfa703002a5c29fb930e5b65ea4b6dda2"
+      "sha256": "4a25958cc3c0c3a1790653025b072a8da2e00cdd483b6bd6b31bcdfa0f9a2eda"
     },
     ".opencode/agents/implementation-engineer.md": {
       "mode": "full",
-      "sha256": "b17d8dd3151f4ea82fde27ff4c9d6fb6fda00a11ee694b3e2c5bffdcd57ea239"
+      "sha256": "5492c0e754f443e77b9e31df06bdeb877467de5b91bd729a953b16ad5c5c5f2b"
     },
     ".opencode/agents/integration-architect.md": {
       "mode": "full",
-      "sha256": "fca2a1c67db5852b204ddd5f50c8217b0fab152566e5732360f8f05ab061c1a1"
+      "sha256": "1437766c9712b881b5ad0dd2854fa5304717366da329037195fc5dd58a7f1059"
     },
     ".opencode/agents/market-opportunity-researcher.md": {
       "mode": "full",
-      "sha256": "979750459810e3da9575b43116d95c918554f54b7413db9185bb1da6ac9ad3a9"
+      "sha256": "b8561b32450f02e583389f2b7e266447f793f169f2efd8695ca28349eab729aa"
     },
     ".opencode/agents/orchestrator.md": {
       "mode": "full",
-      "sha256": "b23f3b9ecd8c69417b60a8a6e7056925e59cd7ceb2c8b7fdf6141b60eec87292"
+      "sha256": "7cf95e8edbc29219fc8cca4b4e23aa2b0a68dc6b27164dd184f8c58ca21ab47f"
     },
     ".opencode/agents/performance-reliability-engineer.md": {
       "mode": "full",
-      "sha256": "31c06df0f6094c1b3ba06e96a8250255a5d7833347b0a87a6f18133056aac627"
+      "sha256": "d2c886278eae8be3fb6d3b849767194444ecb2be5787328997aee48d2efb3f36"
     },
     ".opencode/agents/product-manager.md": {
       "mode": "full",
@@ -517,11 +557,11 @@
     },
     ".opencode/agents/product-marketing-strategist.md": {
       "mode": "full",
-      "sha256": "2fd868fa7654a4965eed17406470e5b14d2e2eda7fd03af0e0122ef178105171"
+      "sha256": "9133221eef965f4549f181c39dbd9c23bb29ea6d00a9608aaceb9a583f988e79"
     },
     ".opencode/agents/qa-test-engineer.md": {
       "mode": "full",
-      "sha256": "18d3a9ec2b9b62e45ee0349f04bd6d0c74c334a4eac3bf67baab3077f8672124"
+      "sha256": "ac56207b85c2c5a0bd3498e27aa8aa28bce0bff51b68851be0f7804daafe68ae"
     },
     ".opencode/agents/rubber-duck.md": {
       "mode": "full",
@@ -529,7 +569,7 @@
     },
     ".opencode/agents/security-privacy-reviewer.md": {
       "mode": "full",
-      "sha256": "56ccc72ad570d91a6014ff6b6c110246a16173c7ed421f8afe6a0d2bfb00fede"
+      "sha256": "98fb9479a813d1caaa30c7322a3d74b2654c0800f2e0faba2b32fb144d7ddb98"
     },
     ".opencode/agents/skeptical-reviewer.md": {
       "mode": "full",
@@ -537,7 +577,7 @@
     },
     ".opencode/agents/software-architect.md": {
       "mode": "full",
-      "sha256": "8407ca5e895a76d7d04a6bcf2f1c0a624a2c07d7321e36231cec4e5aca5d67b5"
+      "sha256": "92efa3b4d28609aab5d3a4d14c29ec9d81c722627ca13a488854305583a9751e"
     },
     ".opencode/agents/technical-writer.md": {
       "mode": "full",
@@ -545,11 +585,11 @@
     },
     ".opencode/agents/ui-ux-designer.md": {
       "mode": "full",
-      "sha256": "5e18cf5a84e211447bf7420686793ba56561aaa2d72b93667c38062b6addd0d1"
+      "sha256": "f6d5d55abbb609dcead90ae86dbb464ba7196a92846bd3bad7fd44cba5efb36b"
     },
     "AGENTS.md": {
       "mode": "block",
-      "sha256": "20e804e3c7e6e9ffc03db9625c0f84081ebc8cb8594ae8d9e7c6816eeca8e4b0"
+      "sha256": "17b4635f31b2df39fa5bece846270fc4e86cdfb948b32cda1f47a6c47c366dba"
     },
     "CLAUDE.md": {
       "mode": "block",

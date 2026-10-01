@@ -45,3 +45,18 @@ Final hosted CI status is available on this repository's draft PR. Initial sourc
 Quality run36855993086 passed all Apple profiles before these test-only corrections.
 
 Initial adoption run36856040859 passed all CI jobs; native product files remain unchanged after this framework-test follow-up.
+
+## OpenAI documentation audit follow-up — 2026-10-01
+
+Updated framework payload: `c16e5d740e1e639dd0f6f6a902ac201fc378f715`. Conditional
+context/reference loading preserves the original Apple guide; marketing/growth
+triggers and native UI evidence are specific. Tool availability, source retrieval and
+role routing require actual evidence. Canonical validation, drift, preflight and
+zero-change reinstallation pass; existing native files and CI/provider settings
+remain byte-identical to the previous draft head. No native app/UI change was made.
+
+Independent source review and final31 runtime/comparison checks pass. Native named
+discovery remains NOT VERIFIED and a UX team-only parent timed out at300.4s despite a
+completed designer. This revision therefore makes no complete runtime-team or manual
+UI acceptance claim. Updated hosted checks are recorded on this draft PR's current
+head; publication/merge and global skill installation remain separate.

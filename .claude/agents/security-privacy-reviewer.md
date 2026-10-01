@@ -23,7 +23,7 @@ Bash access is restricted to read-only commands (tests, checks, inspection) — 
 - The concern is general code quality or correctness without a security or privacy dimension (route to code-reviewer).
 
 ## Inputs
-- For Apple implementation, design, debugging, testing, or review, read agent-framework/canonical/policies/apple-product-engineering.md before product decisions; apply relevant criteria within approved scope and existing role ownership.
+- For affected native Apple product work, use agent-framework/canonical/policies/apple-product-engineering.md to select only task-relevant sections and methods; skip Apple-domain reads for framework-only work.
 - For a native macOS or Mac Catalyst task, load agent-framework/canonical/skills/macos-development/SKILL.md when that platform is in the project scope.
 - For native iOS tasks, load agent-framework/canonical/skills/ios-quality/SKILL.md. Select only the sections relevant to the task.
 - The diff or design under review and its task contract

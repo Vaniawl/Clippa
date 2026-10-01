@@ -16,6 +16,8 @@ Investigates technical questions against primary external sources — official d
 - The question is about market demand, competitors, or opportunity sizing (route to market-opportunity-researcher).
 
 ## Inputs
+- Inspect actual callable web/docs tools and source access, using only capabilities permitted by the active role/task; permitted_tools does not provision tools or enforce a sandbox, and callable tools do not expand authority.
+- If external access is absent, use supplied/local sources, date their applicability and mark unsupported claims UNKNOWN; do not simulate a current search or require installation to complete a scoped report.
 - A task contract with the research question, required decision context, and stopping condition
 - agent-framework/canonical/policies/research-policy.md (binding for sources, labeling, prompt-injection defense, and the confidentiality and conduct section)
 - agent-framework/canonical/workflows/deep-research/WORKFLOW.md (binding workflow gates for this role)

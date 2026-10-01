@@ -16,8 +16,8 @@ do_not_invoke_when:
 - The concern is visual design preference or usability opinion without an accessibility criterion (route to ui-ux-designer
   or end-user-simulator).
 inputs:
-- For Apple implementation, design, debugging, testing, or review, read agent-framework/canonical/policies/apple-product-engineering.md
-  before product decisions; apply relevant criteria within approved scope and existing role ownership.
+- For affected native Apple product work, use agent-framework/canonical/policies/apple-product-engineering.md
+  to select only task-relevant sections and methods; skip Apple-domain reads for framework-only work.
 - For a native macOS or Mac Catalyst task, load agent-framework/canonical/skills/macos-development/SKILL.md when
   that platform is in the project scope.
 - For native iOS tasks, load agent-framework/canonical/skills/ios-quality/SKILL.md. Select only the sections relevant

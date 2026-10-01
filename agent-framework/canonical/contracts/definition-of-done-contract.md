@@ -29,8 +29,10 @@ A task, slice, or release is Done only when every applicable line below is satis
 
 ## Apple UI DoD (adds when native Apple UI changes)
 
-Use sections 73–74 of `agent-framework/canonical/policies/apple-product-engineering.md`
-and the native Apple procedure in `ui-ux-review`. Verify relevant normal/loading/empty/error/
+Use the compact `agent-framework/canonical/policies/apple-product-engineering.md` router
+and the native procedure in `ui-ux-review/references/native-apple.md`; original standard
+sections 73–74 remain in `policies/apple-product-engineering-reference.md`. Read only
+applicable criteria for affected native UI. Verify relevant normal/loading/empty/error/
 disabled states, long content, appearances, adaptive sizes, keyboard/pointer/touch behavior,
 scroll continuity, purposeful motion, Reduce Motion, and accessibility. Reuse the existing
 architecture and components, compile affected targets, and resolve avoidable new warnings.

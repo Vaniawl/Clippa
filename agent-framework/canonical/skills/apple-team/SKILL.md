@@ -6,7 +6,13 @@ description: Coordinate an Apple product request through discovery, design, impl
 # Apple Team
 
 ## Trigger and inputs
-Use when coordinating a natural-language iOS/macOS product request. Read PROJECT, product vision, the relevant BACKLOG item, ADRs and latest handover; check their revision against the checkout. Inputs are the request, approved outcome (if any), product constraints and available runtime capabilities. Inspect repository facts before asking questions. Batch independent context reads and revision/status/diff checks; retain already confirmed context instead of reloading it. Specialists load their task methods; the coordinator reads role authority and selects methods without duplicating a specialist’s full domain audit.
+Use when coordinating a natural-language iOS/macOS product request. Read PROJECT/vision and the relevant approved BACKLOG item when product context matters; architecture/ADRs for structural decisions, threat model for trust boundaries, test strategy for test work, and the latest relevant handover on resume. Verify the checkout and evidence revisions. Framework-only tasks use the contract and affected framework sources, without an Apple-domain audit. Inputs are the request, approved outcome (if any), product constraints and available runtime capabilities. Inspect repository facts before asking questions. Batch independent context reads and revision/status/diff checks; retain already confirmed context instead of reloading it. Specialists load their task methods; the coordinator reads role authority and selects methods without duplicating a specialist’s full domain audit.
+
+For actual Codex/OpenAI questions, select the already-installed openai-docs skill when available.
+For SwiftUI code review, select installed swiftui-pro when available. These optional external
+methods do not replace role authority or independent gates, are not bundled here, and never
+require global installation. Tool names in role configuration are permissions, not proof of
+callable web/docs access or sandbox enforcement; inspect the session capabilities.
 
 ## Select the mode and route
 Use `agent_framework.team.default_mode` when present. New starters default to `advise`; absent settings preserve legacy policy. An explicit request to implement, fix, or execute an agreed result authorizes `execute` for that outcome. Advice returns in the conversation and changes no tracked product files; saving a recommendation requires an explicit request or agreed execution scope.
