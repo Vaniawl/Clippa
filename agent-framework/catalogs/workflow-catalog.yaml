@@ -1,8 +1,8 @@
 workflows:
   - id: software-lifecycle
     title: Software Lifecycle Workflow
-    summary: Mode-aware lifecycle with bounded discovery, design, execution, marketing and measurement routes; evidence
-      gates apply only to the requested outcome.
+    summary: Mode-aware lifecycle with bounded discovery, design, execution, marketing and measurement routes;
+      evidence gates apply only to the requested outcome.
     roles:
       - orchestrator
       - product-manager
@@ -28,8 +28,8 @@ workflows:
     entry_point: agent-framework/canonical/workflows/software-lifecycle/WORKFLOW.md
   - id: deep-research
     title: Deep Research Workflow
-    summary: Technical research via question refinement, primary-source sweep, adversarial verification, and labeled
-      synthesis; read-only, report output only.
+    summary: Technical research via question refinement, primary-source sweep, adversarial verification, and
+      labeled synthesis; read-only, report output only.
     roles:
       - orchestrator
       - deep-researcher
@@ -37,8 +37,8 @@ workflows:
     entry_point: agent-framework/canonical/workflows/deep-research/WORKFLOW.md
   - id: market-research
     title: Market Research Workflow
-    summary: Profile-aware consumer, business or developer-tool market evidence; optional applicable scoring, advice
-      returned without tracked writes.
+    summary: Profile-aware consumer, business or developer-tool market evidence; optional applicable scoring,
+      advice returned without tracked writes.
     roles:
       - orchestrator
       - market-opportunity-researcher
@@ -47,10 +47,88 @@ workflows:
     entry_point: agent-framework/canonical/workflows/market-research/WORKFLOW.md
   - id: persona-validation
     title: Persona Validation Workflow
-    summary: Read-only AI-persona simulations generating hypotheses and proposed Candidates, never empirical interviews
-      or demand evidence.
+    summary: Read-only AI-persona simulations generating hypotheses and proposed Candidates, never empirical
+      interviews or demand evidence.
     roles:
       - orchestrator
       - end-user-simulator
       - product-manager
     entry_point: agent-framework/canonical/workflows/persona-validation/WORKFLOW.md
+  - id: apple-feature-delivery
+    title: Apple Feature Delivery
+    summary: Deliver an approved Apple feature through applicable requirements, native design, implementation,
+      tests and independent risk review.
+    roles:
+      - orchestrator
+      - product-manager
+      - user-researcher
+      - ui-ux-designer
+      - software-architect
+      - implementation-engineer
+      - qa-test-engineer
+      - code-reviewer
+      - accessibility-reviewer
+      - security-privacy-reviewer
+      - localization-specialist
+    entry_point: agent-framework/canonical/workflows/apple-feature-delivery/WORKFLOW.md
+  - id: app-store-delivery
+    title: App Store Delivery
+    summary: Prepare candidate-specific Apple signing, beta/store metadata, declarations, review and rollout
+      readiness.
+    roles:
+      - orchestrator
+      - devops-release-engineer
+      - app-store-release-manager
+      - qa-test-engineer
+      - security-privacy-reviewer
+      - accessibility-reviewer
+      - localization-specialist
+      - brand-creative-designer
+      - product-marketing-strategist
+    entry_point: agent-framework/canonical/workflows/app-store-delivery/WORKFLOW.md
+  - id: apple-data-commerce-change
+    title: Apple Data or Commerce Change
+    summary: Verify approved persistence, sync or StoreKit changes with compatibility, transaction invariants
+      and supported recovery.
+    roles:
+      - orchestrator
+      - software-architect
+      - data-database-engineer
+      - integration-architect
+      - implementation-engineer
+      - qa-test-engineer
+      - code-reviewer
+      - security-privacy-reviewer
+    entry_point: agent-framework/canonical/workflows/apple-data-commerce-change/WORKFLOW.md
+  - id: apple-incident-response
+    title: Apple Incident Response
+    summary: Triage supplied Apple runtime/support evidence, reproduce, contain within authorized scope and
+      verify a corrected candidate.
+    roles:
+      - orchestrator
+      - customer-support-specialist
+      - performance-reliability-engineer
+      - qa-test-engineer
+      - implementation-engineer
+      - data-database-engineer
+      - security-privacy-reviewer
+      - code-reviewer
+      - devops-release-engineer
+      - app-store-release-manager
+    entry_point: agent-framework/canonical/workflows/apple-incident-response/WORKFLOW.md
+  - id: apple-growth-experiment
+    title: Apple Growth Experiment
+    summary: Prepare or analyze an approved Apple product/store experiment using truthful assets, privacy-aware
+      measurement and real outcomes.
+    roles:
+      - orchestrator
+      - product-manager
+      - market-opportunity-researcher
+      - user-researcher
+      - product-marketing-strategist
+      - brand-creative-designer
+      - localization-specialist
+      - growth-analyst
+      - skeptical-reviewer
+      - security-privacy-reviewer
+    entry_point: agent-framework/canonical/workflows/apple-growth-experiment/WORKFLOW.md

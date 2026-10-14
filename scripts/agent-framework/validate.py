@@ -104,6 +104,8 @@ def split_frontmatter(text: str) -> str | None:
 def check_structure():
     required = [
         CANON / "core-instructions.md",
+        CANON / "operating-instructions.md",
+        FRAMEWORK_DIR / "CONTEXT.md",
         *(CANON / "policies" / f"{n}.md" for n in
           ("autonomy-policy", "delegation-policy", "evidence-policy", "research-policy",
            "scope-control-policy", "security-policy")),
@@ -564,6 +566,61 @@ def check_adapter_docs():
                 err(f"providers/{prov}/adapter.yaml does not document render target {needle!r}")
 
 
+def check_context_navigation():
+    """Extraction must retain mandatory rules and a contract for every workflow."""
+    route = "Before any work, read `agent-framework/canonical/operating-instructions.md`."
+    navigation = read_text_checked(FRAMEWORK_DIR / "CONTEXT.md", "context navigation")
+    for path in (CANON / "core-instructions.md", REPO_ROOT / "AGENTS.md"):
+        text = read_text_checked(path, "context navigation")
+        if text is not None and route not in text:
+            err(f"{path.relative_to(REPO_ROOT)}: mandatory operating-instructions route missing")
+    for workflow in sorted((CANON / "workflows").glob("*/WORKFLOW.md")):
+        contract = workflow.with_name("CONTEXT.md")
+        relative = contract.relative_to(FRAMEWORK_DIR).as_posix()
+        if navigation is not None and f"]({relative})" not in navigation:
+            err(f"agent-framework/CONTEXT.md: workflow route missing: {relative}")
+        text = read_text_checked(contract, "workflow context")
+        if text is not None:
+            for heading in ("## Inputs", "## Process", "## Outputs", "## Human and independent gates"):
+                if heading not in text:
+                    err(f"{contract.relative_to(REPO_ROOT)}: missing {heading}")
+            if "[WORKFLOW.md](WORKFLOW.md)" not in text:
+                err(f"{contract.relative_to(REPO_ROOT)}: authoritative workflow link missing")
+
+    # Reusable delivery is file-driven. Keep generic framework validation independent
+    # of Apple project paths, while enforcing the shipped stage contracts/handoffs.
+    from _markdown import local_links
+    template = FRAMEWORK_DIR / 'templates/task-folder'
+    stages = ('01-scope', '02-design', '03-build', '04-verify')
+    entry = read_text_checked(template / 'CONTEXT.md', 'task template')
+    for index, stage in enumerate(stages):
+        contract = template / stage / 'CONTEXT.md'
+        text = read_text_checked(contract, 'delivery stage')
+        relative = contract.relative_to(REPO_ROOT)
+        if entry is not None and f']({stage}/CONTEXT.md)' not in entry:
+            err(f'task template: missing stage route: {stage}')
+        if not (contract.parent / 'output/.gitkeep').is_file():
+            err(f'{relative}: missing fresh output/.gitkeep')
+        if text is None:
+            continue
+        if len(text.splitlines()) >= 80:
+            err(f'{relative}: context must be under 80 lines')
+        for heading in ('## Inputs', '## Process', '## Outputs', '## Audit', '## Checkpoints'):
+            if heading not in text.splitlines():
+                err(f'{relative}: missing {heading}')
+        inputs = text.split('## Inputs', 1)[-1].split('\n## ', 1)[0]
+        if not any('scope' in line.lower() and '|' in line for line in inputs.splitlines()):
+            err(f'{relative}: Inputs needs a scoped table')
+        targets = {(contract.parent / path).resolve()
+                   for _, _, _, path in local_links(inputs)}
+        if index and (template / stages[index - 1] / 'output').resolve() not in targets:
+            err(f'{relative}: missing preceding stage output input')
+        for target in targets:
+            for later in stages[index:]:
+                if target.is_relative_to((template / later).resolve()):
+                    err(f'{relative}: stage input must point backward: {later}')
+
+
 def check_managed_files():
     for name in ("AGENTS.md", "CLAUDE.md"):
         text = read_text_checked(REPO_ROOT / name, "managed files")
@@ -682,7 +739,7 @@ def check_secrets():
 def check_markdown_links():
     """Validate framework-owned resources without auditing unrelated adopter docs."""
     roots = [FRAMEWORK_DIR / 'canonical', FRAMEWORK_DIR / 'templates']
-    documents = set()
+    documents = {FRAMEWORK_DIR / 'CONTEXT.md'}
     for root in roots:
         if root.exists():
             documents.update(root.rglob('*.md'))
@@ -725,6 +782,7 @@ def main() -> int:
     check_permission_pinning()
     check_adapter_docs()
     check_managed_files()
+    check_context_navigation()
     check_schemas()
     check_team_options()
     check_secrets()

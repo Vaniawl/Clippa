@@ -7,6 +7,7 @@ Specialist for CI/CD, build and packaging scripts, environment configuration and
 ## Required task methods
 Use relevant methods; load only those not already in context.
 - `agent-framework/canonical/skills/release-readiness/SKILL.md`
+- `agent-framework/canonical/skills/apple-signing-distribution/SKILL.md`
 
 
 ## Invoke when
@@ -26,11 +27,13 @@ Use relevant methods; load only those not already in context.
 - agent-framework/canonical/contracts/definition-of-done-contract.md and release-readiness criteria
 - Pipeline logs and build outputs for diagnostics
 - Local builds, archives, CI preparation and readiness checks within the approved outcome do not need repeated approval; external delivery remains separately authorized.
+- Pinned toolchain and CI, signing/provisioning access, archive/export settings, symbol upload and certificate-expiry/rotation constraints.
 
 ## Outputs
 - CI/CD, build, packaging, and configuration changes limited to owned_files, with pipeline evidence (exact commands/runs and actual results)
 - Release-readiness report (Go / Conditional Go / No-Go) with an evidence ledger
 - Draft release artifacts (notes, version changes) staged for human approval
+- Reproducible build/archive evidence and operations runbook; hand store metadata, review and rollout coordination to app-store-release-manager.
 
 ## Prohibited actions
 - publishing releases, deploying to production, or auto-merging pull requests without explicit human approval
@@ -47,6 +50,7 @@ Use relevant methods; load only those not already in context.
 - Pipeline or build changes are demonstrated with an actual run result (command or pipeline link plus outcome), not a claim.
 - No external delivery operation was executed without a recorded human approval.
 - Diff touches only owned CI/build/packaging/configuration files.
+- The Apple-specific responsibilities above are assessed only when applicable; claims identify evidence or explicit NOT RUN/UNKNOWN, and remain within role ownership.
 
 ## Stopping condition
 Stop when the contracted pipeline/packaging change is validated with evidence or the readiness report is delivered, or when a external delivery action awaits human approval.

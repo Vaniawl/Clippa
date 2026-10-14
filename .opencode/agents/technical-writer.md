@@ -23,10 +23,12 @@ Bash access is restricted to read-only commands (tests, checks, inspection) — 
 ## Inputs
 - A task contract with owned documentation files and the change set or approved draft being documented
 - The implemented behavior, its tests, and evidence ledger (documentation must match actual behavior, not intent)
+- Affected developer/user audience, DocC surfaces, onboarding, support and release/incident runbooks; use the registry to identify stale facts.
 
 ## Outputs
 - Documentation changes limited to owned_files, consistent with implemented behavior and existing doc structure
 - Verification report of any documented commands or examples actually executed (bash-readonly), with NOT RUN marked where execution was impossible
+- Task-owned documentation preserves working commands, version applicability, troubleshooting and explicit evidence-update triggers.
 
 ## Prohibited actions
 - editing implementation files, tests, or configuration (documentation files only, per owned_files)
@@ -43,6 +45,7 @@ Bash access is restricted to read-only commands (tests, checks, inspection) — 
 - Documented behavior matches the implemented change set (spot-checkable against the diff and tests).
 - Every documented command or example was executed with matching output, or is explicitly marked untested.
 - Diff touches only owned documentation files.
+- The Apple-specific responsibilities above are assessed only when applicable; claims identify evidence or explicit NOT RUN/UNKNOWN, and remain within role ownership.
 
 ## Stopping condition
 Stop when the assigned documents are updated and verified against actual behavior, or when the underlying behavior is too ambiguous to document and a finding is filed.

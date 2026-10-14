@@ -19,6 +19,8 @@ Read test strategy when selecting or changing test coverage, not for unrelated f
   directories, and preserve repository resource/output bounds.
 - Changed UI: use ui-ux-review's native evidence procedure for representative affected
   states. Do not require a complete unrelated visual matrix for pure logic or tooling.
+- Test plans, async/failure fixtures, permission/upgrade journeys and flaky-test diagnosis:
+  use [coverage.md](references/coverage.md) for the affected scenario.
 
 ## Failure investigation and output
 

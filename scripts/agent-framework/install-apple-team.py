@@ -190,13 +190,23 @@ def project_options(stage, source, prior_generated, hashes):
             framework["skills"].append("macos-development")
     config = safe_path(stage, "opencode.json")
     if config.exists():
-        if not isinstance(json.loads(config.read_text()), dict):
+        config_data = json.loads(config.read_text())
+        if not isinstance(config_data, dict):
             raise Refused("opencode.json must contain an object")
-        options = framework.setdefault("opencode", {})
+        record = prior_generated.get('files', {}).get('opencode.json', {})
+        keys = record.get('keys', []) if isinstance(record, dict) else []
+        generated_only = (isinstance(record, dict) and record.get('mode') == 'json-keys'
+                          and isinstance(keys, list) and all(isinstance(k, str) for k in keys)
+                          and set(config_data) == set(keys)
+                          and digest((json.dumps({k: config_data[k] for k in keys}, indent=2)
+                                      + '\n').encode()) == record.get('sha256'))
+        options = framework.get("opencode", {})
         if not isinstance(options, dict):
             raise Refused("agent_framework.opencode must contain a mapping")
-        options["preserve_project_config"] = True
-        aliases = options.setdefault("role_aliases", {})
+        if not generated_only:
+            options["preserve_project_config"] = True
+            framework["opencode"] = options
+        aliases = options.get("role_aliases", {})
         if not isinstance(aliases, dict):
             raise Refused("OpenCode role aliases must contain a mapping")
         roles = [p.stem for p in (source / "agent-framework/canonical/roles").glob("*.yaml")]
@@ -218,6 +228,8 @@ def project_options(stage, source, prior_generated, hashes):
                 candidate = f"apple-team-{role}-{count}"
                 count += 1
             aliases[role] = candidate
+            options["role_aliases"] = aliases
+            framework["opencode"] = options
             occupied.add(candidate)
     # Replace only the framework node. All text outside it stays byte-identical.
     node = yaml.compose(text)
@@ -240,6 +252,8 @@ def snapshot(root):
     files = {}
     for parent, dirs, names in os.walk(root, followlinks=False):
         dirs[:] = [d for d in dirs if d not in {"__pycache__", ".git", "runs", ".pytest_cache"}]
+        if Path(parent) == root / '.opencode':
+            dirs[:] = [d for d in dirs if d != 'node_modules']
         for name in names:
             path = Path(parent) / name
             rel = path.relative_to(root).as_posix()
@@ -258,8 +272,13 @@ def copy_selected(target, stage, updater):
         if src.is_symlink():
             raise Refused(f"symlink in managed root: {rel}")
         if src.exists():
+            def ignore(directory, names):
+                ignored = {"__pycache__", "runs", ".pytest_cache"}
+                if Path(directory) == target / '.opencode':
+                    ignored.add('node_modules')
+                return [name for name in names if name in ignored]
             shutil.copytree(src, stage / rel, symlinks=True,
-                            ignore=shutil.ignore_patterns("__pycache__", "runs", ".pytest_cache"))
+                            ignore=ignore)
     for rel in (*ROOT_FILES, *updater.PROJECT_SCAFFOLD, *ADDITIVE_FILES, "docs/research/.gitkeep", "scripts/create-worktree.sh"):
         src = safe_path(target, rel)
         if src.exists():
@@ -303,6 +322,19 @@ def verify_generated(stage, plan, prior, hashes, blocks):
     for rel, entry in entries.items():
         if not scoped(rel) or not isinstance(entry, dict):
             raise Refused(f"invalid generated ownership record: {rel}")
+        if entry.get("mode") == "full" and rel not in plan["full_files"]:
+            # Only historical generator output families may be removed as stale.
+            # Broad planning scope is not deletion authority for user settings,
+            # project metadata, instruction blocks or native provider policy.
+            stale_output = (
+                re.fullmatch(r"\.(?:agents|claude)/skills/[^/]+/.+", rel)
+                or re.fullmatch(r"\.(?:claude|kimi-code|opencode)/agents/[^/]+\.md", rel)
+                or re.fullmatch(r"\.codex/agents/[^/]+\.toml", rel)
+                or re.fullmatch(r"\.aiassistant/rules/[^/]+\.md", rel)
+                or rel in {".kimi-code/AGENTS.md", ".kimi-code/README.md"}
+            )
+            if not stale_output:
+                raise Refused(f"invalid full generated ownership record: {rel}")
         safe_path(stage, rel)
     prior["files"] = entries
     safe_path(stage, GENERATED_MANIFEST).write_text(json.dumps(prior, indent=2) + "\n")

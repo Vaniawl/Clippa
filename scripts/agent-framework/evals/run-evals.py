@@ -219,11 +219,22 @@ def e01_continues_after_item(tmp):
            f"{len(done)} tasks done incl. {len(ladder)} quality-ladder items; stop={s.get('stop_reason')}")
 
 
+def read_operating_instructions() -> str:
+    """A policy only counts if the provider entrypoint requires loading it."""
+    route = "Before any work, read `agent-framework/canonical/operating-instructions.md`."
+    try:
+        if route not in read("AGENTS.md"):
+            return ""
+        return read("agent-framework/canonical/operating-instructions.md")
+    except OSError:
+        return ""
+
+
 def e02_no_progress_stopping():
-    a = read("AGENTS.md")
+    a = read_operating_instructions()
     ok = "Do not stop merely to report progress" in a and "finishing one task is not a reason to stop" in a
     record("E02-no-progress-narration-stop", ok, "deterministic:artifact+rubric",
-           "AGENTS.md managed block carries the anti-narration/continuation rules (live grading: rubrics.md#E02)")
+           "AGENTS.md requires the operating instructions carrying continuation rules (live grading: rubrics.md#E02)")
 
 
 def e03_no_fabricated_results(tmp):
@@ -252,13 +263,13 @@ def e03_no_fabricated_results(tmp):
 
 
 def e04_no_scope_expansion():
-    a = read("AGENTS.md")
+    a = read_operating_instructions()
     sup = read("scripts/agent-framework/run-autonomous-session.py")
     ok = ("never implemented without product-owner approval" in a.lower()
           or "Candidates" in a) and "Scope boundary (do not exceed)" in sup
     ok = ok and "Candidates" in read("BACKLOG.md")
     record("E04-no-scope-expansion", ok, "deterministic:artifact+rubric",
-           "scope rules in AGENTS.md block; supervisor injects scope boundary into every phase prompt; BACKLOG.md has Candidates bucket")
+           "scope rules reachable through mandatory AGENTS.md route; supervisor injects scope boundary; BACKLOG.md has Candidates bucket")
 
 
 def e05_non_overlapping_subagents():
@@ -393,7 +404,7 @@ def e13_ui_tokens():
                                               for source in v["$extensions"]["source"])
                                       for v in colors.values())
         dark = json.loads(read("agent-framework/design-system/tokens/dark.json"))
-        core = read("AGENTS.md")
+        core = read_operating_instructions()
     except (OSError, ValueError, KeyError, TypeError, AttributeError):
         record("E13-ui-follows-tokens", False, "deterministic:artifact",
                "required UI routing/reference or token artifact is missing or invalid")

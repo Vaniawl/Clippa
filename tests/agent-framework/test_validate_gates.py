@@ -13,7 +13,10 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _helpers import copy_repo, scratch_dir, validate  # noqa: E402
+from _helpers import copy_repo, scratch_dir, validate, source_asset  # noqa: E402
+
+# These source workflow regressions use a bundled test asset in application adopters.
+# They do not validate or replace an application's own CI/security scanners.
 
 
 class ValidateMutationBase(unittest.TestCase):
@@ -154,9 +157,9 @@ class TestCapabilityHonestyGuards(ValidateMutationBase):
     def test_model_tiering_false_claim_fails(self):
         m = self._matrix()
         text = m.read_text()
-        needle = 'codex:     { status: unsupported, note: "No per-agent model mapping'
+        needle = 'codex:     { status: unsupported, note: "Framework model_class mapping'
         self.assertIn(needle, text)
-        m.write_text(text.replace(needle, 'codex:     { status: supported, note: "No per-agent model mapping'))
+        m.write_text(text.replace(needle, 'codex:     { status: supported, note: "Framework model_class mapping'))
         self.assert_fails("model_tiering.codex claims 'supported'")
 
 
@@ -181,7 +184,7 @@ class TestSecretScanningCI(unittest.TestCase):
     forms are executable. NO real secret fixture is used anywhere."""
 
     REPO = Path(__file__).resolve().parent.parent.parent
-    WORKFLOW = REPO / ".github" / "workflows" / "quality.yml"
+    WORKFLOW = source_asset('quality.yml')
 
     def _secrets_run_steps(self) -> list[str]:
         import yaml
@@ -267,7 +270,7 @@ class TestDependencyVulnerabilityScanningCI(unittest.TestCase):
     shaped like real osv-scanner JSON output."""
 
     REPO = Path(__file__).resolve().parent.parent.parent
-    WORKFLOW = REPO / ".github" / "workflows" / "quality.yml"
+    WORKFLOW = source_asset('quality.yml')
 
     def _workflow(self) -> dict:
         import yaml

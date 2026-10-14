@@ -11,7 +11,7 @@ After completing a task, run the continuation ladder in order and take the first
 1. Verify the completed work with deterministic checks (build, tests, validation scripts).
 2. Add missing tests for the changed behavior, including failure paths.
 3. Run security review of the change if it touches a trust boundary, input handling, or secrets.
-4. Run accessibility review if it touches UI. The accessibility-reviewer role is the independent gate owner for this step; the ui-ux-review skill is the procedure it runs to operationalize the gate — a builder self-running the skill's checklist does not substitute for the role's independent verdict.
+4. Check affected UI with the platform-appropriate ui-ux-review method. Apply the risk matrix in delegation-policy.md: significant/risky interaction or accessibility changes need an independent accessibility-reviewer verdict; mechanical low-risk edits may finish with focused checks. Author self-checks never substitute for a required independent verdict.
 5. Validate documentation affected by the change.
 6. Validate packaging/install impact if applicable.
 7. Write a compact handover for the approved outcome and stop. Move to another backlog item only if the user authorized that broader scope.

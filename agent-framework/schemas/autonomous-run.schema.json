@@ -38,7 +38,7 @@
     },
     "provider_risk_acknowledged": {
       "type": "boolean", "default": false,
-      "description": "Explicit human acknowledgment required for real runs where declared policies are not provider-enforceable (kimi advisory permissions; offline/allowlist network on providers without egress enforcement)"
+      "description": "Explicit human acknowledgment required for advisory-only provider permissions (Kimi), declared-but-unenforced allowlists, and every real offline run. Codex restricts sandbox command egress and web search; MCP/plugin/model connections need separate review and are not certified offline."
     },
     "network_policy": {
       "type": "object", "additionalProperties": false, "required": ["mode"],

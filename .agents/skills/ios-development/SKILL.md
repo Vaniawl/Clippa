@@ -42,6 +42,11 @@ and dependency direction unless an architecture change is explicitly in scope.
 
 ## Evidence
 
+For boundary work use [native-boundaries.md](references/native-boundaries.md). Read only
+its applicable lifecycle/navigation, networking/auth or concurrency guidance. Persistence,
+commerce and capabilities use their dedicated optional methods when actually present; the
+catalog alone does not establish method installation or framework support.
+
 For changed behavior, add a focused test including the important failure/cancellation path.
 Run repository validation and the relevant package/native checks. Record exact commands,
 actual outputs, toolchain, and any unsupported environment. Use ios-testing for execution

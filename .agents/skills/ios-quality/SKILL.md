@@ -11,7 +11,8 @@ Use the compact Apple product-engineering router for the affected native product
 Load only the relevant section in [concerns.md](references/concerns.md):
 
 - Accessibility/interaction: use that section and ui-ux-review's native runtime evidence
-  procedure for changed UI. Independent accessibility review remains a separate gate.
+  procedure for changed UI. The delegation risk matrix determines when independent
+  accessibility review is required; mechanical low-risk changes use focused checks.
 - Performance/resource ownership: measure the reproducible scenario first; resource-safety
   applies when resource growth or lifetime is implicated.
 - Security/privacy: inspect actual data flows, manifests and SDKs; use security-review for
@@ -23,6 +24,10 @@ Do not turn a small text change into a full release audit. A Simulator build pro
 manual accessibility nor signing/archive/submission readiness. An uninspected empty privacy
 manifest does not establish no data collection. Return concrete findings with evidence,
 impact and correction; distinguish PASS, NOT RUN and NOT ASSESSED.
+
+For native assistive technology, field diagnostics or declarations use the affected part of
+[native-evidence.md](references/native-evidence.md). These procedures do not require reading
+every quality concern or installing a monitoring service.
 
 ## Research when needed
 

@@ -6,5 +6,7 @@
   `agent-framework/canonical/roles/`). To act as a role, read the brief first,
   e.g. "act per .kimi-code/agents/code-reviewer.md".
 - Skills are discovered from `.agents/skills/` (open-spec copies).
-- Core instructions: the managed block in the repository root `AGENTS.md`.
+- Read the repository root `AGENTS.md`, including its project-specific instructions.
+  The managed block supplies shared guidance; project-owned native workflows and
+  provider policies remain authoritative within their applicable scope.
 - Adapter details and the manual permission profile: `.kimi-code/README.md`.

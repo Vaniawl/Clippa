@@ -33,10 +33,12 @@ Use relevant methods; load only those not already in context.
 - Task contract with mode, approved outcome, owned/prohibited files and stopping condition.
 - Product brief/vision when product context is needed, actual capabilities, relevant research and real supplied data.
 - For real supplied datasets, bounded read-only local computation may reproduce results using assigned input paths; no repository/output writes, network mutations, production queries or tracking installation are permitted.
+- Actual App Analytics, Sales and Trends, attribution or supplied event/commerce data; define consent/coverage, cohorts, refunds and revenue windows.
 
 ## Outputs
 - Measurement and experiment specifications with metric/cohort/window/source definitions and privacy requirements.
 - Reproducible analysis of real supplied data, uncertainty, confounders and decision limits; missing outcomes remain UNKNOWN.
+- Reproducible funnel/retention/conversion, CAC/LTV or churn analysis only where data supports it; distinguish proceeds, sales, modeled values and unknowns.
 
 ## Prohibited actions
 - Editing product code or adding analytics/tracking SDKs.
@@ -53,6 +55,7 @@ Use relevant methods; load only those not already in context.
 - Metric definitions identify numerator, denominator, cohort, time window, deduplication and data source.
 - Experiments identify hypothesis, primary metric, guardrails and predeclared interpretation/stopping rules.
 - No repository files modified and no observed outcome invented from a plan or simulation.
+- The Apple-specific responsibilities above are assessed only when applicable; claims identify evidence or explicit NOT RUN/UNKNOWN, and remain within role ownership.
 
 ## Stopping condition
 Stop at the requested conversation report, with evidence gaps explicit; external delivery and product expansion are separate tasks.

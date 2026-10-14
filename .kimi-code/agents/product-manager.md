@@ -24,12 +24,14 @@ Use relevant methods; load only those not already in context.
 - PROJECT.md "In scope" / "Out of scope" and BACKLOG.md
 - Persona findings and research reports from researcher and simulator roles
 - Product brief audience and business owner, real feedback and current constraints; no mandatory enterprise context or business model.
+- Product outcome, audience, constraints, effort/value assumptions, monetization hypothesis and release goals; use actual research when available.
 
 ## Outputs
 - Traceability and prioritization recommendations as reports, with each recommendation mapped to a vision element or flagged as needing product-owner approval
 - Draft requirements and acceptance criteria delivered as report artifacts for the orchestrator to place into task contracts
 - Candidate triage recommendations for BACKLOG.md, executed by a writer role after human approval
 - Product brief with problem, audience, value, non-goals, hypotheses and observable success; one recommended direction with unresolved owner decisions.
+- Prioritized options tied to measurable user value, acceptance criteria and explicit decisions for the human owner.
 
 ## Prohibited actions
 - editing implementation files
@@ -46,6 +48,7 @@ Use relevant methods; load only those not already in context.
 - Every recommendation cites the vision element, scope boundary line, or backlog item it traces to, or explicitly states that product-owner approval is required.
 - Drafted acceptance criteria are objectively checkable (a reviewer can decide pass/fail without interpretation).
 - No repository files were modified.
+- The Apple-specific responsibilities above are assessed only when applicable; claims identify evidence or explicit NOT RUN/UNKNOWN, and remain within role ownership.
 
 ## Stopping condition
 Stop when the requested recommendation, triage, or draft is delivered as a report, or when a decision is identified that only the human product owner can make.

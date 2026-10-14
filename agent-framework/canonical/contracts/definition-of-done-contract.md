@@ -21,8 +21,8 @@ A task, slice, or release is Done only when every applicable line below is satis
 
 ## Release-level DoD (adds)
 
-- [ ] Release checklist (`docs/releases/release-checklist.md`) complete.
-- [ ] Install, upgrade, rollback validated.
+- [ ] A new version/build/revision-specific checklist, initialized from `agent-framework/templates/release-checklist.md`, is complete with evidence. Historical checked starter reports are not inputs for a new candidate.
+- [ ] Install, supported upgrades and technology-specific recovery validated; mark genuine N/A with a reason. Recovery is rollback where supported, backup/restore or forward-fix where necessary; unsupported reversal is never claimed.
 - [ ] Observability adequate for operating the change.
 - [ ] Known limitations documented.
 - [ ] Human approval recorded. Releases are never agent-approved.
@@ -39,6 +39,19 @@ architecture and components, compile affected targets, and resolve avoidable new
 Record runtime and visual evidence separately from build results. Mark unavailable checks
 NOT RUN and genuinely inapplicable criteria N/A with reasons; do not claim full UI polish
 from source inspection alone.
+
+New or materially redesigned screens have a product-specific visual direction and composition
+specified before implementation using `apple-experience-design`. Compare inspected runtime
+captures against screen-specific polish criteria and record corrections/re-review of significant
+visual findings. Existing specifications cover mechanical changes. Passing compilation or UI
+element assertions alone does not satisfy visual-design acceptance.
+
+For screen-building requests, the coordinator carries out the first-request UI procedure
+through the approved implementation and correction cycle. Handover includes representative
+capture paths and actual inspected criteria for the tested revision, conditions and states;
+open significant findings are explicit. A scaffold or design specialist handoff alone does
+not complete a product-building request. Unavailable visual inspection leaves visual
+acceptance NOT RUN rather than silently converting a build pass into professional polish.
 
 ## Enforcement
 

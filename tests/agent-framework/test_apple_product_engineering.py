@@ -9,7 +9,9 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _helpers import EXCLUDE, REPO_ROOT, check_drift, render, run, scratch_dir, validate
+from _helpers import EXCLUDE, REPO_ROOT, IS_TEMPLATE_SOURCE, check_drift, render, run, scratch_dir, validate
+sys.path.insert(0, str(REPO_ROOT / 'scripts/agent-framework'))
+from _markdown import local_links, invalid_local_links
 
 import yaml
 
@@ -21,11 +23,6 @@ APPLE_ROLES = (
     "security-privacy-reviewer", "devops-release-engineer", "ui-ux-designer",
 )
 APPLE_SKILLS = ("ios-development", "ios-testing", "ios-quality", "macos-development")
-IS_TEMPLATE_SOURCE = (REPO_ROOT / "agent-framework/.framework-source").is_file() or (
-    (REPO_ROOT / "scripts/bootstrap.py").is_file()
-    and not (REPO_ROOT / ".project-initialized").exists()
-    and not (REPO_ROOT / ".project-initialized").is_symlink()
-)
 
 
 class AppleProductEngineeringTests(unittest.TestCase):
@@ -87,7 +84,25 @@ class AppleProductEngineeringTests(unittest.TestCase):
                     for reference in (repo / f"agent-framework/canonical/skills/{skill}/references").rglob("*"):
                         if reference.is_file():
                             relative = reference.relative_to(repo / f"agent-framework/canonical/skills/{skill}")
-                            self.assertEqual((package / relative).read_bytes(), reference.read_bytes())
+                            installed = package / relative
+                            if reference.suffix != '.md':
+                                self.assertEqual(installed.read_bytes(), reference.read_bytes())
+                                continue
+                            source_text, installed_text = reference.read_text(), installed.read_text()
+                            self.assertEqual(invalid_local_links(installed_text, installed, repo), [])
+                            source_links, installed_links = list(local_links(source_text)), list(local_links(installed_text))
+                            self.assertEqual(len(source_links), len(installed_links))
+                            canonical = (repo / f'agent-framework/canonical/skills/{skill}').resolve()
+                            for source_link, installed_link in zip(source_links, installed_links):
+                                target = (reference.parent / source_link[3]).resolve()
+                                expected = package / target.relative_to(canonical) if target.is_relative_to(canonical) else target
+                                self.assertEqual((installed.parent / installed_link[3]).resolve(), expected.resolve())
+                            # Only destinations may change during packaging; all prose remains intact.
+                            for start, end, *_ in reversed(source_links):
+                                source_text = source_text[:start] + '<resource>' + source_text[end:]
+                            for start, end, *_ in reversed(installed_links):
+                                installed_text = installed_text[:start] + '<resource>' + installed_text[end:]
+                            self.assertEqual(installed_text, source_text)
         self.assert_success(check_drift(repo))
 
     def test_missing_router_or_reference_fails_validation(self):
@@ -116,6 +131,11 @@ class AppleProductEngineeringTests(unittest.TestCase):
                     if path.is_file()
                 }
                 agents_before = (repo / "AGENTS.md").read_bytes()
+                navigation_before = {
+                    relative: (repo / relative).read_bytes()
+                    for relative in ("agent-framework/CONTEXT.md",
+                                     "agent-framework/templates/task-folder/CONTEXT.md")
+                }
                 self.assertIn(Path(REFERENCE), before)
                 self.assert_success(run(["git", "init", "-q", "-b", "main"], repo))
                 self.assert_success(run(["git", "add", "."], repo))
@@ -132,6 +152,14 @@ class AppleProductEngineeringTests(unittest.TestCase):
                 for path, content in before.items():
                     self.assertEqual((repo / path).read_bytes(), content, str(path))
                 self.assertEqual((repo / "AGENTS.md").read_bytes(), agents_before)
+                for relative, content in navigation_before.items():
+                    self.assertEqual((repo / relative).read_bytes(), content, relative)
+                self.assertIn('# Project context: Policy Fixture', (repo / 'CONTEXT.md').read_text())
+                task_index = (repo / 'docs/tasks/CONTEXT.md').read_text()
+                self.assertIn('## Active product tasks\n\nNone yet.', task_index)
+                self.assertIn('## Source history', task_index)
+                self.assert_success(run([sys.executable, 'scripts/validate-context.py'], repo))
+                self.assertIn("docs/tasks/CONTEXT.md", (repo / "README.md").read_text())
                 self.assertIn(POLICY, (repo / "README.md").read_text(encoding="utf-8"))
                 metadata = yaml.safe_load((repo / "project.yaml").read_text(encoding="utf-8"))
                 self.assertTrue(set(APPLE_SKILLS) <= set(metadata["agent_framework"]["skills"]))

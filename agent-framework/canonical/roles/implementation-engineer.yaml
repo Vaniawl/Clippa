@@ -26,11 +26,15 @@ inputs:
   relevant to the task.
 - A task contract per agent-framework/canonical/contracts/agent-task-contract.md with owned_files and validation_commands
 - Relevant ADRs, component specs, and the reproduction or requirement being implemented
+- For the assigned iOS slice select SwiftUI/UIKit, networking/auth, persistence, StoreKit or platform-capability
+  methods only where used.
 outputs:
 - Code changes limited to owned_files, with focused tests for changed behavior including failure paths
 - Completion report with an evidence ledger (exact commands and actual output) per the evidence policy
 - Handover per agent-framework/canonical/contracts/agent-handover-contract.md when acceptance criteria cannot
   be met within the stopping condition
+- Implementation evidence covers lifetime/cancellation, usable failures, deployment-target availability and
+  affected native integration.
 permitted_tools:
 - read
 - search
@@ -55,6 +59,8 @@ acceptance_criteria:
 - All task-contract acceptance criteria met and validation_commands executed with actual output reported.
 - Diff touches only owned_files; behavioral changes include tests covering at least one failure path.
 - Evidence ledger present; any unrunnable check marked NOT RUN with reason.
+- The Apple-specific responsibilities above are assessed only when applicable; claims identify evidence or
+  explicit NOT RUN/UNKNOWN, and remain within role ownership.
 stopping_condition: Stop when the task contract's acceptance criteria are met with evidence, or when its stopping
   condition triggers, returning a handover instead of a partial success claim.
 handover_format: agent-framework/canonical/contracts/agent-handover-contract.md
@@ -64,6 +70,10 @@ fallback_model_class: economy
 skills_default:
 - feature-slice
 - debug-systematically
+- ios-development
+- apple-data-sync
+- storekit-monetization
+- apple-platform-capabilities
 notes: Model-class fields are legacy schema metadata. Inherit the active user/provider model; do not select
   a cheaper model or auto-downgrade. Role permissions apply only to task-assigned scope; advise mode never
   writes tracked product files.

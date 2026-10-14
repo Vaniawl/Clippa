@@ -699,6 +699,36 @@ class TestEnforceabilityGates(unittest.TestCase):
                        network_policy={"mode": "allowlist", "allowed_domains": ["example.com"]})
         self._refused(cfg, "allowlist")
 
+    def test_codex_offline_requires_ack_for_external_connections(self):
+        cfg = real_cfg(run_id="g-codex-offline", provider="codex",
+                       network_policy={"mode": "offline"})
+        self._refused(cfg, "MCP/plugin/model connections are not certified offline")
+
+    def test_codex_offline_ack_allows_bounded_mock_run(self):
+        runs = scratch_dir()
+        mock_dir = scratch_dir()
+        try:
+            write_mock_cli(mock_dir, "codex", r'''
+if [[ "${1:-}" == "--version" ]]; then echo "codex-cli 0.159.3"; exit 0; fi
+cat > /dev/null
+printf '{"type":"thread.started","thread_id":"mock-codex"}\n'
+printf '{"type":"item.completed","item":{"type":"agent_message","text":"PHASE_RESULT: ok"}}\n'
+printf '{"type":"turn.completed","usage":{"input_tokens":10,"cached_input_tokens":3,"output_tokens":5}}\n'
+''')
+            cfg = real_cfg(run_id="g-codex-offline-ack", provider="codex",
+                           network_policy={"mode": "offline"},
+                           provider_risk_acknowledged=True,
+                           budget={"max_provider_calls": 1})
+            p = supervisor(cfg, runs, env={"PATH": f"{mock_dir}:{os.environ['PATH']}"})
+            self.assertEqual(p.returncode, 0, p.stderr + p.stdout)
+            state = json.loads((runs / cfg["run_id"] / "run-state.json").read_text())
+            self.assertEqual(state["provider_calls"], 1)
+            self.assertEqual(state["stop_reason"], "budget")
+            self.assertEqual(state["budget_spent"]["total_tokens"], 15)
+        finally:
+            shutil.rmtree(runs, ignore_errors=True)
+            shutil.rmtree(mock_dir, ignore_errors=True)
+
 
 if __name__ == "__main__":
     unittest.main()

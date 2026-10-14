@@ -92,7 +92,18 @@ sections below refer to that reference, not the compact router. Do not load the 
 
 ### Native Apple verification checklist
 
+For visual-design acceptance, compare runtime captures with the chosen visual direction and
+screen composition in the UX specification. Check what attracts attention first, whether
+content grouping and the dominant action match the user's goal, and whether type, spacing,
+alignment, surfaces and assets form a coherent system across affected screens and states.
+Inspect realistic content density, formatting, long copy and localized variants. Record
+specific mismatches and correct significant findings before claiming professional polish.
+A missing specification for a new/major redesign goes back to design; mechanical changes
+may reference the existing specification/components. A screenshot or successful build alone
+does not establish usability or accessibility, and missing visual review remains NOT RUN.
+
 - [ ] Approved user goal, hierarchy, navigation, and repository/component reuse checked
+- [ ] Runtime captures compared with the specified visual direction, composition and screen-specific polish criteria
 - [ ] Adopted product design system or native system semantics respected
 - [ ] Spacing, alignment, type, icons, surfaces, and primary-action emphasis reviewed
 - [ ] Relevant light/dark and contrast settings, long content, adaptive sizes checked
@@ -104,4 +115,3 @@ sections below refer to that reference, not the compact router. Do not load the 
 - [ ] Affected builds/tests run; API availability and new warnings reviewed
 - [ ] Before/after visual evidence inspected; runtime evidence supports interaction/motion claims
 - [ ] Final self-review complete; missing checks NOT RUN, inapplicable checks N/A with reasons
-

@@ -1,6 +1,6 @@
 ---
 name: release-readiness
-description: Verify criteria, tests, security, compatibility, migrations, install, upgrade, rollback, observability, docs, notices, and limitations; return Go/Conditional Go/No-Go. Use when deciding whether a release, milestone, or deliverable is ready to ship, tag, or hand to a customer.
+description: Verify criteria, tests, security, compatibility, migrations, install, upgrade, supported recovery, observability, docs, notices, and limitations; return Go/Conditional Go/No-Go. Use when deciding whether a release, milestone, or deliverable is ready to ship, tag, or hand to a customer.
 ---
 
 
@@ -23,31 +23,33 @@ Render a defensible Go / Conditional Go / No-Go verdict from verified evidence �
 
 ## Procedure
 
-Assess each area below. For every area record: verified (evidence cited) / failed (evidence cited) / `NOT RUN` (reason). Second-hand claims are cited as `REPORTED, NOT INDEPENDENTLY VERIFIED` and the gate-critical ones re-run, per `agent-framework/canonical/policies/evidence-policy.md`.
+Initialize a fresh version/build/revision-specific [release checklist](../../../agent-framework/templates/release-checklist.md). Historical checked starter evidence never establishes a new candidate's readiness.
+
+Assess each area below. For every area record: verified (evidence cited) / failed (evidence cited) / `NOT RUN` (reason) / `N/A` (genuinely inapplicable, with reason). Missing access or evidence is NOT RUN, never N/A. Second-hand claims are cited as `REPORTED, NOT INDEPENDENTLY VERIFIED` and the gate-critical ones re-run, per `agent-framework/canonical/policies/evidence-policy.md`.
 
 1. **Acceptance criteria.** Every criterion for the release scope maps to evidence. Unmet or unevidenced criteria are enumerated.
 2. **Tests.** Full relevant suites executed on the release candidate (exact commit), commands and results recorded. Flaky reruns disclosed. Stub test scripts count as `NOT RUN`.
 3. **Security.** Security review completed for changes touching trust boundaries; findings resolved or explicitly accepted by the owner. No secrets in the artifact or history.
 4. **Compatibility.** Impact on existing clients, data, configs, and integrations assessed; breaking changes documented and versioned per policy.
-5. **Migrations.** Forward migration tested on realistic data; reverse/rollback migration tested or its impossibility stated in the notes.
+5. **Migrations.** Forward migration tested on realistic data; technology-supported recovery verified (rollback, backup/restore or forward-fix); irreversible constraints and supported old clients documented.
 6. **Install and upgrade.** Fresh install and upgrade-from-previous both exercised, not assumed. Record the environments used.
-7. **Rollback.** A rehearsed or at least written rollback procedure exists for the deployment; data implications stated.
+7. **Recovery.** A supported recovery/containment procedure has evidence; distinguish rehearsal from a written untested plan. App Store rollout pause does not undo installed updates; a corrected version may be required.
 8. **Observability.** New failure modes are logged/measurable; operators can tell the release is healthy after deploy.
 9. **Docs and notices.** User docs, changelog/release notes, and required legal/compliance notices updated for this version.
 10. **Known limitations.** Honest list assembled; each one classified as acceptable-for-release or blocking.
 
 ## Verdict rules
 
-- **Go** — all areas verified; residual items are Optional-grade and documented.
-- **Conditional Go** — no gate-critical failures, but specific, named conditions remain (e.g., "docs PR merged before announce", "rollback rehearsal before production rollout"). Every condition has an owner and a deadline; unowned conditions make it a No-Go.
+- **Go** — all applicable areas verified; genuinely inapplicable areas have justified N/A; residual items are Optional-grade and documented.
+- **Conditional Go** — no gate-critical failures, but specific, named conditions remain (e.g., "docs PR merged before announce", "recovery rehearsal before production rollout"). Every condition has an owner and a deadline; unowned conditions make it a No-Go.
 - **No-Go** — any gate-critical failure or any gate-critical area stuck at `NOT RUN` without an approved waiver. Unknown is not Go: missing evidence is treated as failure, never as pass.
 
 ## Verification checklist
 
 - [ ] Release candidate commit/artifact identified precisely
-- [ ] All ten areas assessed with evidence or explicit `NOT RUN` + reason
+- [ ] All ten areas assessed with evidence or explicit `NOT RUN`/justified `N/A` + reason
 - [ ] No claim accepted from narrative alone; second-hand evidence labeled
-- [ ] Rollback path stated (or its absence stated as a risk)
+- [ ] Supported recovery stated, with verification and residual risk
 - [ ] Known limitations list reviewed by the product owner
 - [ ] Every Conditional Go condition has owner + deadline
 
@@ -61,7 +63,7 @@ Follow `agent-framework/canonical/policies/evidence-policy.md`: the report carri
 ## Release Readiness: <version / milestone>
 Candidate: <commit / artifact id>
 
-| Area | Status (verified/failed/NOT RUN) | Evidence |
+| Area | Status (verified/failed/NOT RUN/N/A) | Evidence |
 |------|----------------------------------|----------|
 | Acceptance criteria | ... | ... |
 | Tests | ... | ... |
@@ -69,7 +71,7 @@ Candidate: <commit / artifact id>
 | Compatibility | ... | ... |
 | Migrations | ... | ... |
 | Install/upgrade | ... | ... |
-| Rollback | ... | ... |
+| Recovery | ... | ... |
 | Observability | ... | ... |
 | Docs/notices | ... | ... |
 | Known limitations | ... | ... |

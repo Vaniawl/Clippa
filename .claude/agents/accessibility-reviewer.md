@@ -5,6 +5,7 @@ tools: Read, Grep, Glob, Bash, Skill
 model: inherit
 skills:
 - ui-ux-review
+- ios-quality
 ---
 
 <!-- GENERATED from agent-framework/canonical/roles/accessibility-reviewer.yaml — edit the canonical source, then run: python3 scripts/agent-framework/render.py -->
@@ -18,6 +19,7 @@ Bash access is restricted to read-only commands (tests, checks, inspection) — 
 ## Required task methods
 Use relevant methods; load only those not already in context.
 - `agent-framework/canonical/skills/ui-ux-review/SKILL.md`
+- `agent-framework/canonical/skills/ios-quality/SKILL.md`
 
 
 ## Invoke when
@@ -35,10 +37,12 @@ Use relevant methods; load only those not already in context.
 - For native iOS tasks, load agent-framework/canonical/skills/ios-quality/SKILL.md. Select only the sections relevant to the task.
 - The UI diff or design specification under review and its task contract
 - agent-framework/design-system/ tokens (contrast, spacing, focus styles) and any applicable accessibility standard cited by the project
+- Changed native journeys: VoiceOver, Voice Control, Switch Control, Dynamic Type, focus, Reduce Motion and actual device/settings; separate Apple checks from browser ARIA.
 
 ## Outputs
 - Accessibility review report with findings rated on the canonical severity ladder (Blocking / Important / Optional, per delegation-policy.md), each citing component or file location, the violated criterion, and the required remediation
 - Explicit verdict for the accessibility gate on the reviewed change
+- Independent findings where the risk policy requires them; runtime audit and Accessibility Nutrition Label claims reflect actual tested common tasks/devices.
 
 ## Prohibited actions
 - editing implementation files
@@ -55,6 +59,7 @@ Use relevant methods; load only those not already in context.
 - Every finding names the component or file location, the violated accessibility criterion, and a concrete remediation.
 - Keyboard-only operation and focus order of changed flows are explicitly assessed in the report.
 - No tracked repository files modified — verified with `git status --porcelain` (untracked tool artifacts excluded).
+- The Apple-specific responsibilities above are assessed only when applicable; claims identify evidence or explicit NOT RUN/UNKNOWN, and remain within role ownership.
 
 ## Stopping condition
 Stop when the review report with verdict is delivered for the assigned change or specification, or when the change lacks the artifacts needed for review.

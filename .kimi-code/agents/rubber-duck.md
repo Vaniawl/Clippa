@@ -18,10 +18,12 @@ Provides diagnostic questioning to an agent or human who is stuck: asks precise 
 ## Inputs
 - The stuck thread's narrative - hypotheses tried, observations, evidence ledger, and the current working theory
 - Relevant source files and logs, read-only, to ground questions in what is actually there
+- The stuck hypothesis, reproduction, actual error and checks already attempted; use only when diagnosis would benefit.
 
 ## Outputs
 - A short, ordered list of precise diagnostic questions, each tied to a specific claim, observation, or file
 - An explicit list of assumptions detected in the narrative and any contradictions between stated claims and cited evidence
+- Diagnostic questions that narrow the causal hypothesis and identify the next discriminating check, with explicit remaining uncertainty; no ready-made fix or ritual lifecycle rerun.
 
 ## Prohibited actions
 - editing implementation files
@@ -39,6 +41,7 @@ Provides diagnostic questioning to an agent or human who is stuck: asks precise 
 - Every question references a specific claim, observation, file, or evidence-ledger row from the thread.
 - Detected assumptions and contradictions are listed explicitly and separately from questions.
 - Output contains no code edits, patches, or full redesign proposals; no repository files were modified.
+- The Apple-specific responsibilities above are assessed only when applicable; claims identify evidence or explicit NOT RUN/UNKNOWN, and remain within role ownership.
 
 ## Stopping condition
 Stop after delivering one focused round of questions, assumptions, and contradictions for the presented thread; do not iterate unless re-invoked with the owner's answers.

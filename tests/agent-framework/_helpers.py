@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -56,6 +57,64 @@ def check_drift(repo: Path) -> subprocess.CompletedProcess:
 
 def scratch_dir() -> Path:
     return Path(tempfile.mkdtemp(prefix="af-test-"))
+
+
+def is_template_source(root: Path) -> bool:
+    """A downstream foundation does not own its host app's CI, even in a fork
+    that separately remains a framework development home.
+    """
+    candidate = (root / 'agent-framework/.framework-source').is_file() or (
+        (root / 'scripts/bootstrap.py').is_file()
+        and not (root / '.project-initialized').exists()
+        and not (root / '.project-initialized').is_symlink()
+    )
+    try:
+        metadata = json.loads((root / 'agent-framework/.framework-payload.json').read_text())
+    except (OSError, ValueError):
+        return candidate
+    installed = (isinstance(metadata, dict) and metadata.get('template') == 'ios-starter'
+                 and metadata.get('source_url') == 'https://github.com/Vaniawl/ios-starter.git'
+                 and isinstance(metadata.get('source_commit'), str)
+                 and re.fullmatch(r'[0-9a-f]{40}', metadata['source_commit']))
+    return candidate and not installed
+
+
+IS_TEMPLATE_SOURCE = is_template_source(REPO_ROOT)
+
+
+def source_asset(name: str) -> Path:
+    """Test source-owned assets without requiring an adopter's CI to match them."""
+    originals = {'quality.yml': REPO_ROOT / '.github/workflows/quality.yml',
+                 'adr-template.md': REPO_ROOT / 'docs/adr/0000-template.md',
+                 'permissions.json': REPO_ROOT / '.claude/settings.json'}
+    if IS_TEMPLATE_SOURCE:
+        return originals[name]
+    return Path(__file__).parent / 'fixtures/source-assets' / name
+
+
+def updater_source_fixture(dst: Path) -> Path:
+    """A neutral framework source in scratch; never installs CI into the host app."""
+    import importlib.util
+    spec = importlib.util.spec_from_file_location('test_source_updater', SCRIPTS / 'update-framework.py')
+    updater = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = updater
+    spec.loader.exec_module(updater)
+    for relative, source in updater.payload_files(REPO_ROOT).items():
+        target = dst / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, target)
+    for name, relative in [('quality.yml', '.github/workflows/quality.yml'),
+                           ('adr-template.md', 'docs/adr/0000-template.md')]:
+        target = dst / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source_asset(name), target)
+    settings = dst / '.claude/settings.json'
+    settings.parent.mkdir(parents=True, exist_ok=True)
+    settings.write_text(json.dumps({'permissions': json.loads(
+        source_asset('permissions.json').read_text())['permissions']}, indent=2) + '\n')
+    (dst / 'agent-framework/.framework-payload.json').write_text(json.dumps({
+        'framework_version': 'fixture', 'files': {}, 'scaffold': {}}))
+    return dst
 
 
 def write_mock_cli(bin_dir: Path, name: str, script: str) -> Path:

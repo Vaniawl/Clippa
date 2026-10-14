@@ -68,21 +68,28 @@ af_require_cli_version() {
   # shim's argv contract is version-specific (e.g. `codex exec resume` options), an
   # installed CLI outside the tested series must fail VISIBLY before any provider
   # invocation — a warning-and-continue path is not sufficient. Deliberate pilot
-  # override: AF_ACCEPT_UNSUPPORTED_CLI=1 (recorded loudly on stderr).
-  local cli="$1" tested="$2" installed
+  # override for direct shim invocation: AF_ACCEPT_UNSUPPORTED_CLI=1 (recorded
+  # loudly on stderr). The supervisor's curated environment drops this override.
+  local cli="$1" installed supported="" series version_series=""
+  shift
   installed="$(af_with_timeout_secs 10 "$cli" --version </dev/null 2>/dev/null | head -1 || echo unknown)"
-  if [[ "$installed" == *"$tested"* ]]; then
-    return 0
+  if [[ "$installed" =~ (^|[^0-9.])([0-9]+)\.([0-9]+)\.[0-9]+([^0-9.]|$) ]]; then
+    version_series="${BASH_REMATCH[2]}.${BASH_REMATCH[3]}"
   fi
+  for series in "$@"; do
+    [[ "$version_series" == "$series" ]] && return 0
+    supported="${supported:+$supported, }$series.x"
+  done
   if [[ "${AF_ACCEPT_UNSUPPORTED_CLI:-0}" == "1" ]]; then
-    echo "WARN: $cli version '$installed' is outside the tested series '$tested' —" \
+    echo "WARN: $cli version '$installed' is outside the tested series '$supported' —" \
          "continuing ONLY because AF_ACCEPT_UNSUPPORTED_CLI=1 was set explicitly" >&2
     return 0
   fi
   echo "provider shim: REFUSED — installed $cli version '$installed' is not in the" \
-       "supported series '$tested.x'. The command construction (including resume" \
-       "argv) is verified against that series only. Install a supported version or" \
-       "set AF_ACCEPT_UNSUPPORTED_CLI=1 to accept the risk for an attended pilot." >&2
+       "supported series '$supported'. The command construction (including resume" \
+       "argv) is verified against those series only. Install a supported version." \
+       "For an attended direct shim pilot only, set AF_ACCEPT_UNSUPPORTED_CLI=1;" \
+       "the supervisor does not forward that override." >&2
   exit 2
 }
 

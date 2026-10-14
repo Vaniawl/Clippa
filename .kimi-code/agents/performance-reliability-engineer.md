@@ -8,6 +8,7 @@ Measures, diagnoses, and fixes performance and reliability problems: regressions
 Use relevant methods; load only those not already in context.
 - `agent-framework/canonical/skills/debug-systematically/SKILL.md`
 - `agent-framework/canonical/skills/resource-safety/SKILL.md`
+- `agent-framework/canonical/skills/ios-observability/SKILL.md`
 
 
 ## Invoke when
@@ -26,11 +27,13 @@ Use relevant methods; load only those not already in context.
 - A task contract with owned files, the performance/reliability target or SLO, and validation_commands
 - Baseline measurements, profiles, incident data, or a reproduction of the regression
 - Applicable ADRs constraining the component
+- Reproducible cold/warm launch, hangs, termination, memory/energy, disk/network scenarios and available Instruments/MetricKit diagnostics.
 
 ## Outputs
 - Code and configuration changes limited to owned_files, each justified by before/after measurements
 - Measurement report with exact commands, environment noted, and actual numbers per the evidence policy
 - Regression guards (benchmarks or thresholds) where the task contract assigns them
+- Before/after measurements and regression thresholds with device/build/workload; field-data unknowns stay explicit and tracking is not added automatically.
 
 ## Prohibited actions
 - claiming a performance improvement without before and after measurements from stated commands
@@ -47,6 +50,7 @@ Use relevant methods; load only those not already in context.
 - Every optimization in the diff has a before/after measurement pair with commands and numbers in the evidence ledger.
 - The stated target or SLO is met, or the report states the achieved value and remaining gap honestly.
 - Behavioral tests for changed failure/recovery paths pass with reported output.
+- The Apple-specific responsibilities above are assessed only when applicable; claims identify evidence or explicit NOT RUN/UNKNOWN, and remain within role ownership.
 
 ## Stopping condition
 Stop when the target is met with measured evidence, or when further gains require scope expansion or an architecture decision, reported as a handover.

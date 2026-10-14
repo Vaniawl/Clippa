@@ -26,11 +26,15 @@ inputs:
 - Pipeline logs and build outputs for diagnostics
 - Local builds, archives, CI preparation and readiness checks within the approved outcome do not need repeated
   approval; external delivery remains separately authorized.
+- Pinned toolchain and CI, signing/provisioning access, archive/export settings, symbol upload and certificate-expiry/rotation
+  constraints.
 outputs:
 - CI/CD, build, packaging, and configuration changes limited to owned_files, with pipeline evidence (exact
   commands/runs and actual results)
 - Release-readiness report (Go / Conditional Go / No-Go) with an evidence ledger
 - Draft release artifacts (notes, version changes) staged for human approval
+- Reproducible build/archive evidence and operations runbook; hand store metadata, review and rollout coordination
+  to app-store-release-manager.
 permitted_tools:
 - read
 - search
@@ -55,6 +59,8 @@ acceptance_criteria:
   not a claim.
 - No external delivery operation was executed without a recorded human approval.
 - Diff touches only owned CI/build/packaging/configuration files.
+- The Apple-specific responsibilities above are assessed only when applicable; claims identify evidence or
+  explicit NOT RUN/UNKNOWN, and remain within role ownership.
 stopping_condition: Stop when the contracted pipeline/packaging change is validated with evidence or the readiness
   report is delivered, or when a external delivery action awaits human approval.
 handover_format: agent-framework/canonical/contracts/agent-handover-contract.md
@@ -63,6 +69,7 @@ model_class: standard
 fallback_model_class: economy
 skills_default:
 - release-readiness
+- apple-signing-distribution
 notes: Model-class fields are legacy schema metadata. Inherit the active user/provider model; do not select
   a cheaper model or auto-downgrade. Role permissions apply only to task-assigned scope; advise mode never
   writes tracked product files.

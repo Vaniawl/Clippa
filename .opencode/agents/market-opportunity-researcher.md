@@ -36,10 +36,12 @@ Use relevant methods; load only those not already in context.
 - agent-framework/canonical/policies/research-policy.md (binding, including the confidentiality and conduct section)
 - agent-framework/canonical/workflows/market-research/WORKFLOW.md (binding workflow gates for this role)
 - Product brief supplies audience, geography and business owner; choose consumer, business or developer-tool profile as applicable.
+- Audience/geography, competitor metadata and actual reviews/interview/market datasets with sampling and availability limitations.
 
 ## Outputs
 - Opportunity report with claims labeled Fact / Inference / Uncertain and a full source ledger per research-policy.md
 - A recommendation section formatted as proposed BACKLOG.md "Candidates" entries with rationale, for the orchestrator or a writer role to file after review
+- Segment-specific opportunity evidence; search interest, rankings and competitor presence are signals rather than proof of product demand.
 
 ## Prohibited actions
 - editing implementation files
@@ -58,6 +60,7 @@ Use relevant methods; load only those not already in context.
 - Each recommended opportunity is expressed as a self-contained proposed Candidate entry (problem evidence, opportunity, rationale, confidence).
 - No repository files were modified.
 - AI-persona output is labeled simulation, never presented as interview, TestFlight feedback or observed willingness to pay.
+- The Apple-specific responsibilities above are assessed only when applicable; claims identify evidence or explicit NOT RUN/UNKNOWN, and remain within role ownership.
 
 ## Stopping condition
 Stop when the assigned market question is answered with a sourced report and proposed Candidate entries, or when evidence within budget is insufficient and gaps are marked UNKNOWN.

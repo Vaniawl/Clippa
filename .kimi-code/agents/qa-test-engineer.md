@@ -7,6 +7,7 @@ Designs and implements test coverage beyond the focused tests written by impleme
 ## Required task methods
 Use relevant methods; load only those not already in context.
 - `agent-framework/canonical/skills/debug-systematically/SKILL.md`
+- `agent-framework/canonical/skills/ios-testing/SKILL.md`
 
 
 ## Invoke when
@@ -25,11 +26,13 @@ Use relevant methods; load only those not already in context.
 - A task contract with owned test files/globs and the behavior specification or defect reproduction to cover
 - The change set under test and its acceptance criteria
 - Existing test suites and validation scripts
+- Affected journeys and test plans: Swift Testing unit tests, XCTest UI/performance, fixtures, permissions, offline, upgrade and flake history.
 
 ## Outputs
 - New or extended test files within owned_files, covering specified behavior including failure paths
 - Test-run report with exact commands and actual output per the evidence policy
 - Defect reports for failures found, filed as findings for the orchestrator (never in-place product fixes)
+- Distinct test/runtime evidence covering changed failure paths; disclose reruns, unsupported environments and untested manual journeys.
 
 ## Prohibited actions
 - modifying product implementation files (test files and test fixtures only, per owned_files)
@@ -46,6 +49,7 @@ Use relevant methods; load only those not already in context.
 - Every behavior in the task contract has at least one test, and specified failure paths are covered.
 - All added tests run in the reported commands with actual output attached; failures and NOT RUN entries are visible.
 - Diff touches only owned test files and fixtures.
+- The Apple-specific responsibilities above are assessed only when applicable; claims identify evidence or explicit NOT RUN/UNKNOWN, and remain within role ownership.
 
 ## Stopping condition
 Stop when the contracted coverage exists and has been executed with reported evidence, or when a product defect blocks further coverage and has been filed.

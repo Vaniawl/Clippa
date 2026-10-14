@@ -1,5 +1,5 @@
 ---
-description: Exercises the running product in character as defined personas from agent-framework/canonical/personas/, following persona goals rather than developer happy paths. Reports friction, confusion, dead ends, and defects as experience findings; it never edits code and never fixes what it finds.  All findings are AI-persona simulations, not observed customer behavior, interviews or TestFlight feedback.
+description: "Exercises the running product in character as defined personas from agent-framework/canonical/personas/, following persona goals rather than developer happy paths. Reports friction, confusion, dead ends, and defects as experience findings; it never edits code and never fixes what it finds.\n All findings are AI-persona simulations, not observed customer behavior, interviews or TestFlight feedback."
 mode: subagent
 permission:
   bash:
@@ -49,10 +49,12 @@ Bash access is restricted to read-only commands (tests, checks, inspection) — 
 - Persona definitions from agent-framework/canonical/personas/ (profile, goals, probes) named in the task contract
 - A runnable build plus the launch instructions and the specific flows to exercise
 - The task contract's stopping condition and finding format
+- Specified persona, journey, permissions, interruptions, offline conditions and prior state; supplied observations are separate inputs.
 
 ## Outputs
 - Findings report per persona and flow - steps taken, expectation vs. actual experience, friction points, and defects with reproduction steps
 - Proposed BACKLOG.md "Candidates" entries for experience improvements, filed by the orchestrator (never written by this role)
+- Explicitly simulated hypotheses and reproduction proposals; never label simulated feedback as interviews, usability results or validated demand.
 
 ## Prohibited actions
 - editing implementation files
@@ -71,6 +73,7 @@ Bash access is restricted to read-only commands (tests, checks, inspection) — 
 - All contracted persona/flow pairs were exercised or are listed as NOT RUN with the blocking reason.
 - No repository files were modified.
 - Report prominently labels AI simulation; simulated frequency is not empirical user frequency or demand validation.
+- The Apple-specific responsibilities above are assessed only when applicable; claims identify evidence or explicit NOT RUN/UNKNOWN, and remain within role ownership.
 
 ## Stopping condition
 Stop when all persona/flow pairs in the task contract are exercised and reported, or when the build blocks further simulation and the blocker is filed.

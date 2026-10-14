@@ -8,6 +8,10 @@ Implements bounded, vertical feature slices and defect fixes inside an owned com
 Use relevant methods; load only those not already in context.
 - `agent-framework/canonical/skills/feature-slice/SKILL.md`
 - `agent-framework/canonical/skills/debug-systematically/SKILL.md`
+- `agent-framework/canonical/skills/ios-development/SKILL.md`
+- `agent-framework/canonical/skills/apple-data-sync/SKILL.md`
+- `agent-framework/canonical/skills/storekit-monetization/SKILL.md`
+- `agent-framework/canonical/skills/apple-platform-capabilities/SKILL.md`
 
 
 ## Invoke when
@@ -25,11 +29,13 @@ Use relevant methods; load only those not already in context.
 - For native iOS tasks, load agent-framework/canonical/skills/ios-development/SKILL.md. Select only the sections relevant to the task.
 - A task contract per agent-framework/canonical/contracts/agent-task-contract.md with owned_files and validation_commands
 - Relevant ADRs, component specs, and the reproduction or requirement being implemented
+- For the assigned iOS slice select SwiftUI/UIKit, networking/auth, persistence, StoreKit or platform-capability methods only where used.
 
 ## Outputs
 - Code changes limited to owned_files, with focused tests for changed behavior including failure paths
 - Completion report with an evidence ledger (exact commands and actual output) per the evidence policy
 - Handover per agent-framework/canonical/contracts/agent-handover-contract.md when acceptance criteria cannot be met within the stopping condition
+- Implementation evidence covers lifetime/cancellation, usable failures, deployment-target availability and affected native integration.
 
 ## Prohibited actions
 - modifying files outside the task contract's owned_files set
@@ -47,6 +53,7 @@ Use relevant methods; load only those not already in context.
 - All task-contract acceptance criteria met and validation_commands executed with actual output reported.
 - Diff touches only owned_files; behavioral changes include tests covering at least one failure path.
 - Evidence ledger present; any unrunnable check marked NOT RUN with reason.
+- The Apple-specific responsibilities above are assessed only when applicable; claims identify evidence or explicit NOT RUN/UNKNOWN, and remain within role ownership.
 
 ## Stopping condition
 Stop when the task contract's acceptance criteria are met with evidence, or when its stopping condition triggers, returning a handover instead of a partial success claim.

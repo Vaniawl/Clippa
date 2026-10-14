@@ -24,6 +24,10 @@ Find exploitable weaknesses in a change or component before an attacker does, an
 
 ## Procedure
 
+For native Apple app boundaries, also use [native-apple.md](references/native-apple.md).
+Browser/server-only controls apply only when those surfaces actually exist; this review does
+not imply a backend, compliance certification or additional implementation authority.
+
 Trace each area in the code itself — do not accept "we validate that" from a description. Per `agent-framework/canonical/policies/security-policy.md`: authorization is enforced server-side, external input is validated, and new boundaries update the threat model.
 
 1. **Map the attack surface.** List entry points (endpoints, webhooks, files, queues, CLI, env/config), the trust level of each caller, and the assets behind them. Update/check the threat model for new boundaries.

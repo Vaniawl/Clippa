@@ -15,8 +15,8 @@ default_install:
   - product-positioning
   - app-store-marketing
   - product-measurement
-domain_skills_policy: 'Domain skills are installed per project via project.yaml (agent_framework.skills). Do not
-  install the entire domain catalogue into every project.
+domain_skills_policy: 'Domain skills are installed per project via project.yaml (agent_framework.skills). Do
+  not install the entire domain catalogue into every project.
 
   '
 skills:
@@ -24,20 +24,20 @@ skills:
     kind: core
     status: complete
     default_install: true
-    summary: Evidence-based architecture verdict (Blocking/Important/Optional) on designs and cross-module changes,
-      including scope, failure-mode, migration, and ADR checks.
+    summary: Evidence-based architecture verdict (Blocking/Important/Optional) on designs and cross-module
+      changes, including scope, failure-mode, migration, and ADR checks.
   - id: debug-systematically
     kind: core
     status: complete
     default_install: true
-    summary: Reproduce, minimize, rank and falsify hypotheses one at a time, fix the root cause, and prove it with
-      a fail-then-pass regression test.
+    summary: Reproduce, minimize, rank and falsify hypotheses one at a time, fix the root cause, and prove
+      it with a fail-then-pass regression test.
   - id: feature-slice
     kind: core
     status: complete
     default_install: true
-    summary: Deliver approved work as the smallest end-to-end vertical slice with acceptance criteria, tests, docs,
-      and an evidence ledger.
+    summary: Deliver approved work as the smallest end-to-end vertical slice with acceptance criteria, tests,
+      docs, and an evidence ledger.
   - id: release-readiness
     kind: core
     status: complete
@@ -47,8 +47,9 @@ skills:
     kind: core
     status: complete
     default_install: true
-    summary: Review of process lifecycle, memory growth, output capture, and handle management for unbounded resource
-      consumption, with an explicit memory/CPU containment bound for long-running or third-party-driven work.
+    summary: Review of process lifecycle, memory growth, output capture, and handle management for unbounded
+      resource consumption, with an explicit memory/CPU containment bound for long-running or third-party-driven
+      work.
   - id: security-review
     kind: core
     status: complete
@@ -59,104 +60,104 @@ skills:
     kind: core
     status: complete
     default_install: true
-    summary: UI review covering keyboard access, WCAG 2.2 AA contrast, focus, breakpoints, error/loading/empty states,
-      novice clarity, expert efficiency, design-token conformance, and before/after screenshot evidence.
+    summary: UI review covering keyboard access, WCAG 2.2 AA contrast, focus, breakpoints, error/loading/empty
+      states, novice clarity, expert efficiency, design-token conformance, and before/after screenshot evidence.
   - id: sap-s4hana
     kind: domain
     status: incomplete-stub
     default_install: false
-    summary: Honest stub for SAP S/4HANA work — scope framing plus mandatory consultation of the SAP Help Portal
-      for the customer's exact edition and release.
+    summary: "Honest stub for SAP S/4HANA work \u2014 scope framing plus mandatory consultation of the SAP\
+      \ Help Portal for the customer's exact edition and release."
   - id: servicenow
     kind: domain
     status: incomplete-stub
     default_install: false
-    summary: Honest stub for ServiceNow work — release-family awareness and mandatory consultation of the official
-      ServiceNow docs portal.
+    summary: "Honest stub for ServiceNow work \u2014 release-family awareness and mandatory consultation of\
+      \ the official ServiceNow docs portal."
   - id: jira
     kind: domain
     status: incomplete-stub
     default_install: false
-    summary: Honest stub for Jira work — Cloud vs. Data Center awareness and mandatory consultation of official
-      Atlassian documentation.
+    summary: "Honest stub for Jira work \u2014 Cloud vs. Data Center awareness and mandatory consultation of\
+      \ official Atlassian documentation."
   - id: zephyr-scale
     kind: domain
     status: incomplete-stub
     default_install: false
-    summary: Honest stub for Zephyr Scale test management in Jira — line awareness (Cloud vs. Server/DC) and mandatory
-      consultation of SmartBear documentation.
+    summary: "Honest stub for Zephyr Scale test management in Jira \u2014 line awareness (Cloud vs. Server/DC)\
+      \ and mandatory consultation of SmartBear documentation."
   - id: tricentis-tosca
     kind: domain
     status: incomplete-stub
     default_install: false
-    summary: Honest stub for Tricentis Tosca test automation — Cloud vs. on-premises version awareness and mandatory
-      consultation of Tricentis documentation.
+    summary: "Honest stub for Tricentis Tosca test automation \u2014 Cloud vs. on-premises version awareness\
+      \ and mandatory consultation of Tricentis documentation."
   - id: tricentis-qtest
     kind: domain
     status: incomplete-stub
     default_install: false
-    summary: Honest stub for Tricentis qTest test management — SaaS vs. on-premises awareness and mandatory consultation
-      of Tricentis documentation.
+    summary: "Honest stub for Tricentis qTest test management \u2014 SaaS vs. on-premises awareness and mandatory\
+      \ consultation of Tricentis documentation."
   - id: uipath
     kind: domain
     status: incomplete-stub
     default_install: false
-    summary: Honest stub for UiPath automation platform work — product/deployment identification and mandatory consultation
-      of docs.uipath.com.
+    summary: "Honest stub for UiPath automation platform work \u2014 product/deployment identification and\
+      \ mandatory consultation of docs.uipath.com."
   - id: worksoft-certify
     kind: domain
     status: incomplete-stub
     default_install: false
-    summary: Honest stub for Worksoft Certify business-process test automation — version awareness and mandatory
-      consultation of the Worksoft Help Portal.
+    summary: "Honest stub for Worksoft Certify business-process test automation \u2014 version awareness and\
+      \ mandatory consultation of the Worksoft Help Portal."
   - id: sql-database-design
     kind: domain
     status: complete
     default_install: false
-    summary: Vendor-neutral relational schema design — normalization, keys, constraints, types, indexing, transactions,
-      and migration safety with engine-doc citations.
+    summary: "Vendor-neutral relational schema design \u2014 normalization, keys, constraints, types, indexing,\
+      \ transactions, and migration safety with engine-doc citations."
   - id: rest-openapi
     kind: domain
     status: complete
     default_install: false
-    summary: REST/HTTP API design and OpenAPI 3.x authoring — semantics, errors, pagination, versioning, compatibility,
-      and contract validation.
+    summary: "REST/HTTP API design and OpenAPI 3.x authoring \u2014 semantics, errors, pagination, versioning,\
+      \ compatibility, and contract validation."
   - id: finmatics
     kind: domain
     status: incomplete-stub
     default_install: false
-    summary: Honest stub for Finmatics document-processing automation — tenant-feature confirmation and mandatory
-      consultation of the official (German) help center.
+    summary: "Honest stub for Finmatics document-processing automation \u2014 tenant-feature confirmation and\
+      \ mandatory consultation of the official (German) help center."
   - id: appium
     kind: domain
     status: complete
     default_install: false
-    summary: Appium mobile/UI automation — driver and capability setup, accessibility-ID locators, explicit waits,
-      device execution, and flake control.
+    summary: "Appium mobile/UI automation \u2014 driver and capability setup, accessibility-ID locators, explicit\
+      \ waits, device execution, and flake control."
   - id: playwright
     kind: domain
     status: complete
     default_install: false
-    summary: Playwright end-to-end web testing — user-facing locators, auto-waiting/web-first assertions, fixtures,
-      tracing, and CI stability.
+    summary: "Playwright end-to-end web testing \u2014 user-facing locators, auto-waiting/web-first assertions,\
+      \ fixtures, tracing, and CI stability."
   - id: selenium
     kind: domain
     status: complete
     default_install: false
-    summary: Selenium WebDriver automation — locator strategy, explicit waits, page objects, Grid execution, and
-      suite stabilization.
+    summary: "Selenium WebDriver automation \u2014 locator strategy, explicit waits, page objects, Grid execution,\
+      \ and suite stabilization."
   - id: ios-development
     kind: domain
     status: complete
     default_install: false
-    summary: Implement and review SwiftUI features, state ownership, module boundaries, and Swift concurrency in
-      native iOS apps.
+    summary: Implement and review SwiftUI features, state ownership, module boundaries, and Swift concurrency
+      in native iOS apps.
   - id: ios-testing
     kind: domain
     status: complete
     default_install: false
-    summary: Build, run, and test native iOS apps with Swift package tests, XCTest and Simulator; diagnose failures
-      and record reproducible evidence.
+    summary: Build, run, and test native iOS apps with Swift package tests, XCTest and Simulator; diagnose
+      failures and record reproducible evidence.
   - id: ios-quality
     kind: domain
     status: complete
@@ -209,3 +210,51 @@ skills:
     status: complete
     default_install: true
     summary: Reproducible metric definitions and experiments without automatic analytics installation.
+  - id: apple-data-sync
+    kind: domain
+    status: complete
+    default_install: false
+    summary: Use when designing or verifying SwiftData, Core Data or CloudKit persistence, migrations and offline
+      sync in an Apple app.
+  - id: storekit-monetization
+    kind: domain
+    status: complete
+    default_install: false
+    summary: Use when implementing or reviewing approved Apple in-app purchases, subscription entitlements
+      and StoreKit tests.
+  - id: apple-signing-distribution
+    kind: domain
+    status: complete
+    default_install: false
+    summary: Use when preparing reproducible Apple archives, signing and CI, TestFlight or App Store distribution
+      evidence without automatic delivery.
+  - id: app-localization
+    kind: domain
+    status: complete
+    default_install: false
+    summary: Use when preparing or verifying Apple string catalogs, plurals, locale formatting, RTL and localized
+      store resources.
+  - id: ios-observability
+    kind: domain
+    status: complete
+    default_install: false
+    summary: Use when diagnosing iOS launch, crash, hang, memory or energy regressions from actual Instruments,
+      MetricKit or sanitized support evidence.
+  - id: user-research
+    kind: domain
+    status: complete
+    default_install: false
+    summary: Use when planning bounded user studies or analyzing supplied real interviews, usability observations
+      and TestFlight feedback.
+  - id: marketing-creative-production
+    kind: domain
+    status: complete
+    default_install: false
+    summary: Use when producing approved app icons, store screenshots, previews or campaign assets with truthful
+      claims and placement-specific exports.
+  - id: apple-platform-capabilities
+    kind: domain
+    status: complete
+    default_install: false
+    summary: Use when designing or verifying approved Apple notifications, background work, deep links, extensions,
+      widgets, Live Activities or App Intents.

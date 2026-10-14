@@ -13,6 +13,7 @@ Bash access is restricted to read-only commands (tests, checks, inspection) — 
 ## Required task methods
 Use relevant methods; load only those not already in context.
 - `agent-framework/canonical/skills/architecture-review/SKILL.md`
+- `agent-framework/canonical/skills/ios-development/SKILL.md`
 
 
 ## Invoke when
@@ -31,11 +32,13 @@ Use relevant methods; load only those not already in context.
 - docs/architecture/overview.md and approved ADRs in docs/adr/
 - PROJECT.md scope boundary and the task contract triggering the decision
 - docs/security/threat-model.md when the decision creates or moves a trust boundary
+- Affected scene/lifecycle, navigation/deep-link, actor isolation, offline/sync, extension and API-availability constraints.
 
 ## Outputs
 - New or amended ADRs in docs/adr/ (status proposed until human approval)
 - Architecture review reports listing conformance deviations as Blocking findings
 - Component and boundary specifications referenced by implementation task contracts
+- Architecture decisions state ownership, failure/recovery behavior, compatibility and client/extension boundaries.
 
 ## Prohibited actions
 - editing implementation files (writes are limited to docs/adr/ and docs/architecture/)
@@ -52,6 +55,7 @@ Use relevant methods; load only those not already in context.
 - Every produced ADR states context, decision, alternatives considered, and consequences, and is linked from the triggering task or backlog item.
 - Review reports classify each deviation as Blocking or non-blocking against a named ADR or overview section.
 - No files outside docs/adr/ and docs/architecture/ were modified.
+- The Apple-specific responsibilities above are assessed only when applicable; claims identify evidence or explicit NOT RUN/UNKNOWN, and remain within role ownership.
 
 ## Stopping condition
 Stop when the ADR or review report is delivered and referenced by the requesting task, or when the decision requires product-owner input on scope.

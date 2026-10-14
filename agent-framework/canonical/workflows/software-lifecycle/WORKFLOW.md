@@ -94,7 +94,7 @@ Independent needed work may run in parallel when inputs are ready and writers do
 - **Purpose:** Build the smallest complete vertical slice satisfying the requirements.
 - **Role(s):** implementation-engineer (writer); data-database-engineer for schema/migrations; integration-architect for external integrations; code-reviewer at the gate (independent, read-only).
 - **Inputs:** Requirements, ADRs, UX specs; an agent task contract per delegated slice.
-- **Outputs:** Code changes within `owned_files`; migrations with rollback notes; change referencing its backlog item (traceability).
+- **Outputs:** Code changes within `owned_files`; migrations with technology-supported recovery evidence; change referencing its backlog item (traceability).
 - **Gate:** Applicable independent review of the specific changed revision passed after findings/corrections; low-risk changes may finish with focused author validation when no independent gate is required. Author self-checks are never independent review. Architecture conformance checked against ADRs (deviations are Blocking); no changes outside owned files; task-level DoD lines met with evidence.
 - **Delegation notes:** Parallel implementation writers MUST have non-overlapping `owned_files` or separate worktrees (`scripts/create-worktree.sh`). The orchestrator re-runs or cites validation commands before integrating — a subagent's success claim is not evidence.
 
@@ -127,11 +127,11 @@ Independent needed work may run in parallel when inputs are ready and writers do
 ## Stage 9 — Accessibility
 
 - **Purpose:** Verify UI changes are usable with keyboard, screen reader, and zoom.
-- **Role(s):** accessibility-reviewer (read-only).
+- **Role(s):** Coordinator for focused low-risk checks; accessibility-reviewer (read-only) when the delegation risk matrix requires independent review.
 - **Inputs:** UI changes, UX specs, accessibility-user persona.
 - **Outputs:** Findings with severity and affected requirement.
 - **Gate:** No Blocking accessibility findings on changed UI; slice-level DoD accessibility line satisfied or `N/A` with reason.
-- **Applicability:** Affected UI; otherwise omit this stage.
+- **Applicability:** Affected UI; otherwise omit this stage. Mechanical low-risk edits use focused checks; significant interaction/semantics changes need independent runtime evidence under the delegation risk matrix.
 
 ## Stage 10 — Performance
 
@@ -156,13 +156,13 @@ Independent needed work may run in parallel when inputs are ready and writers do
 - **Role(s):** devops-release-engineer.
 - **Inputs:** Green integration gate; version and changelog inputs.
 - **Outputs:** Build artifacts, changelog entry, install/upgrade notes.
-- **Gate:** Build command and output recorded; install and upgrade validated (release-level DoD); rollback path stated.
+- **Gate:** Build command and output recorded; install and upgrade validated (release-level DoD); supported recovery strategy stated.
 
 ## Stage 13 — Release
 
 - **Purpose:** Ship the release with explicit human approval.
 - **Role(s):** devops-release-engineer (executes); product-owner (approves).
-- **Inputs:** Release checklist (`docs/releases/release-checklist.md`); packaging outputs.
+- **Inputs:** Fresh candidate-specific release checklist (from `agent-framework/templates/release-checklist.md`); packaging outputs.
 - **Outputs:** Released version, release notes, recorded human approval.
 - **Gate:** **Human approval recorded — releases are never agent-approved** (security policy, DoD contract). No auto-merge, no unapproved deploy.
 
@@ -170,9 +170,9 @@ Independent needed work may run in parallel when inputs are ready and writers do
 
 - **Purpose:** Confirm the release is observable and operable; watch for regressions.
 - **Role(s):** devops-release-engineer; performance-reliability-engineer.
-- **Inputs:** Deployed release; observability tooling; rollback procedure.
+- **Inputs:** Deployed release; observability tooling; supported recovery/containment procedure.
 - **Outputs:** Post-release health check with evidence; incidents/regressions filed to backlog.
-- **Gate:** Observability adequate to operate the change (release-level DoD); rollback verified available; any incident has a filed follow-up.
+- **Gate:** Observability adequate to operate the change (release-level DoD); supported recovery verified; any incident has a filed follow-up.
 
 ## Stage 15 — User validation
 

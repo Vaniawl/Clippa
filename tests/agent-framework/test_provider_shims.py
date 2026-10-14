@@ -128,7 +128,54 @@ class TestCodexShim(ShimTestBase):
         self.assertNotIn("resume", argv)
         out = self.last_json(p)
         self.assertEqual(out["session_ref"], "th-1")
-        self.assertEqual(out["tokens"], 18)  # includes cache tokens (KF-L03)
+        self.assertEqual(out["tokens"], 15)  # cached input is already included in input_tokens
+
+    def test_supported_versions_construct_initial_and_resume_commands(self):
+        for version in ("0.144.6", "0.159.3"):
+            for session_ref in ("", "th-1"):
+                with self.subTest(version=version, resume=bool(session_ref)):
+                    prelude = ('if [[ "${1:-}" == "--version" ]]; then '
+                               f'echo "codex-cli {version}"; exit 0; fi\n')
+                    write_mock_cli(self.bin, "codex", prelude + RECORDER + self.cli_response)
+                    p = self.run_shim(session_ref=session_ref)
+                    self.assertEqual(p.returncode, 0, p.stderr)
+                    self.assertEqual(self.last_json(p)["tokens"], 15)
+                    argv = self.argv()
+                    if session_ref:
+                        self.assertEqual(argv[:3], ["exec", "resume", session_ref])
+                        self.assertNotIn("--sandbox", argv)
+                    else:
+                        self.assertEqual(argv[0], "exec")
+                        self.assertIn("--sandbox", argv)
+
+    def test_offline_policy_is_explicit_without_project_config(self):
+        self.assertFalse((self.workdir / ".codex").exists())
+        for session_ref in ("", "th-1"):
+            for command_mode in ("workspace-write", "read-only"):
+                with self.subTest(resume=bool(session_ref), command_mode=command_mode):
+                    p = self.run_shim(session_ref=session_ref, command_mode=command_mode,
+                                      extra_env={"AF_NETWORK_MODE": "offline"})
+                    self.assertEqual(p.returncode, 0, p.stderr)
+                    argv = self.argv()
+                    overrides = [argv[i + 1] for i, arg in enumerate(argv) if arg == "-c"]
+                    self.assertIn('approval_policy="never"', overrides)
+                    self.assertIn('sandbox_workspace_write.network_access=false', overrides)
+                    self.assertIn('web_search="disabled"', overrides)
+
+    def test_invalid_network_mode_refused_before_invocation(self):
+        p = self.run_shim(extra_env={"AF_NETWORK_MODE": "invalid"})
+        self.assertEqual(p.returncode, 2, p.stderr)
+        self.assertIn("invalid AF_NETWORK_MODE", p.stderr)
+        self.assertFalse((self.record / "argv").exists())
+
+    def test_version_series_must_match_exactly(self):
+        write_mock_cli(self.bin, "codex",
+                       'if [[ "${1:-}" == "--version" ]]; then echo "codex-cli 0.1440.6"; exit 0; fi\n'
+                       + RECORDER + self.cli_response)
+        p = self.run_shim()
+        self.assertEqual(p.returncode, 2, p.stderr)
+        self.assertIn("REFUSED", p.stderr)
+        self.assertFalse((self.record / "argv").exists())
 
     def test_resume_never_passes_sandbox_flag(self):
         """CXR-002/KF-H13: `codex exec resume` rejects --sandbox; the shim must use

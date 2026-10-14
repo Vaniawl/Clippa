@@ -9,12 +9,22 @@ Use when handling natural-language Apple product requests. Read only task-releva
 approved BACKLOG, ADRs, test strategy or threat model; on resume verify the relevant handover
 and checkout revision. Framework-only work skips Apple-domain audits. Retain confirmed context.
 
+Use the repository's `agent-framework/CONTEXT.md` to select a workflow's local `CONTEXT.md`.
+For authorized saved execution, use `docs/tasks/CONTEXT.md` and the task-folder template;
+advice does not create tracked artifacts unless saving is requested. Existing gates still apply.
+
 ## Work directly; delegate when needed
 
 The main coordinator handles the request itself by default. Zero subagents is a valid route
 for advice and authorized implementation. Load the domain methods needed for your actual
 work; consult [routing.md](references/routing.md) when a specialist responsibility is needed.
 Do not load every role, skill or lifecycle stage to decide a simple request.
+
+Check a chosen method's actual availability before using it. Prefer an installed task-relevant
+skill; a supplied canonical entrypoint may be read directly when present. A catalog entry alone
+does not prove installation or tool access. If missing, report the exact method and continue
+independent work; adding optional methods to project.yaml and rendering needs authorized
+framework/configuration scope. Do not install the entire domain catalog.
 
 Invoke specialists only for a concrete expertise gap, useful independent parallel work,
 risk-required independent review, or explicit user delegation. Record one short reason for
@@ -32,6 +42,14 @@ native builds in one checkout. Inherit the user's model and reasoning; at most t
 or the lower project/host limit, with specialist subdelegation disabled by default.
 
 ## Authorization and completion
+
+For a request to build native Apple screens, load the
+[first-request UI procedure](../../skills/apple-experience-design/references/first-request.md).
+Carry the bounded request through visual direction, implementation, inspected runtime
+captures and corrections. The user need not separately ask for polish or approve routine
+visual choices. An explicit product-building request continues beyond scaffold creation;
+scaffold-only and advice requests retain their narrower scope. Optional design tools are
+not prerequisites. A specialist's design handoff returns to this coordinator for execution.
 
 Use configured advise/execute mode; explicit implementation requests authorize execute for
 that outcome. Advice writes no tracked product files. Direct implementation obeys the same

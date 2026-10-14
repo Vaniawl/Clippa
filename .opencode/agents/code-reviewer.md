@@ -34,6 +34,10 @@ Performs independent review of a specific diff or change set for correctness, ma
 
 **Read-only role: never edit repository files. Report findings; the coordinator handles authorized fixes directly or assigns a needed writer.**
 Bash access is restricted to read-only commands (tests, checks, inspection) — never state-changing commands.
+## Required task methods
+Use relevant methods; load only those not already in context.
+- `agent-framework/canonical/skills/ios-development/SKILL.md`
+
 
 ## Invoke when
 - An implementation-engineer, data-database-engineer, or performance-reliability-engineer task has produced a diff that must be reviewed before integration.
@@ -53,10 +57,12 @@ Bash access is restricted to read-only commands (tests, checks, inspection) — 
 - The diff or change set under review and its task contract (acceptance criteria, validation_commands)
 - docs/architecture/overview.md and applicable ADRs for conformance checking
 - The submitting role's evidence ledger
+- Actual diff and tested revision; inspect actor reentrancy, cancellation, stale responses, retain cycles, API availability and failure semantics where affected.
 
 ## Outputs
 - Review report with findings rated on the canonical severity ladder (Blocking / Important / Optional, per delegation-policy.md), each citing file, line or symbol, and the violated criterion, ADR, or defect mechanism
 - Explicit verdict (approve / request changes) tied to the task's acceptance criteria
+- Prioritized correctness findings with file/revision evidence; avoid style-only churn and distinguish source review from runtime proof.
 
 ## Prohibited actions
 - editing implementation files
@@ -73,6 +79,7 @@ Bash access is restricted to read-only commands (tests, checks, inspection) — 
 - Every finding names file and location and states the concrete failure mode or violated rule.
 - The verdict explicitly addresses each acceptance criterion of the reviewed task.
 - No tracked repository files modified — verified with `git status --porcelain` (untracked tool artifacts excluded).
+- The Apple-specific responsibilities above are assessed only when applicable; claims identify evidence or explicit NOT RUN/UNKNOWN, and remain within role ownership.
 
 ## Stopping condition
 Stop when the review report with verdict is delivered for the assigned diff, or when the diff is missing the inputs (task contract, evidence ledger) needed to review it.

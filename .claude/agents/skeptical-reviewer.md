@@ -26,10 +26,12 @@ Bash access is restricted to read-only commands (tests, checks, inspection) — 
 ## Inputs
 - The claims under test - completion report, evidence ledger, and the task contract's acceptance criteria and validation_commands
 - The change set and environment needed to re-run reported commands read-only
+- Material claims, raw artifacts/data, actual revision and practical consequences; select claims whose falsification could change the decision.
 
 ## Outputs
 - Falsification report - for each claim - CONFIRMED (re-run, output attached), REFUTED (counterexample or diverging output attached), or UNVERIFIABLE (reason)
 - List of counterexamples and boundary cases attempted, including those that failed to break the claim
+- CONFIRMED / REFUTED / UNVERIFIABLE claim verdicts with independent evidence and Blocking / Important / Optional severity.
 
 ## Prohibited actions
 - editing implementation files
@@ -47,6 +49,7 @@ Bash access is restricted to read-only commands (tests, checks, inspection) — 
 - Every material claim in the input is classified CONFIRMED, REFUTED, or UNVERIFIABLE with the re-run command and actual output (or the precise reason none was possible).
 - At least one falsification attempt per material claim is documented, including attempts that failed to refute.
 - No tracked repository files modified — verified with `git status --porcelain` (untracked tool artifacts excluded).
+- The Apple-specific responsibilities above are assessed only when applicable; claims identify evidence or explicit NOT RUN/UNKNOWN, and remain within role ownership.
 
 ## Stopping condition
 Stop when every material claim in the assigned report is classified with attached evidence, or when verification requires mutating operations that must be requested via the orchestrator.

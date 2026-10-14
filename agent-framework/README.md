@@ -10,10 +10,10 @@ canonical/            SOURCE OF TRUTH — edit here only
   core-instructions.md  -> AGENTS.md / CLAUDE.md managed blocks
   policies/             autonomy, delegation, evidence, research, scope-control, security
   contracts/            task, handover, definition-of-done
-  roles/                21 role definitions (YAML)
+  roles/                26 role definitions (YAML)
   skills/               open-spec Agent Skills (core + domain)
   workflows/            software-lifecycle, deep-research, market-research,
-                        persona-validation, autonomous-session
+                        persona-validation, autonomous-session and five focused Apple routes
   personas/             12 user-validation personas
 providers/            adapter definitions per provider (mapping documentation)
 catalogs/             role/skill/workflow/persona catalogs + provider capability matrix
@@ -33,6 +33,14 @@ Generated provider files (`.claude/`, `.agents/skills/`, `.codex/`, `.kimi-code/
 
 ## Apple team entrypoint
 
+Start with [CONTEXT.md](CONTEXT.md) for scoped navigation. The short root AGENTS.md
+requires [operating instructions](canonical/operating-instructions.md); all existing rules
+remain binding. Workflow folders have local CONTEXT.md contracts. During authorized
+execution, copy `agent-framework/templates/task-folder/` into `docs/tasks/<task-id>/`
+for scope, decision links, evidence and handover. Advice stays in conversation unless saved
+on request. This ICM-inspired navigation complements the existing execution framework;
+it does not introduce a fixed pipeline, new approval gates or a claim of full ICM conformance.
+
 The template's primary runtime is Codex. Root AGENTS.md loads the coordinator and apple-team;
 project.yaml configures advise/execute and at most three workers. Missing team settings preserve
 legacy adopter behavior. Named agents inherit user model settings. Product, UX, marketing and
@@ -41,6 +49,13 @@ measurement templates live in templates/. See ../docs/ios-agents.md and ADR 0008
 Structural checks, read-only preflight and opt-in live smoke have distinct statuses. Never claim
 all providers run merely because their artifacts render. Historical SKYPhoenix reports and
 example brand assets are upstream reference material, not current generated-app evidence.
+
+See [coverage and ownership](canonical/references/apple-team-coverage.md) for the complete
+team and optional methods, and [primary sources](canonical/references/apple-source-registry.md)
+for dated documentation. New domain methods remain project-selected. Role eval requests
+and criteria live in `evals/apple-team-scenarios.yaml`; check their coverage with
+`python3 scripts/agent-framework/evals/check-apple-team-scenarios.py` from the repository root.
+Fixture integrity never means that all roles/providers ran successfully.
 
 ## Commands
 

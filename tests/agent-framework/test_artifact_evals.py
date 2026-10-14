@@ -19,6 +19,7 @@ ROUTER = 'agent-framework/canonical/policies/apple-product-engineering.md'
 STANDARD = 'agent-framework/canonical/policies/apple-product-engineering-reference.md'
 BASE = 'agent-framework/design-system/tokens/base.json'
 DARK = 'agent-framework/design-system/tokens/dark.json'
+OPERATING = 'agent-framework/canonical/operating-instructions.md'
 
 
 class UITokenArtifactGateTests(unittest.TestCase):
@@ -37,7 +38,7 @@ class UITokenArtifactGateTests(unittest.TestCase):
         self.assertTrue(self.verdict())
 
     def test_missing_or_unlinked_references_fail(self):
-        for path in (BRANDED, NATIVE, ROUTER, STANDARD):
+        for path in (BRANDED, NATIVE, ROUTER, STANDARD, OPERATING):
             with self.subTest(missing=path):
                 self.assertFalse(self.verdict(missing=path))
         for path, link in ((SKILL, '(references/web-branded.md)'),
@@ -73,14 +74,20 @@ class UITokenArtifactGateTests(unittest.TestCase):
                              (STANDARD, 'suitable native control'),
                              (NATIVE, 'native semantic'),
                              (NATIVE, 'documented brand-owner approval'),
-                             ('AGENTS.md', 'system semantic controls'),
-                             ('AGENTS.md', 'instead of arbitrary'),
-                             ('AGENTS.md', 'Branded surfaces use their adopted, approved tokens'),
-                             ('AGENTS.md', 'tokens retain their approval requirements')):
+                             (OPERATING, 'system semantic controls'),
+                             (OPERATING, 'instead of arbitrary'),
+                             (OPERATING, 'Branded surfaces use their adopted, approved tokens'),
+                             (OPERATING, 'tokens retain their approval requirements')):
             with self.subTest(removed=phrase):
                 text = evals.read(path)
                 self.assertIn(phrase, text)
                 self.assertFalse(self.verdict({path: text.replace(phrase, '')}))
+
+    def test_unrouted_operating_rules_do_not_count(self):
+        route = 'Before any work, read `agent-framework/canonical/operating-instructions.md`.'
+        entry = evals.read('AGENTS.md')
+        self.assertIn(route, entry)
+        self.assertFalse(self.verdict({'AGENTS.md': entry.replace(route, '')}))
 
 
 if __name__ == '__main__':

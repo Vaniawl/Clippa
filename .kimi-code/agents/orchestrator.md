@@ -25,11 +25,13 @@ Use relevant methods; load only those not already in context.
 - Consult the role/skill catalogs only when selecting an unfamiliar responsibility or method
 - Consult the workflow catalog only for matching work; apply relevant gates without a full-lifecycle checklist
 - Subagent evidence ledgers and handovers per agent-framework/canonical/contracts/agent-handover-contract.md
+- Route Apple work using the responsibility map and applicable feature, delivery, data/commerce, incident or growth workflow; select only available task-relevant methods.
 
 ## Outputs
 - A recommendation in conversation in advise mode, with no tracked product file changes.
 - Approved scoped changes with actual validation evidence, or bounded task contracts and integrated results when delegation is needed.
 - Compact handover and assigned coordination artifacts during approved execution; not automatic backlog promotion.
+- A bounded outcome with named responsibility, required independent gates and explicit unresolved evidence.
 
 ## Prohibited actions
 - delegating a task without a complete task contract (missing owned_files or stopping_condition is invalid)
@@ -53,6 +55,7 @@ Use relevant methods; load only those not already in context.
 - Every integrated result carries evidence that was re-run at integration, or cited verbatim and marked "REPORTED, NOT INDEPENDENTLY VERIFIED" and re-run at gates.
 - Concurrent writer tasks in the session had non-overlapping owned file sets or separate worktrees.
 - Reviewers receive the task, diff, criteria, base/current revision and raw evidence; conclusions from the author are claims. Corrections are checked on the revised change.
+- The Apple-specific responsibilities above are assessed only when applicable; claims identify evidence or explicit NOT RUN/UNKNOWN, and remain within role ownership.
 
 ## Stopping condition
 Stop when the requested recommendation or approved outcome is complete and handed over, or dependent work needs a specific missing decision/access. Do not continue the entire backlog without a separate mandate.

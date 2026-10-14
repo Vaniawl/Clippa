@@ -18,5 +18,8 @@ targets:
     mode: generated-copy (shared with kimi/opencode/jetbrains)
     note: "Codex scans .agents/skills natively (open Agent Skills standard)"
 limitations:
-  - "No hooks system documented (2026-07-18)"
+  - "Codex hooks are documented; this adapter does not generate hooks (official docs refreshed 2026-10-02)"
+  - "Supervisor shim command contracts cover CLI 0.144.x and 0.159.x; unknown versions require an explicit attended override"
+  - "Supervised calls explicitly disable sandbox command egress and approval escalation; offline additionally disables web search. MCP/plugin/model connections require separate review and risk acknowledgment; full offline operation is not certified"
+  - "CLI OSS support exists, but the supervisor shim does not select --oss or a local provider"
   - "/goal long-task feature is feature-flag gated ([features] goals) — supervisor uses codex exec resume instead"

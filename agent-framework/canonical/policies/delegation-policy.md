@@ -22,6 +22,21 @@ and host capacity, plus the coordinator. This is a ceiling, never a target. Miss
 preserve legacy provider concurrency behavior. Do not delegate materially ambiguous scope or
 work that merely repeats the main agent's investigation.
 
+## Applicable independent review
+
+| Changed consequence | Required independent responsibility | Evidence |
+| --- | --- | --- |
+| Authorization, sensitive data, permissions, secrets or external trust | security-privacy-reviewer | Changed flows and abuse/failure cases |
+| Persistence/migration, commerce entitlement, concurrency or public contract | code-reviewer; domain expertise when needed | Compatibility, recovery, cancellation or transaction evidence |
+| New/complex interaction, custom controls, focus/semantics or assistive-technology behavior | accessibility-reviewer; design critique when needed | Affected common tasks, runtime/settings evidence |
+| Framework routing, authority, provider permissions or installer behavior | code-reviewer | Actual framework diff, generated artifacts and regression checks |
+| Existing copy/style/mechanical edit without the consequences above | No automatic specialist | Focused behavior, layout/localization/accessibility checks as applicable |
+
+This matrix routes responsibility, not automatic fan-out. One independent reviewer may cover
+multiple consequences only with the relevant methods and concrete evidence. Determine risk
+from actual changed behavior: a tiny authorization edit remains risky; source inspection is
+not runtime accessibility proof. Release approval remains human regardless of review outcome.
+
 ## Task definition
 
 Every delegated task MUST be expressed using the agent task contract (`agent-framework/canonical/contracts/agent-task-contract.md`): objective, context, owned files/component, prohibited files, expected output, acceptance criteria, validation commands, stopping condition. A delegation without owned files and a stopping condition is invalid.

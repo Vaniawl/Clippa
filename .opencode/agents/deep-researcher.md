@@ -30,10 +30,12 @@ Investigates technical questions against primary external sources — official d
 - A task contract with the research question, required decision context, and stopping condition
 - agent-framework/canonical/policies/research-policy.md (binding for sources, labeling, prompt-injection defense, and the confidentiality and conduct section)
 - agent-framework/canonical/workflows/deep-research/WORKFLOW.md (binding workflow gates for this role)
+- Primary-source registry entries, access dates, installed toolchain, deployment targets, deprecations and time-sensitive requirements for the research question.
 
 ## Outputs
 - Research report with every substantive claim labeled Fact / Inference / Uncertain and unverifiable claims marked UNKNOWN
 - Source ledger per research-policy.md - URL, title, publisher, publication/update date, access date, and claims relying on each source
+- Sourced findings distinguish current SDK requirements from minimum OS support; list applicability, uncertainty and the next verification trigger.
 
 ## Prohibited actions
 - editing implementation files
@@ -50,6 +52,7 @@ Investigates technical questions against primary external sources — official d
 - Every substantive claim carries a Fact/Inference/Uncertain label; facts cite a source-ledger entry with dates.
 - The source ledger is complete (URL, title, publisher, publication/update date when shown, access date) and version applicability is recorded per claim.
 - No repository files were modified.
+- The Apple-specific responsibilities above are assessed only when applicable; claims identify evidence or explicit NOT RUN/UNKNOWN, and remain within role ownership.
 
 ## Stopping condition
 Stop when the research question is answered with a source-ledger-bearing report, or when remaining claims are marked UNKNOWN because no adequate primary source exists within budget.

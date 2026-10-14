@@ -29,9 +29,9 @@ Use security-review for trust boundaries, remote input, authentication and persi
 
 ## Distribution
 
-Use the devops-release-engineer for signing, archives and delivery tooling. Confirm bundle ID,
+DevOps owns signing, archives and delivery tooling; the release manager owns store readiness.
+Invoke expertise only when needed. Confirm bundle ID,
 version/build, icons, supported devices, Release build and the relevant privacy declarations.
 Check current Apple submission requirements against official sources when preparing delivery.
 TestFlight/App Store upload or publication requires user authorization for that action; a
 request to review readiness alone is not upload permission. Do not invent signing identities.
-

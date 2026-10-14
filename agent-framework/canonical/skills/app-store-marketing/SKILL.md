@@ -14,4 +14,8 @@ Use `agent-framework/templates/launch-plan.md`. Prepare local title/subtitle/des
 Propose a bounded page experiment with hypothesis, audience, primary metric, measurement method, guardrails, exposure/window and interpretation rules using product-measurement. Publishing, App Store Connect changes, outreach and ad spend are separate external actions.
 
 ## Verification and stop
+
+For ASO, product-page tests and attribution-aware launch plans read
+[store-experiments.md](references/store-experiments.md). Choose only experiments supported
+by the current store rules and actual measurement access.
 Link metadata promises to actual behavior/evidence; validate applicable lengths and assets against dated official requirements. Record build/revision/device/locale for captured screenshots. Label unavailable captures/manual checks NOT RUN. Stop when assigned local materials and readiness gaps are delivered; never claim launched or validated without real delivery/outcome data.

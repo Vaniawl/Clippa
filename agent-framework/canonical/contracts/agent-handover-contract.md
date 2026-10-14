@@ -36,5 +36,7 @@ Used when: a session ends, a task is returned unfinished, a blocker stops work, 
 - "Next action" is mandatory and concrete (a command, a file, a decision to request) — never "continue working".
 - Handovers never inflate status: partial is partial. A resuming agent treats prior claims as `REPORTED, NOT INDEPENDENTLY VERIFIED` until it re-runs the validation commands.
 - Autonomous-session handovers are written to the run directory as `handover-<n>.md` and referenced from the run-state JSON.
+- A saved project task keeps its handover in `docs/tasks/<task-id>/handover.md` and links
+  its actual validation ledger in `evidence.md`. This does not replace autonomous run-state.
 
 - Save handovers only within authorized execution or when requested. Keep raw runtime logs in ignored artifacts; reference them from compact evidence. On resume, re-read product sources and verify revision before using the last confirmed state.

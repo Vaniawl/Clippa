@@ -131,6 +131,44 @@ class InstallerTests(unittest.TestCase):
         self.assertEqual(self.run_install()["changed"], [])
         self.assertEqual(tree(self.target), before)
 
+    def test_opencode_runtime_dependencies_are_preserved_outside_framework_scope(self):
+        cache = self.target / '.opencode/node_modules'
+        put(self.target, '.opencode/node_modules/package/index.js', 'module.exports = 1;\n')
+        executable = cache / '.bin/package'
+        executable.parent.mkdir()
+        try:
+            executable.symlink_to('../package/index.js')
+        except OSError:
+            self.skipTest('host cannot create the symlink used by the runtime-cache fixture')
+        payload = (cache / 'package/index.js').read_bytes()
+        preview = self.run_install(dry_run=True)
+        result = self.run_install()
+        self.assertEqual(preview['changed'], result['changed'])
+        self.assertFalse(any(p.startswith('.opencode/node_modules/') for p in result['changed']))
+        self.assertEqual((cache / 'package/index.js').read_bytes(), payload)
+        self.assertTrue(executable.is_symlink())
+        self.assertEqual(os.readlink(executable), '../package/index.js')
+        self.assertEqual(self.run_install()['changed'], [])
+
+    def test_optional_apple_methods_and_scenario_evidence_are_portable(self):
+        self.run_install()
+        role_ids = {p.stem for p in (self.source / 'agent-framework/canonical/roles').glob('*.yaml')}
+        for role in role_ids:
+            for directory, suffix in [('.codex', 'toml'), ('.claude', 'md'),
+                                      ('.kimi-code', 'md'), ('.opencode', 'md')]:
+                self.assertTrue((self.target / directory / 'agents' / f'{role}.{suffix}').is_file())
+        for sid in ['apple-data-sync', 'storekit-monetization', 'apple-signing-distribution',
+                    'app-localization', 'ios-observability', 'user-research',
+                    'marketing-creative-production', 'apple-platform-capabilities']:
+            self.assertTrue((self.target / 'agent-framework/canonical/skills' / sid / 'SKILL.md').is_file())
+            self.assertFalse((self.target / '.agents/skills' / sid).exists())
+        self.assertTrue((self.target / 'agent-framework/canonical/references/apple-source-registry.md').is_file())
+        gate = subprocess.run([sys.executable, '-B', 'scripts/agent-framework/evals/check-apple-team-scenarios.py'],
+                              cwd=self.target, text=True, capture_output=True, timeout=60)
+        self.assertEqual(gate.returncode, 0, gate.stdout + gate.stderr)
+        self.assertIn('Fixture integrity PASS', gate.stdout)
+        self.assertNotIn('REPORTED PASS', gate.stdout)
+
     def test_dry_run_changes_nothing_and_predicts_apply(self):
         put(self.target, "Sources/Real.swift", "// existing native source\n")
         before = tree(self.target)
@@ -147,6 +185,26 @@ class InstallerTests(unittest.TestCase):
                                     text=True, timeout=10)
             self.assertEqual(result.returncode, 2)
             self.assertIn("NOT RUN", result.stderr)
+
+    def test_fresh_generated_opencode_config_stays_idempotent(self):
+        self.run_install()
+        before = tree(self.target)
+        self.assertEqual(self.run_install(dry_run=True)['changed'], [])
+        self.assertEqual(self.run_install()['changed'], [])
+        self.assertEqual(tree(self.target), before)
+
+    def test_user_model_added_after_install_is_preserved(self):
+        self.run_install()
+        config = self.target / 'opencode.json'
+        data = json.loads(config.read_text())
+        data['model'] = 'user-selected-model'
+        config.write_text(json.dumps(data, indent=2) + '\n')
+        before = config.read_bytes()
+        self.run_install()
+        self.assertEqual(config.read_bytes(), before)
+        self.assertTrue(yaml.safe_load((self.target / 'project.yaml').read_text())
+                        ['agent_framework']['opencode']['preserve_project_config'])
+        self.assertEqual(self.run_install()['changed'], [])
 
     def test_modified_canonical_and_generated_files_are_refused_without_writes(self):
         self.run_install()
@@ -184,6 +242,38 @@ class InstallerTests(unittest.TestCase):
         with self.assertRaises(installer.Refused):
             self.run_install()
         self.assertEqual(tree(external), {"sentinel": (b"untouched", 0o644)})
+
+    def test_stale_full_records_cannot_delete_project_policy_or_metadata(self):
+        self.run_install()
+        settings = '{"permissions":{"deny":["Bash(custom-dangerous-command)"]}}\n'
+        put(self.target, ".claude/settings.json", settings)
+        config = '{"model":"user","permission":{"task":"deny"}}\n'
+        put(self.target, "opencode.json", config)
+        # Match the attacker's hash exactly: a hash alone must not grant full
+        # ownership of a file the generator never owns in full.
+        manifest_path = self.target / installer.GENERATED_MANIFEST
+        original = manifest_path.read_bytes()
+        for rel in (".claude/settings.json", "project.yaml", ".gitignore", "opencode.json", "AGENTS.md"):
+            with self.subTest(rel=rel):
+                manifest = json.loads(original)
+                manifest["files"][rel] = {"mode": "full", "sha256": installer.digest((self.target / rel).read_bytes())}
+                manifest_path.write_text(json.dumps(manifest))
+                before = tree(self.target)
+                with self.assertRaisesRegex(installer.Refused, "invalid full generated ownership"):
+                    self.run_install()
+                self.assertEqual(tree(self.target), before)
+                manifest_path.write_bytes(original)
+
+    def test_legitimate_stale_generated_profile_is_removed(self):
+        self.run_install()
+        rel = ".claude/agents/retired-reviewer.md"
+        put(self.target, rel, "Earlier generated role\n")
+        path = self.target / installer.GENERATED_MANIFEST
+        manifest = json.loads(path.read_text())
+        manifest["files"][rel] = {"mode": "full", "sha256": installer.digest((self.target / rel).read_bytes())}
+        path.write_text(json.dumps(manifest))
+        self.run_install()
+        self.assertFalse((self.target / rel).exists())
 
     def test_invalid_source_returns_controlled_cli_refusal(self):
         result = subprocess.run([sys.executable, "-B", str(REPO / "scripts/agent-framework/install-apple-team.py"),

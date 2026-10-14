@@ -16,11 +16,8 @@ import yaml
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 WORKFLOW = REPO_ROOT / ".github" / "workflows" / "quality.yml"
-IS_TEMPLATE_SOURCE = (REPO_ROOT / "agent-framework/.framework-source").is_file() or (
-    (REPO_ROOT / "scripts/bootstrap.py").is_file()
-    and not (REPO_ROOT / ".project-initialized").exists()
-    and not (REPO_ROOT / ".project-initialized").is_symlink()
-)
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from _helpers import IS_TEMPLATE_SOURCE
 
 
 def assert_windows_framework_contract(workflow: dict) -> None:

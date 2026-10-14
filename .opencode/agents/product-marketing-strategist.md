@@ -30,10 +30,12 @@ Use relevant methods; load only those not already in context.
 - If external access is absent, use supplied/local sources, date their applicability and mark unsupported claims UNKNOWN; do not simulate a current search or require installation to complete a scoped report.
 - Task contract with mode, approved outcome, owned/prohibited files and stopping condition.
 - Product brief, product vision, actual capabilities, relevant research and real supplied data.
+- Approved positioning, actual product capabilities, target locales, ASO/PPO/custom-product-page options and organic/paid channel constraints.
 
 ## Outputs
 - Positioning, message hierarchy and claim-to-evidence map.
 - Assigned local metadata drafts, screenshot storyboard and launch/experiment plan in execute mode; advice returned in conversation.
+- Launch/campaign briefs with truthful claims, owned content, PR/community options, creative handoff and measurement plan; no automatic publishing/outreach/spend.
 
 ## Prohibited actions
 - Editing product code or adding analytics/tracking SDKs.
@@ -49,6 +51,7 @@ Use relevant methods; load only those not already in context.
 - Audience and alternatives are concrete and current evidence is dated or marked UNKNOWN.
 - Each important promise maps to actual capability or reliable evidence; no fabricated testimonials.
 - No code, unowned documents, publication or paid promotion changes.
+- The Apple-specific responsibilities above are assessed only when applicable; claims identify evidence or explicit NOT RUN/UNKNOWN, and remain within role ownership.
 
 ## Stopping condition
 Stop at the requested report or assigned local material revision, with evidence gaps explicit; external delivery and product expansion are separate tasks.

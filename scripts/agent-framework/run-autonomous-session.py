@@ -884,26 +884,32 @@ def main() -> int:
             return 2
         mode = cfg["network_policy"]["mode"]
         if mode == "allowlist" and not ack:
-            # No provider translates allowed_domains into enforcement — codex's sandbox
-            # is a static binary off switch (review finding KF-M09).
+            # None of these shims translates allowed_domains into an executor policy.
+            # Codex's managed network capabilities do not implement this adapter.
             print("REFUSED: network_policy.mode=allowlist is not enforceable on any "
-                  "provider (codex egress enforcement is a static off switch; "
+                  "provider shim (codex command egress is explicitly disabled; "
                   "allowed_domains has no consumer). Set provider_risk_acknowledged: true "
                   "to accept declared-but-unenforced network policy.", file=sys.stderr)
             return 2
+        if mode == "offline" and cfg["provider"] == "codex" and not ack:
+            print("REFUSED: Codex offline blocks sandbox command egress and web search, "
+                  "but MCP/plugin/model connections are not certified offline. Set "
+                  "provider_risk_acknowledged: true only after reviewing these external "
+                  "connections and accepting this bounded policy.", file=sys.stderr)
+            return 2
         if mode == "offline" and cfg["provider"] != "codex" and not ack:
             print(f"REFUSED: network_policy.mode=offline is not enforceable on provider "
-                  f"'{cfg['provider']}' (only codex ships egress enforcement in "
-                  ".codex/config.toml). Set provider_risk_acknowledged: true to accept "
+                  f"'{cfg['provider']}' (Codex explicitly blocks command egress, "
+                  "not every external tool). Set provider_risk_acknowledged: true to accept "
                   "declared-but-unenforced network policy.", file=sys.stderr)
             return 2
         if mode == "open" and cfg["provider"] == "codex":
-            print("NOTE: .codex/config.toml disables sandbox network access regardless of "
+            print("NOTE: the Codex shim explicitly disables command network access regardless of "
                   "network_policy.mode=open — the run will have LESS network access than "
                   "declared.", file=sys.stderr)
         if cfg["provider"] != "claude" and "max_provider_calls" not in cfg["budget"]:
             print(f"REFUSED: provider '{cfg['provider']}' does not report cost to the "
-                  "supervisor, so max_cost_usd/max_total_tokens cannot trip. Set "
+                  "supervisor, so max_cost_usd cannot trip. Token reporting is separate. Set "
                   "budget.max_provider_calls as the enforceable cap.", file=sys.stderr)
             return 2
         err = verify_worktree(cfg)

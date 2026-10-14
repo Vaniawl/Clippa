@@ -99,6 +99,8 @@ PAYLOAD = [
     "agent-framework/providers",
     "agent-framework/design-system",
     "agent-framework/evals/rubrics.md",
+    "agent-framework/evals/apple-team-scenarios.yaml",
+    "agent-framework/evals/APPLE-TEAM.md",
     "agent-framework/templates",
     # Public trust anchor for template tag signatures. framework-update.yml imports it
     # before `git verify-tag`, because a hosted runner starts with an empty keyring and
@@ -107,6 +109,7 @@ PAYLOAD = [
     "agent-framework/trust",
     "agent-framework/VERSION",
     "agent-framework/README.md",
+    "agent-framework/CONTEXT.md",
     # Framework reference documentation. `provider-research.md` is also read by eval
     # E11 (dated-source discipline); the review/verification reports are template
     # process artifacts and are deliberately NOT shipped to adopting repositories.
@@ -584,6 +587,43 @@ _SCAFFOLD_NOTE = ("> Scaffold created on framework adoption. Replace this with t
                   "content — the gates check that this file exists, not that it is true.\n")
 
 PROJECT_SCAFFOLD: dict[str, str] = {
+    "CONTEXT.md": (
+        "# Project context\n\n"
+        "Purpose: route work using project-owned scope and the installed framework.\n\n"
+        "## Inputs\n\n"
+        "| Source | Section / scope | Why |\n| --- | --- | --- |\n"
+        "| [Project](PROJECT.md) | Approved outcome and constraints | Scope |\n"
+        "| [Framework map](agent-framework/CONTEXT.md) | Applicable workflow only | Methods |\n"
+        "| [Tasks](docs/tasks/CONTEXT.md) | Active task only | Working state |\n\n"
+        "## Process\n\n"
+        "Select the approved outcome, then its framework workflow and affected component. "
+        "Extend this project-owned map with local component contracts as needed. "
+        "For setup, complete project scope and actual tool prerequisites; do not bootstrap "
+        "an existing app. For status, verify the active handover against the current "
+        "revision and actual stage evidence.\n\n"
+        "## Outputs\n\n"
+        "Owned changes and editable task handoffs; existing execution/review rules apply. "
+        "A file's presence is not proof of completion.\n"),
+    "docs/tasks/CONTEXT.md": (
+        "# Project task workspaces\n\n"
+        "For authorized execution, copy `agent-framework/templates/task-folder/` to a new "
+        "`docs/tasks/<task-id>/` directory; never overwrite an existing task. "
+        "Advice creates no tracked workspace unless saving is requested.\n\n"
+        "## Inputs\n\n"
+        "Use the [framework map](../../agent-framework/CONTEXT.md), approved outcome, "
+        "relevant requirement and current checkout revision.\n\n"
+        "## Process\n\n"
+        "Fill task.md (approval, ownership, criteria, workflow, selected stages and checks); "
+        "use the template's numbered stages and editable output/ handoffs for substantial work. "
+        "Explain omitted stages/replacement inputs in task.md. Keep decision "
+        "links in decisions.md, actual commands/results in evidence.md, and revision/status/"
+        "next action in handover.md. Verify the handover revision on resume.\n\n"
+        "## Outputs and gates\n\n"
+        "Project-owned task folders contain CONTEXT.md, task.md, decisions.md, evidence.md "
+        "and handover.md. Code, ADRs and reports keep their existing homes; link to them. "
+        "Existing approval, independent review and evidence policies apply. Raw logs stay "
+        "ignored; folder presence does not prove completion. Autonomous supervisor state "
+        "remains in agent-framework/runs/.\n"),
     "PROJECT.md": (
         "# Project\n\n" + _SCAFFOLD_NOTE +
         "\n## Purpose\n\n## Status\n\n## Stack\n\n## Owner\n"),

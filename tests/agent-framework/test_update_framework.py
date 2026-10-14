@@ -22,7 +22,7 @@ import unittest
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from _helpers import REPO_ROOT, SCRIPTS, run, scratch_dir  # noqa: E402
+from _helpers import REPO_ROOT, SCRIPTS, run, scratch_dir, updater_source_fixture  # noqa: E402
 
 UPDATER = SCRIPTS / "update-framework.py"
 
@@ -295,6 +295,14 @@ class TestCustomizedCiPreserved(UpdaterTestBase):
     CUSTOM_CI = ("name: Quality\non: [push]\njobs:\n  custom:\n    runs-on: self-hosted\n"
                  "    steps:\n      - run: echo REPO-SPECIFIC-PIPELINE\n")
 
+    def setUp(self):
+        super().setUp()
+        self.source = updater_source_fixture(self.tmp / 'source')
+
+    def update(self, *args, **kwargs):
+        return run([sys.executable, str(UPDATER), '--from', str(self.source),
+                    '--target', str(self.repo), '--no-verify', *args], cwd=self.repo, **kwargs)
+
     def _write_custom_ci(self) -> Path:
         wf = self.repo / ".github" / "workflows" / "quality.yml"
         wf.parent.mkdir(parents=True, exist_ok=True)
@@ -442,12 +450,13 @@ class TestAdoptIndependentRepository(unittest.TestCase):
     def setUp(self):
         self.tmp = scratch_dir()
         self.repo = make_independent_repo(self.tmp / "independent")
+        self.source = updater_source_fixture(self.tmp / 'source')
 
     def tearDown(self):
         shutil.rmtree(self.tmp, ignore_errors=True)
 
     def update(self, *args: str, timeout: int = 300):
-        return run([sys.executable, str(UPDATER), "--from", str(REPO_ROOT),
+        return run([sys.executable, str(UPDATER), "--from", str(self.source),
                     "--target", str(self.repo), "--no-verify", *args],
                    cwd=self.repo, timeout=timeout)
 

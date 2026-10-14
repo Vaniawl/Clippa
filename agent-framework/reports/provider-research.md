@@ -4,6 +4,32 @@
 - Method: primary official documentation only; secondary sources used solely to locate primaries and flagged as such. Unverifiable items are marked **UNKNOWN**, not guessed.
 - Full capability matrix: `agent-framework/catalogs/provider-capability-matrix.yaml`.
 
+## Codex refresh — 2026-10-02
+
+The sections below retain their historical research date. The active Codex matrix now
+distinguishes current product capabilities from functionality implemented by this adapter.
+
+- Hooks are documented, including project trust and tool-coverage limits:
+  https://learn.chatgpt.com/docs/hooks (accessed 2026-10-02).
+- Custom agents can configure model/reasoning; this framework deliberately inherits user settings:
+  https://learn.chatgpt.com/docs/agent-configuration/subagents (accessed 2026-10-02).
+- Local OSS mode supports Ollama and LM Studio; the supervisor does not automatically select it:
+  https://learn.chatgpt.com/docs/config-file/config-advanced (accessed 2026-10-02).
+- Untrusted projects skip project .codex layers. Supervised calls therefore pass command-network
+  and approval restrictions explicitly; offline disables web search but does not certify
+  MCP/plugin/model connections:
+  https://learn.chatgpt.com/docs/config-file/config-basic (accessed 2026-10-02).
+- Configuration supports managed network policy where the executor supports it; this adapter
+  still does not translate run-config allowlists:
+  https://learn.chatgpt.com/docs/config-file/config-reference (accessed 2026-10-02).
+- Cached input tokens are included in input_tokens. Codex usage totals must add only input
+  and output, with cache counts treated as a breakdown:
+  https://developers.openai.com/api/docs/guides/agents-api/observability (accessed 2026-10-02).
+
+Command-shape probes of installed codex-cli 0.159.3 confirm initial exec --sandbox,
+resume -c overrides, and stdin/JSONL flags. Regression mocks cover 0.144.6 and 0.159.3;
+these checks do not constitute a new authenticated provider run or native network-denial test.
+
 ## 1. Claude Code (Anthropic)
 
 Primary source set: `https://code.claude.com/docs/en/{memory,skills,sub-agents,hooks,settings,permissions,sandboxing,headless,cli-reference,plugins}` (accessed 2026-07-18; pages display no update dates).

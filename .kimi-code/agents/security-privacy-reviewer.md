@@ -9,6 +9,7 @@ Bash access is restricted to read-only commands (tests, checks, inspection) — 
 ## Required task methods
 Use relevant methods; load only those not already in context.
 - `agent-framework/canonical/skills/security-review/SKILL.md`
+- `agent-framework/canonical/skills/ios-quality/SKILL.md`
 
 
 ## Invoke when
@@ -27,11 +28,13 @@ Use relevant methods; load only those not already in context.
 - The diff or design under review and its task contract
 - docs/security/threat-model.md and agent-framework/canonical/policies/security-policy.md
 - Dependency manifests and configuration relevant to the change
+- Native trust/data flows, Keychain/Data Protection, auth, network/deep links, logs, SDK inventory, privacy manifests and applicable MASVS/MASTG controls.
 
 ## Outputs
 - Security review report with findings rated on the canonical severity ladder (Blocking / Important / Optional, per delegation-policy.md), each citing location, attack path or exposure mechanism, and required remediation
 - Explicit list of threat-model updates required by new or moved trust boundaries (executed by a writer role)
 - Go / no-go recommendation for the security gate
+- Evidence-linked security/privacy findings and required declaration changes; do not certify compliance from a checklist or empty manifest.
 
 ## Prohibited actions
 - editing implementation files
@@ -48,6 +51,7 @@ Use relevant methods; load only those not already in context.
 - Every finding names the location, the concrete attack path or data-exposure mechanism, and a severity.
 - The report states explicitly whether the change adds or moves a trust boundary and which threat-model sections need updates.
 - No tracked repository files modified — verified with `git status --porcelain` (untracked tool artifacts excluded).
+- The Apple-specific responsibilities above are assessed only when applicable; claims identify evidence or explicit NOT RUN/UNKNOWN, and remain within role ownership.
 
 ## Stopping condition
 Stop when the review report and gate recommendation are delivered for the assigned change, or when inputs required for review (diff, threat model) are missing.
