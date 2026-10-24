@@ -18,7 +18,7 @@ actor EncryptedHistoryStore {
     init(fileURL: URL? = nil, keyStore: LocalHistoryKeyStore = LocalHistoryKeyStore()) {
         let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?
             .appendingPathComponent("Clippa", isDirectory: true)
-        let root = base ?? URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("Clippa", isDirectory: true)
+        let root = fileURL?.deletingLastPathComponent() ?? base ?? URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("Clippa", isDirectory: true)
         self.fileURL = fileURL ?? root.appendingPathComponent("history.aesgcm")
         self.keyStore = keyStore
         self.blobStore = EncryptedBlobStore(folderURL: root.appendingPathComponent("BinaryPayloads", isDirectory: true), keyStore: keyStore)
@@ -99,13 +99,14 @@ actor EncryptedHistoryStore {
             items.append(ClipboardItem(
                 id: diskItem.id,
                 kind: diskItem.kind,
-                createdAt: diskItem.createdAt,
-                lastUsedAt: diskItem.lastUsedAt,
+                createdAt: diskItem.preciseCreatedAt.map(Date.init(timeIntervalSince1970:)) ?? diskItem.createdAt,
+                lastUsedAt: diskItem.preciseLastUsedAt.map(Date.init(timeIntervalSince1970:)) ?? diskItem.lastUsedAt,
                 preview: diskItem.preview,
                 payload: payload,
                 payloadHash: diskItem.payloadHash,
                 isPinned: diskItem.isPinned,
-                sourceBundleIdentifier: diskItem.sourceBundleIdentifier
+                sourceBundleIdentifier: diskItem.sourceBundleIdentifier,
+                template: diskItem.template
             ))
         }
         return items
@@ -126,6 +127,10 @@ private struct DiskClipboardItem: Codable, Sendable {
     var payloadHash: String
     var isPinned: Bool
     var sourceBundleIdentifier: String?
+    var template: TextTemplate?
+    // Additive precision fields keep the original ISO-8601 dates readable by older builds.
+    var preciseCreatedAt: TimeInterval?
+    var preciseLastUsedAt: TimeInterval?
 
     init(item: ClipboardItem, payload: DiskClipboardPayload) {
         self.id = item.id
@@ -137,6 +142,9 @@ private struct DiskClipboardItem: Codable, Sendable {
         self.payloadHash = item.payloadHash
         self.isPinned = item.isPinned
         self.sourceBundleIdentifier = item.sourceBundleIdentifier
+        self.template = item.template
+        self.preciseCreatedAt = item.createdAt.timeIntervalSince1970
+        self.preciseLastUsedAt = item.lastUsedAt.timeIntervalSince1970
     }
 }
 

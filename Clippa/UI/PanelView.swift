@@ -10,6 +10,9 @@ struct PanelView: View {
     var onExtractText: @MainActor (ClipboardItem) -> Void
     var onTogglePin: @MainActor (ClipboardItem) -> Void
     var onDelete: @MainActor (ClipboardItem) -> Void
+    var onEditTemplate: @MainActor (ClipboardItem) -> Void
+    var onNewTemplate: @MainActor () -> Void
+    var onSearchFocusChanged: @MainActor (Bool) -> Void
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorSchemeContrast) private var contrast
@@ -22,12 +25,14 @@ struct PanelView: View {
             headerRow
             searchField
             filterBar
+            if store.selectedFilter == .templates { folderBar }
 
             if let storageMessage = store.storageMessage {
                 StorageMessageView(message: storageMessage)
             }
 
             results
+            keyboardHints
         }
         .padding(metrics.panelPadding)
         .frame(width: DesignSystem.panelWidth, height: DesignSystem.panelHeight)
@@ -42,7 +47,9 @@ struct PanelView: View {
         .accessibilityLabel(Text("Clippa clipboard history"))
         .onAppear {
             isSearchFocused = true
+            onSearchFocusChanged(true)
         }
+        .onChange(of: isSearchFocused) { _, focused in onSearchFocusChanged(focused) }
     }
 
     private var headerRow: some View {
@@ -63,6 +70,13 @@ struct PanelView: View {
             }
 
             Spacer(minLength: 0)
+
+            Button(action: onNewTemplate) {
+                Label("New Template", systemImage: "plus")
+                    .font(.caption.weight(.medium))
+            }
+            .buttonStyle(.bordered)
+            .help("Create a text template (⌘N)")
 
             if store.pinnedItemCount > 0 {
                 StatusBadge(
@@ -114,32 +128,66 @@ struct PanelView: View {
     }
 
     private var filterBar: some View {
-        ScrollView(.horizontal) {
-            HStack(spacing: 6) {
-                ForEach(ClipboardFilter.allCases) { filter in
-                    FilterChip(
-                        filter: filter,
-                        isSelected: store.selectedFilter == filter,
-                        count: count(for: filter)
-                    ) {
-                        animate {
-                            store.selectedFilter = filter
+        ScrollViewReader { proxy in
+            ScrollView(.horizontal) {
+                HStack(spacing: 6) {
+                    ForEach(ClipboardFilter.allCases) { filter in
+                        FilterChip(
+                            filter: filter,
+                            isSelected: store.selectedFilter == filter,
+                            count: count(for: filter)
+                        ) {
+                            animate { store.selectedFilter = filter }
                         }
+                        .id(filter)
                     }
                 }
             }
+            .scrollIndicators(.hidden)
+            .onChange(of: store.selectedFilter) { _, filter in
+                proxy.scrollTo(filter, anchor: .center)
+            }
         }
-        .scrollIndicators(.hidden)
         .frame(height: DesignSystem.filterHeight)
+    }
+
+    private var folderBar: some View {
+        HStack {
+            Picker("Folder", selection: $store.selectedTemplateFolder) {
+                Text("All folders").tag(nil as String?)
+                ForEach(store.templateFolders, id: \.self) { folder in
+                    Text(folder).tag(Optional(folder))
+                }
+            }
+            .pickerStyle(.menu)
+            .fixedSize()
+            Spacer()
+        }
+    }
+
+    private var keyboardHints: some View {
+        HStack(spacing: 12) {
+            Text("⌘1–9 Quick paste")
+            Text("↑↓ Select")
+            Text("⌘[ / ⌘] Filters")
+            Spacer(minLength: 0)
+            Text("↵ Paste")
+        }
+        .font(.caption2)
+        .foregroundStyle(.secondary)
+        .accessibilityElement(children: .combine)
     }
 
     private func count(for filter: ClipboardFilter) -> Int? {
         switch filter {
         case .all:
-            let total = store.items.count(where: { !$0.isPinned })
+            let total = store.items.count
             return total == 0 ? nil : total
         case .pinned:
             return store.pinnedItemCount == 0 ? nil : store.pinnedItemCount
+        case .templates:
+            let total = store.items.count(where: \.isTemplate)
+            return total == 0 ? nil : total
         case .text:
             return count(kind: .text)
         case .url:
@@ -152,21 +200,33 @@ struct PanelView: View {
     }
 
     private func count(kind: ClipboardItemKind) -> Int? {
-        let total = store.items.count { !$0.isPinned && $0.kind == kind }
+        let total = store.items.count { $0.kind == kind }
         return total == 0 ? nil : total
     }
 
     @ViewBuilder
     private var results: some View {
         if store.visibleItems.isEmpty {
-            EmptyClipboardView(isFiltering: store.selectedFilter != .all || !store.searchQuery.isEmpty)
+            if store.selectedFilter == .templates && !store.items.contains(where: \.isTemplate) {
+                VStack(spacing: 12) {
+                    Image(systemName: "text.badge.plus").font(.largeTitle).foregroundStyle(.secondary)
+                    Text("No templates yet").font(.headline)
+                    Text("Save a reply, command, or prompt you use often.")
+                        .font(.callout).foregroundStyle(.secondary)
+                    Button("New Template", action: onNewTemplate).buttonStyle(.borderedProminent)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                EmptyClipboardView(isFiltering: store.selectedFilter != .all || !store.searchQuery.isEmpty)
+            }
         } else {
             ScrollViewReader { proxy in
                 ScrollView {
                     LazyVStack(spacing: 5) {
-                        ForEach(store.visibleItems) { item in
+                        ForEach(Array(store.visibleItems.enumerated()), id: \.element.id) { index, item in
                             ClipboardRow(
                                 item: item,
+                                quickPasteNumber: index < 9 ? index + 1 : nil,
                                 isSelected: item.id == store.selectedItemID,
                                 contrast: contrast,
                                 metrics: metrics,
@@ -192,7 +252,8 @@ struct PanelView: View {
                                 },
                                 onDelete: {
                                     animate { onDelete(item) }
-                                }
+                                },
+                                onEditTemplate: { onEditTemplate(item) }
                             )
                             .id(item.id)
                             .transition(.opacity.combined(with: .move(edge: .top)))
@@ -345,6 +406,7 @@ private struct EmptyClipboardView: View {
 
 private struct ClipboardRow: View {
     let item: ClipboardItem
+    let quickPasteNumber: Int?
     let isSelected: Bool
     let contrast: ColorSchemeContrast
     let metrics: PanelMetrics
@@ -356,6 +418,7 @@ private struct ClipboardRow: View {
     let onExtractText: @MainActor () -> Void
     let onTogglePin: @MainActor () -> Void
     let onDelete: @MainActor () -> Void
+    let onEditTemplate: @MainActor () -> Void
     @State private var isHovering = false
 
     var body: some View {
@@ -397,8 +460,15 @@ private struct ClipboardRow: View {
                 }
             }
             Divider()
-            Button(action: onTogglePin) {
-                Label(item.isPinned ? "Unpin" : "Pin", systemImage: item.isPinned ? "pin.slash" : "pin")
+            if item.kind == .text {
+                Button(action: onEditTemplate) {
+                    Label(item.isTemplate ? "Edit Template" : "Save as Template", systemImage: "text.badge.plus")
+                }
+            }
+            if !item.isTemplate {
+                Button(action: onTogglePin) {
+                    Label(item.isPinned ? "Unpin" : "Pin", systemImage: item.isPinned ? "pin.slash" : "pin")
+                }
             }
             Button(role: .destructive, action: onDelete) {
                 Label("Delete", systemImage: "trash")
@@ -430,10 +500,10 @@ private struct ClipboardRow: View {
                 }
 
                 RowIconButton(
-                    systemImage: item.isPinned ? "pin.fill" : "pin",
-                    accessibilityLabel: item.isPinned ? "Unpin" : "Pin",
+                    systemImage: item.isTemplate ? "pencil" : item.isPinned ? "pin.fill" : "pin",
+                    accessibilityLabel: item.isTemplate ? "Edit Template" : item.isPinned ? "Unpin" : "Pin",
                     isProminent: item.isPinned,
-                    action: onTogglePin
+                    action: item.isTemplate ? onEditTemplate : onTogglePin
                 )
 
                 RowIconButton(
@@ -456,41 +526,54 @@ private struct ClipboardRow: View {
     }
 
     private var rowContent: some View {
-        HStack(spacing: metrics.rowSpacing) {
-            ClipboardThumbnailView(
-                item: item,
-                size: metrics.iconWellSize,
-                cornerRadius: metrics.thumbnailCornerRadius,
-                showsPin: item.isPinned
-            )
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(rowTitle)
-                    .font(.subheadline.weight(.medium))
-                    .lineLimit(1)
-                    .foregroundStyle(.primary)
-
-                metadataLine
+        Button(action: onPaste) {
+            HStack(spacing: metrics.rowSpacing) {
+                ClipboardThumbnailView(
+                    item: item,
+                    size: metrics.iconWellSize,
+                    cornerRadius: metrics.thumbnailCornerRadius,
+                    showsPin: item.isPinned
+                )
+                VStack(alignment: .leading, spacing: 4) {
+                    HStack(spacing: 6) {
+                        Text(rowTitle)
+                            .font(.subheadline.weight(.medium))
+                            .lineLimit(1)
+                            .foregroundStyle(.primary)
+                        if let folder = item.template?.folder, !folder.isEmpty {
+                            Label(folder, systemImage: "folder")
+                                .font(.caption2).foregroundStyle(.secondary).lineLimit(1)
+                        }
+                    }
+                    if item.isTemplate {
+                        Text(item.preview).font(.caption).foregroundStyle(.secondary).lineLimit(1)
+                    } else {
+                        metadataLine
+                    }
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                if let quickPasteNumber {
+                    Text("⌘\(quickPasteNumber)")
+                        .font(.caption.monospacedDigit())
+                        .foregroundStyle(.secondary)
+                        .accessibilityHidden(true)
+                }
             }
-
-            Spacer(minLength: 8)
-
-            if isSelected {
-                Image(systemName: "return")
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundStyle(.secondary)
-                    .padding(.trailing, 2)
-                    .accessibilityHidden(true)
-            }
+            .contentShape(.rect)
         }
-        .contentShape(.rect)
-        .onTapGesture(perform: onPaste)
+        .buttonStyle(.plain)
+        .accessibilityLabel(Text([rowTitle, item.template?.folder ?? "", item.isTemplate ? item.preview : ""].filter { !$0.isEmpty }.joined(separator: ", ")))
+        .accessibilityHint(quickPasteNumber.map { Text("Quick paste: Command-\($0)") } ?? Text("Paste this clip"))
     }
 
     private var metadataLine: some View {
         HStack(spacing: 6) {
-            Label(item.kind.displayName, systemImage: item.kind.symbolName)
+            Label(item.isTemplate ? String(localized: "Template") : item.kind.displayName,
+                  systemImage: item.isTemplate ? "text.badge.plus" : item.kind.symbolName)
                 .labelStyle(.titleAndIcon)
+            if let template = item.template, !template.folder.isEmpty {
+                Text(template.folder).lineLimit(1)
+            }
 
             if case .image = item.payload {
                 ClipboardImageInfoView(item: item)
@@ -521,6 +604,7 @@ private struct ClipboardRow: View {
     }
 
     private var rowTitle: String {
+        if let template = item.template { return template.title }
         if item.kind == .image {
             return String(localized: "Clipboard image")
         }

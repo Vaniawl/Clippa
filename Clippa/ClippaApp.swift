@@ -16,6 +16,13 @@ private struct MenuBarContentView: View {
     @Bindable var appState: AppState
 
     var body: some View {
+        Button {
+            appState.panelController.show(appState: appState)
+        } label: {
+            Label("Show Clipboard History", systemImage: "doc.on.clipboard")
+        }
+        Divider()
+
         if appState.settings.isCapturePaused {
             Button {
                 appState.settings.resumeCapture()
@@ -60,6 +67,12 @@ private struct MenuBarContentView: View {
         }
 
         Button {
+            appState.editTemplate()
+        } label: {
+            Label("New Template", systemImage: "text.badge.plus")
+        }
+
+        Button {
             appState.showSettings()
         } label: {
             Label("Settings", systemImage: "gearshape")
@@ -83,11 +96,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
-        appState.start()
+        // Unit tests own isolated stores and must not capture or overwrite real history.
+        if NSClassFromString("XCTestCase") == nil { appState.start() }
     }
 
     func applicationDidBecomeActive(_ notification: Notification) {
         appState.refreshAccessibilityState()
+    }
+
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        if appState.templateWindowController.activateIfVisible() { return false }
+        if !flag { appState.panelController.show(appState: appState) }
+        return false
     }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
