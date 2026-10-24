@@ -4,7 +4,7 @@ import SwiftUI
 
 enum DesignSystem {
     static let panelWidth: CGFloat = 560
-    static let panelHeight: CGFloat = 430
+    static let panelHeight: CGFloat = 480
     static let panelCornerRadius: CGFloat = 22
     static let rowHeight: CGFloat = 58
     static let controlHeight: CGFloat = 36
@@ -94,7 +94,7 @@ struct ClipboardThumbnailView: View {
                 fallbackIcon(symbol: "photo", color: .secondary)
             }
         case .text:
-            fallbackIcon(symbol: item.kind.symbolName, color: .secondary)
+            fallbackIcon(symbol: item.isTemplate ? "text.badge.plus" : item.kind.symbolName, color: .secondary)
         case .url:
             fallbackIcon(symbol: item.kind.symbolName, color: .blue)
         case .files:

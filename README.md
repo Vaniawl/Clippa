@@ -90,15 +90,19 @@ Core workflow:
 
 - `Command-Shift-V` opens clipboard history.
 - `Up` / `Down` selects items.
-- `Left` / `Right` switches filters.
+- `Command-[` / `Command-]` switches filters; `Left` / `Right` keeps normal search caret movement.
+- `Command-1` through `Command-9` pastes that position in the current visible results.
 - `Return` or click pastes the selected item.
 - `Esc` closes the panel.
 
 Useful details:
 
 - Keeps recent text, links, images, and file references.
-- Newest copied item stays at the top.
-- Pinned items stay available separately.
+- Most recently copied or used item moves to the top, including after restarting.
+- Pinned items appear in All and their kind filter, and remain available in Pinned.
+- Text templates have names, optional folders, and a dedicated Templates filter. Create one with New Template or save a text clip as a template from its context menu.
+- Templates support custom fields such as `{name}` / `{ім’я}` and automatic `{date}` / `{дата}`, `{time}` / `{час}` values. Fill custom fields before pasting; Cancel leaves the clipboard unchanged.
+- Edit templates using the pencil button or context menu; they stay encrypted locally and are included in pinned export/import.
 - Optional trailing space for pasted text and links.
 - Context menu supports copy, pin, delete, open, Quick Look, and image text extraction.
 - Search supports plain text plus tokens such as `kind:text`, `type:link`, `from:safari`, `is:pinned`, `today`, and `yesterday`.

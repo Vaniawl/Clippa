@@ -30,6 +30,7 @@ enum ClipboardItemKind: String, Codable, CaseIterable, Sendable {
 enum ClipboardFilter: String, CaseIterable, Identifiable, Sendable {
     case all
     case pinned
+    case templates
     case text
     case url
     case image
@@ -41,6 +42,7 @@ enum ClipboardFilter: String, CaseIterable, Identifiable, Sendable {
         switch self {
         case .all: String(localized: "All")
         case .pinned: String(localized: "Pinned")
+        case .templates: String(localized: "Templates")
         case .text: String(localized: "Text")
         case .url: String(localized: "Links")
         case .image: String(localized: "Images")
@@ -52,6 +54,7 @@ enum ClipboardFilter: String, CaseIterable, Identifiable, Sendable {
         switch self {
         case .all: "tray.full"
         case .pinned: "pin"
+        case .templates: "text.badge.plus"
         case .text: "text.alignleft"
         case .url: "link"
         case .image: "photo"
@@ -255,6 +258,17 @@ struct ClipboardItem: Identifiable, Codable, Equatable, Sendable {
     var isPinned: Bool
     var sourceBundleIdentifier: String?
     var imageMetadata: ClipboardImageMetadata?
+    var template: TextTemplate?
+
+    var isTemplate: Bool { template != nil && kind == .text }
+    var activityDate: Date { max(createdAt, lastUsedAt) }
+
+    var archiveIdentity: String {
+        guard let template else { return payloadHash }
+        // Encode the tuple unambiguously; identical bodies can have distinct named templates.
+        let encoded = (try? JSONEncoder().encode([payloadHash, template.title, template.folder])) ?? Data()
+        return encoded.base64EncodedString()
+    }
 
     init(
         id: UUID,
@@ -266,7 +280,8 @@ struct ClipboardItem: Identifiable, Codable, Equatable, Sendable {
         payloadHash: String,
         isPinned: Bool,
         sourceBundleIdentifier: String?,
-        imageMetadata: ClipboardImageMetadata? = nil
+        imageMetadata: ClipboardImageMetadata? = nil,
+        template: TextTemplate? = nil
     ) {
         self.id = id
         self.kind = kind
@@ -278,6 +293,7 @@ struct ClipboardItem: Identifiable, Codable, Equatable, Sendable {
         self.isPinned = isPinned
         self.sourceBundleIdentifier = sourceBundleIdentifier
         self.imageMetadata = imageMetadata ?? payload.imageMetadata
+        self.template = template
     }
 
     init(
@@ -286,7 +302,8 @@ struct ClipboardItem: Identifiable, Codable, Equatable, Sendable {
         createdAt: Date = Date(),
         lastUsedAt: Date? = nil,
         isPinned: Bool = false,
-        sourceBundleIdentifier: String? = nil
+        sourceBundleIdentifier: String? = nil,
+        template: TextTemplate? = nil
     ) {
         self.id = id
         self.kind = payload.kind
@@ -298,6 +315,7 @@ struct ClipboardItem: Identifiable, Codable, Equatable, Sendable {
         self.isPinned = isPinned
         self.sourceBundleIdentifier = sourceBundleIdentifier
         self.imageMetadata = payload.imageMetadata
+        self.template = template
     }
 }
 

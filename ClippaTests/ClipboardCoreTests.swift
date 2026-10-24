@@ -7,6 +7,188 @@ import XCTest
 
 @MainActor
 final class ClipboardCoreTests: XCTestCase {
+    func testTemplateValidationEditAndCaptureKeepSeparateIdentity() throws {
+        let store = makeStore()
+        XCTAssertThrowsError(try store.saveTemplate(title: " ", folder: "", body: "text"))
+        XCTAssertThrowsError(try store.saveTemplate(title: "Name", folder: "", body: " "))
+        let template = try store.saveTemplate(title: " Reply ", folder: " Work ", body: "Hello {name}")
+        XCTAssertEqual(template.template, TextTemplate(title: "Reply", folder: "Work"))
+        XCTAssertTrue(template.isPinned)
+        store.add(payload: .text("Hello {name}"), sourceBundleIdentifier: "com.apple.Notes")
+        XCTAssertEqual(store.items.count, 2)
+        let updated = try store.saveTemplate(id: template.id, title: "Updated", folder: "Personal", body: "Hi {name}")
+        XCTAssertEqual(updated.id, template.id)
+        XCTAssertEqual(store.items.count, 2)
+        XCTAssertEqual(store.templateFolders, ["Personal"])
+        XCTAssertEqual(store.filteredItems(query: "Personal Updated", filter: .templates).count, 1)
+        store.togglePin(updated)
+        XCTAssertTrue(store.items.first { $0.id == updated.id }!.isPinned)
+        let removed = try XCTUnwrap(store.delete(updated))
+        store.restore([removed])
+        XCTAssertTrue(store.items.contains { $0.id == template.id && $0.isTemplate })
+        XCTAssertThrowsError(try store.saveTemplate(id: UUID(), title: "Missing", folder: "", body: "Text"))
+    }
+
+    func testTemplateFoldersAndQuickPasteUseVisibleOrder() throws {
+        let store = makeStore()
+        let first = try store.saveTemplate(title: "A", folder: "Work", body: "First")
+        let second = try store.saveTemplate(title: "B", folder: "Home", body: "Second")
+        store.selectedTemplateFolder = "Work"
+        XCTAssertEqual(store.quickPasteItem(at: 0)?.id, first.id)
+        XCTAssertNil(store.quickPasteItem(at: 1))
+        XCTAssertNil(store.quickPasteItem(at: -1))
+        XCTAssertNil(store.quickPasteItem(at: 9))
+        store.selectedTemplateFolder = nil
+        XCTAssertEqual(store.quickPasteItem(at: 0)?.id, second.id)
+        store.searchQuery = "First"
+        XCTAssertEqual(store.quickPasteItem(at: 0)?.id, first.id)
+    }
+
+    func testTemplatePlaceholdersAreUniqueUnicodeAndNonRecursive() {
+        let body = "Hi {ім’я}, {name}, {ім’я}! {date} {дата} {time} {час}. {\"json\":true}"
+        XCTAssertEqual(TemplateRenderer.variables(in: body), ["ім’я", "name"])
+        let rendered = TemplateRenderer.render(body, values: ["ім’я": "Оля", "name": "{date}"],
+            date: Date(timeIntervalSince1970: 0), locale: Locale(identifier: "en_US"), timeZone: TimeZone(secondsFromGMT: 0)!)
+        XCTAssertTrue(rendered.hasPrefix("Hi Оля, {date}, Оля! Jan 1, 1970 Jan 1, 1970"))
+        XCTAssertTrue(rendered.hasSuffix("{\"json\":true}"))
+        XCTAssertEqual(TemplateRenderer.render("{missing}"), "{missing}")
+        XCTAssertEqual(TemplateRenderer.variables(in: "{a-b} { spaced name } {x\ny}"), ["a-b"])
+    }
+
+    func testTemplateExportImportKeepsMetadataAndDistinctBodies() throws {
+        let source = makeStore()
+        _ = try source.saveTemplate(title: "Reply", folder: "Work", body: "same")
+        _ = try source.saveTemplate(title: "Greeting", folder: "Home", body: "same")
+        source.add(payload: .text("same"), sourceBundleIdentifier: nil)
+        source.togglePin(source.items.first { !$0.isTemplate }!)
+        let data = try source.exportPinnedData()
+        let target = makeStore()
+        XCTAssertEqual(try target.importPinnedData(data).count, 3)
+        XCTAssertEqual(target.items.filter(\.isTemplate).count, 2)
+        XCTAssertEqual(target.templateFolders, ["Home", "Work"])
+        XCTAssertTrue(try target.importPinnedData(data).isEmpty)
+    }
+
+    func testEncryptedTemplateAndUsageOrderingSurviveReload() async throws {
+        let history = isolatedHistory()
+        let store = ClipboardStore(historyStore: history)
+        let now = Date(timeIntervalSince1970: floor(Date().timeIntervalSince1970))
+        let template = try store.saveTemplate(title: "Private reply", folder: "Work", body: "secret {name}", date: now)
+        store.add(payload: .text("newer"), sourceBundleIdentifier: nil, date: now.addingTimeInterval(0.1))
+        store.use(template, date: now.addingTimeInterval(0.2))
+        await store.flushPendingSave()
+        let restored = ClipboardStore(historyStore: history)
+        await restored.load()
+        XCTAssertEqual(restored.items.first?.id, template.id)
+        XCTAssertEqual(restored.items.first?.template, template.template)
+        XCTAssertEqual(restored.items.first?.payload, .text("secret {name}"))
+        XCTAssertNil(restored.storageMessage)
+    }
+
+    func testLatestSnapshotWinsAfterBurstOfWritesAndFlush() async throws {
+        let history = isolatedHistory()
+        let store = ClipboardStore(historyStore: history)
+        for index in 0..<30 { store.add(payload: .text("Burst \(index)"), sourceBundleIdentifier: nil) }
+        let last = try XCTUnwrap(store.items.first)
+        let first = try XCTUnwrap(store.items.first { $0.preview == "Burst 0" })
+        store.use(first)
+        await store.flushPendingSave()
+        let restored = ClipboardStore(historyStore: history)
+        await restored.load()
+        XCTAssertEqual(restored.items.count, 30)
+        XCTAssertEqual(restored.items.first?.id, first.id)
+        XCTAssertTrue(restored.items.contains { $0.id == last.id })
+    }
+
+    func testSaveFailureKeepsHistoryAndShowsRecoveryMessage() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("ClippaTests.failure.\(UUID().uuidString)")
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        let blocker = root.appendingPathComponent("not-a-directory")
+        try Data([1]).write(to: blocker)
+        let history = EncryptedHistoryStore(fileURL: blocker.appendingPathComponent("history.aesgcm"),
+            keyStore: LocalHistoryKeyStore(fallbackURL: root.appendingPathComponent("history.key")))
+        let store = ClipboardStore(historyStore: history)
+        store.add(payload: .text("Keep this"), sourceBundleIdentifier: nil)
+        await store.flushPendingSave()
+        XCTAssertEqual(store.items.first?.preview, "Keep this")
+        XCTAssertNotNil(store.storageMessage)
+    }
+
+    func testLegacyHistoryLoadsWithoutTemplateMetadata() async throws {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("ClippaTests.legacy.\(UUID().uuidString)")
+        let historyURL = root.appendingPathComponent("history.aesgcm")
+        let keyStore = LocalHistoryKeyStore(fallbackURL: root.appendingPathComponent("history.key"))
+        let key = try await keyStore.loadOrCreateKey()
+        let legacy = ClipboardItem(payload: .text("legacy text"))
+        let legacyEncoder = JSONEncoder()
+        legacyEncoder.dateEncodingStrategy = .iso8601
+        let data = try legacyEncoder.encode(StoredClipboardSnapshot(items: [legacy]))
+        let sealed = try AES.GCM.seal(data, using: SymmetricKey(data: key))
+        try XCTUnwrap(sealed.combined).write(to: historyURL)
+        let history = EncryptedHistoryStore(fileURL: historyURL, keyStore: keyStore)
+        let loaded = try await history.load()
+        XCTAssertEqual(loaded.items.first?.payload, .text("legacy text"))
+        XCTAssertNil(loaded.items.first?.template)
+    }
+
+    func testSearchEditingPreservesCaretAndNativeShortcuts() throws {
+        for code in [kVK_LeftArrow, kVK_RightArrow] {
+            XCTAssertNil(PanelController.action(for: try keyEvent(code), isEditingText: true))
+            XCTAssertNil(PanelController.action(for: try keyEvent(code, flags: .option), isEditingText: true))
+            XCTAssertNil(PanelController.action(for: try keyEvent(code, flags: .shift), isEditingText: true))
+        }
+        for code in [kVK_ANSI_C, kVK_ANSI_Z, kVK_Delete] {
+            XCTAssertNil(PanelController.action(for: try keyEvent(code, flags: .command), isEditingText: true))
+        }
+        XCTAssertEqual(PanelController.action(for: try keyEvent(kVK_ANSI_RightBracket, flags: .command), isEditingText: true), .selectNextFilter)
+        XCTAssertEqual(PanelController.action(for: try keyEvent(kVK_DownArrow), isEditingText: true), .selectNext)
+    }
+
+    func testFocusedPanelControlsKeepNativeActivation() throws {
+        for code in [kVK_Return, kVK_DownArrow, kVK_UpArrow, kVK_LeftArrow, kVK_RightArrow] {
+            XCTAssertNil(PanelController.action(for: try keyEvent(code), isSearchFocused: false))
+        }
+        XCTAssertEqual(PanelController.action(for: try keyEvent(kVK_Escape), isSearchFocused: false), .close)
+        XCTAssertEqual(PanelController.action(for: try keyEvent(kVK_ANSI_1, flags: .command), isSearchFocused: false), .pasteAtIndex(0))
+    }
+
+    func testEveryQuickPasteShortcutMapsToVisiblePosition() throws {
+        let codes = [kVK_ANSI_1, kVK_ANSI_2, kVK_ANSI_3, kVK_ANSI_4, kVK_ANSI_5, kVK_ANSI_6, kVK_ANSI_7, kVK_ANSI_8, kVK_ANSI_9]
+        for (index, code) in codes.enumerated() {
+            XCTAssertEqual(PanelController.action(for: try keyEvent(code, flags: .command), isEditingText: true), .pasteAtIndex(index))
+            XCTAssertNil(PanelController.action(for: try keyEvent(code, flags: [.command, .shift])))
+        }
+        XCTAssertNil(PanelController.action(for: try keyEvent(kVK_ANSI_0, flags: .command)))
+        XCTAssertEqual(PanelController.action(for: try keyEvent(kVK_ANSI_1, flags: [.command, .capsLock])), .pasteAtIndex(0))
+    }
+
+    func testInvalidSavedShortcutFallsBackToDefault() throws {
+        let name = "ClippaTests.invalidShortcut.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: name))
+        defer { defaults.removePersistentDomain(forName: name) }
+        defaults.set(Data("invalid".utf8), forKey: "showPanelShortcut")
+        XCTAssertEqual(AppSettings(defaults: defaults).showPanelShortcut, .defaultShowPanel)
+        defaults.set(try JSONEncoder().encode(HotKeyShortcut(keyCode: 999, modifiers: 0)), forKey: "showPanelShortcut")
+        XCTAssertEqual(AppSettings(defaults: defaults).showPanelShortcut, .defaultShowPanel)
+    }
+
+    private func keyEvent(_ code: Int, flags: NSEvent.ModifierFlags = []) throws -> NSEvent {
+        try XCTUnwrap(NSEvent.keyEvent(with: .keyDown, location: .zero, modifierFlags: flags, timestamp: 0,
+            windowNumber: 0, context: nil, characters: "", charactersIgnoringModifiers: "", isARepeat: false, keyCode: UInt16(code)))
+    }
+
+    private func isolatedHistory() -> EncryptedHistoryStore {
+        let root = FileManager.default.temporaryDirectory.appendingPathComponent("ClippaTests.\(UUID().uuidString)")
+        return EncryptedHistoryStore(
+            fileURL: root.appendingPathComponent("history.aesgcm"),
+            keyStore: LocalHistoryKeyStore(fallbackURL: root.appendingPathComponent("history.key"))
+        )
+    }
+
+    private func makeStore(policy: ClipboardHistoryPolicy = .default) -> ClipboardStore {
+        ClipboardStore(historyStore: isolatedHistory(), policy: policy)
+    }
+
     func testCreatesSupportedItemKinds() {
         let file = FileReference(url: URL(fileURLWithPath: "/tmp/example.txt"))
         XCTAssertEqual(ClipboardItem(payload: .text("hello")).kind, .text)
@@ -16,7 +198,7 @@ final class ClipboardCoreTests: XCTestCase {
     }
 
     func testDeduplicatesAndMovesExistingItemToTop() {
-        let store = ClipboardStore()
+        let store = makeStore()
         let old = Date(timeIntervalSince1970: 10)
         let newer = Date(timeIntervalSince1970: 20)
         store.add(payload: .text("same"), sourceBundleIdentifier: "a", date: old)
@@ -26,23 +208,23 @@ final class ClipboardCoreTests: XCTestCase {
         XCTAssertEqual(store.items.first?.sourceBundleIdentifier, "b")
     }
 
-    func testUsingOlderItemDoesNotChangeCopyOrder() {
-        let store = ClipboardStore()
+    func testUsingOlderItemMovesItToFirstPlace() {
+        let store = makeStore()
         store.add(payload: .text("old"), sourceBundleIdentifier: nil, date: Date(timeIntervalSince1970: 10))
         store.add(payload: .text("new"), sourceBundleIdentifier: nil, date: Date(timeIntervalSince1970: 20))
 
         let oldItem = store.items.first { $0.preview == "old" }!
         store.use(oldItem, date: Date(timeIntervalSince1970: 30))
 
-        XCTAssertEqual(store.items.map(\.preview), ["new", "old"])
+        XCTAssertEqual(store.items.map(\.preview), ["old", "new"])
         XCTAssertEqual(
             store.items.first { $0.preview == "old" }?.lastUsedAt,
             Date(timeIntervalSince1970: 30)
         )
     }
 
-    func testPinnedItemsOnlyAppearInPinnedFilterAndHistoryStaysNewestFirst() {
-        let store = ClipboardStore()
+    func testPinnedItemsAppearInAllAndKindFiltersWithRecentOrder() {
+        let store = makeStore()
         let now = Date()
         store.add(payload: .text("old"), sourceBundleIdentifier: nil, date: now.addingTimeInterval(-1))
         store.add(payload: .text("new"), sourceBundleIdentifier: nil, date: now)
@@ -50,13 +232,13 @@ final class ClipboardCoreTests: XCTestCase {
         store.togglePinSelected()
 
         XCTAssertEqual(store.items.first?.preview, "new")
-        XCTAssertEqual(store.filteredItems(query: "", filter: .all).map(\.preview), ["new"])
-        XCTAssertEqual(store.filteredItems(query: "", filter: .text).map(\.preview), ["new"])
+        XCTAssertEqual(store.filteredItems(query: "", filter: .all).map(\.preview), ["new", "old"])
+        XCTAssertEqual(store.filteredItems(query: "", filter: .text).map(\.preview), ["new", "old"])
         XCTAssertEqual(store.filteredItems(query: "", filter: .pinned).map(\.preview), ["old"])
     }
 
     func testItemScopedPinAndDeleteActionsSelectTargetItem() {
-        let store = ClipboardStore()
+        let store = makeStore()
         let now = Date()
         store.add(payload: .text("first"), sourceBundleIdentifier: nil, date: now.addingTimeInterval(-1))
         store.add(payload: .text("second"), sourceBundleIdentifier: nil, date: now)
@@ -65,19 +247,19 @@ final class ClipboardCoreTests: XCTestCase {
 
         store.select(second)
         store.togglePin(first)
-        XCTAssertEqual(store.selectedItemID, second.id)
+        XCTAssertEqual(store.selectedItemID, first.id)
         XCTAssertTrue(store.items.first { $0.id == first.id }?.isPinned == true)
 
         store.delete(second)
         XCTAssertNil(store.items.first { $0.id == second.id })
-        XCTAssertNil(store.selectedItemID)
+        XCTAssertEqual(store.selectedItemID, first.id)
 
         store.selectedFilter = .pinned
         XCTAssertEqual(store.selectedItemID, first.id)
     }
 
     func testDeletedItemsCanBeRestored() {
-        let store = ClipboardStore()
+        let store = makeStore()
         let now = Date()
         store.add(payload: .text("first"), sourceBundleIdentifier: nil, date: now.addingTimeInterval(-1))
         store.add(payload: .text("second"), sourceBundleIdentifier: nil, date: now)
@@ -92,7 +274,7 @@ final class ClipboardCoreTests: XCTestCase {
     }
 
     func testClearedUnpinnedItemsCanBeRestored() {
-        let store = ClipboardStore()
+        let store = makeStore()
         let now = Date()
         store.add(payload: .text("pinned"), sourceBundleIdentifier: nil, date: now.addingTimeInterval(-1))
         store.add(payload: .text("unpinned"), sourceBundleIdentifier: nil, date: now)
@@ -106,7 +288,7 @@ final class ClipboardCoreTests: XCTestCase {
     }
 
     func testLimitsUnpinnedHistoryTo100() {
-        let store = ClipboardStore()
+        let store = makeStore()
         for index in 0..<120 {
             store.add(payload: .text("item \(index)"), sourceBundleIdentifier: nil, date: Date(timeIntervalSince1970: TimeInterval(index)))
         }
@@ -115,7 +297,7 @@ final class ClipboardCoreTests: XCTestCase {
     }
 
     func testConfigurableHistoryLimitIsApplied() {
-        let store = ClipboardStore(
+        let store = makeStore(
             policy: ClipboardHistoryPolicy(retention: .forever, limit: .fifty)
         )
         for index in 0..<75 {
@@ -131,7 +313,7 @@ final class ClipboardCoreTests: XCTestCase {
     }
 
     func testForeverRetentionKeepsOldUnpinnedItems() {
-        let store = ClipboardStore(
+        let store = makeStore(
             policy: ClipboardHistoryPolicy(retention: .forever, limit: .oneHundred)
         )
         store.add(payload: .text("old"), sourceBundleIdentifier: nil, date: Date(timeIntervalSince1970: 0))
@@ -141,7 +323,7 @@ final class ClipboardCoreTests: XCTestCase {
     }
 
     func testRetentionKeepsPinnedAndRemovesOldUnpinned() {
-        let store = ClipboardStore()
+        let store = makeStore()
         let old = Date(timeIntervalSince1970: 0)
         let now = Date(timeIntervalSince1970: 8 * 24 * 60 * 60)
         store.add(payload: .text("unpinned old"), sourceBundleIdentifier: nil, date: old)
@@ -153,7 +335,7 @@ final class ClipboardCoreTests: XCTestCase {
     }
 
     func testRetentionKeepsRecentlyUsedOldUnpinned() {
-        let store = ClipboardStore()
+        let store = makeStore()
         let old = Date(timeIntervalSince1970: 0)
         let recent = Date(timeIntervalSince1970: 8 * 24 * 60 * 60)
         store.add(payload: .text("old but used"), sourceBundleIdentifier: nil, date: old)
@@ -166,7 +348,7 @@ final class ClipboardCoreTests: XCTestCase {
     }
 
     func testSearchAndFilters() {
-        let store = ClipboardStore()
+        let store = makeStore()
         store.add(payload: .text("alpha note"), sourceBundleIdentifier: nil)
         store.add(payload: .url(URL(string: "https://example.com/beta")!), sourceBundleIdentifier: nil)
         store.add(payload: .image(data: Data([1]), uti: nil), sourceBundleIdentifier: nil)
@@ -177,12 +359,12 @@ final class ClipboardCoreTests: XCTestCase {
         XCTAssertEqual(store.filteredItems(query: "", filter: .url).first?.kind, .url)
         XCTAssertEqual(store.filteredItems(query: "", filter: .files).first?.kind, .files)
         XCTAssertEqual(store.filteredItems(query: "", filter: .pinned).first?.preview, "alpha note")
-        XCTAssertTrue(store.filteredItems(query: "alpha", filter: .all).isEmpty)
-        XCTAssertTrue(store.filteredItems(query: "alpha", filter: .text).isEmpty)
+        XCTAssertEqual(store.filteredItems(query: "alpha", filter: .all).count, 1)
+        XCTAssertEqual(store.filteredItems(query: "alpha", filter: .text).count, 1)
     }
 
     func testAdvancedSearchTokens() {
-        let store = ClipboardStore()
+        let store = makeStore()
         let now = Date()
         store.add(payload: .text("alpha note"), sourceBundleIdentifier: "com.apple.Notes", date: now)
         store.add(payload: .url(URL(string: "https://example.com/beta")!), sourceBundleIdentifier: "com.apple.Safari", date: now)
@@ -213,13 +395,13 @@ final class ClipboardCoreTests: XCTestCase {
     }
 
     func testPinnedExportImportRoundTrip() throws {
-        let source = ClipboardStore()
+        let source = makeStore()
         source.add(payload: .text("pinned"), sourceBundleIdentifier: nil, date: Date(timeIntervalSince1970: 1))
         source.add(payload: .text("regular"), sourceBundleIdentifier: nil, date: Date(timeIntervalSince1970: 2))
         source.togglePin(source.items.first { $0.preview == "pinned" }!)
 
         let data = try source.exportPinnedData()
-        let target = ClipboardStore()
+        let target = makeStore()
         let imported = try target.importPinnedData(data, date: Date(timeIntervalSince1970: 3))
 
         XCTAssertEqual(imported.count, 1)
@@ -229,7 +411,7 @@ final class ClipboardCoreTests: XCTestCase {
     }
 
     func testDerivedVisibleStateUpdatesOnlyWhenVisibleItemsChange() {
-        let store = ClipboardStore()
+        let store = makeStore()
         let initialRevision = store.visibleItemsRevision
 
         store.add(payload: .text("alpha"), sourceBundleIdentifier: nil)
@@ -249,8 +431,8 @@ final class ClipboardCoreTests: XCTestCase {
         let revisionBeforePin = store.visibleItemsRevision
         store.togglePin(store.items.first!)
         XCTAssertEqual(store.pinnedItemCount, 1)
-        XCTAssertTrue(store.visibleItems.isEmpty)
-        XCTAssertGreaterThan(store.visibleItemsRevision, revisionBeforePin)
+        XCTAssertEqual(store.visibleItems.count, 1)
+        XCTAssertEqual(store.visibleItemsRevision, revisionBeforePin)
     }
 
     func testImageMetadataUsesImagePropertiesWithoutViewDecode() throws {
@@ -330,7 +512,7 @@ final class ClipboardCoreTests: XCTestCase {
         XCTAssertThrowsError(try AES.GCM.open(AES.GCM.SealedBox(combined: combined), using: SymmetricKey(size: .bits256)))
     }
 
-    func testShowPanelShortcutIsAlwaysCommandShiftV() throws {
+    func testShowPanelShortcutSurvivesRestart() throws {
         let suiteName = "ClippaTests.shortcuts.\(UUID().uuidString)"
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
         defaults.removePersistentDomain(forName: suiteName)
@@ -341,7 +523,7 @@ final class ClipboardCoreTests: XCTestCase {
         settings.showPanelShortcut = HotKeyShortcut(keyCode: UInt32(kVK_ANSI_B), modifiers: UInt32(controlKey | optionKey))
 
         settings = AppSettings(defaults: defaults)
-        XCTAssertEqual(settings.showPanelShortcut.displayString, "⇧⌘V")
+        XCTAssertEqual(settings.showPanelShortcut.displayString, "⌃⌥B")
 
         defaults.removePersistentDomain(forName: suiteName)
     }
@@ -431,7 +613,7 @@ final class ClipboardCoreTests: XCTestCase {
 
     @MainActor
     func testFilterSelectionWrapsWithHorizontalNavigation() {
-        let store = ClipboardStore()
+        let store = makeStore()
 
         XCTAssertEqual(store.selectedFilter, .all)
         store.selectAdjacentFilter(offset: -1)
