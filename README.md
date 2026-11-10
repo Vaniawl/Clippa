@@ -142,18 +142,15 @@ Accessibility permission is only used to restore focus and paste the selected cl
 
 ## Verification
 
-The current public release is `1.0.13`.
+The macOS build packaged on `main` is `1.0.17`. Published releases are listed on [GitHub Releases](https://github.com/Vaniawl/Clippa/releases/latest).
 
 | Check | Status |
 | --- | --- |
 | GitHub Actions CI | Passing |
-| Local Swift tests | 34/34 passing |
+| Local macOS tests | 50/50 passing |
 | Local iOS companion tests | 8/8 passing |
 | Release build | Passing |
 | Smoke launch | Passing |
-| GitHub release | `v1.0.13` live |
-| npm package | `clippa@1.0.13` prepared; publish requires npm 2FA |
-| Homebrew cask | `clippa 1.0.13` |
 | Bundle identifier | `app.clippa.Clippa` |
 
 Useful verification commands:
@@ -196,7 +193,7 @@ git pull origin main
 ## Production Notes
 
 - Bundle identifier: `app.clippa.Clippa`
-- Version: `1.0.13`
+- macOS build on `main`: `1.0.17`
 - Release builds use hardened runtime.
 - History retention and item limits are configurable; the default is 100 items for one week.
 
