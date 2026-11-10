@@ -231,6 +231,7 @@ struct PanelView: View {
                                 contrast: contrast,
                                 metrics: metrics,
                                 reduceMotion: reduceMotion,
+                                loadImageData: store.imageData(for:),
                                 onPaste: {
                                     animate { store.select(item) }
                                     onPasteSelected()
@@ -262,6 +263,7 @@ struct PanelView: View {
                     .padding(.vertical, 2)
                 }
                 .scrollIndicators(.never)
+                .modifier(HistoryScrollEdgeFade())
                 .onChange(of: store.selectedItemID) { _, selectedID in
                     guard let selectedID else {
                         return
@@ -404,6 +406,42 @@ private struct EmptyClipboardView: View {
     }
 }
 
+private struct HistoryScrollEdgeFade: ViewModifier {
+    @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
+    @Environment(\.colorSchemeContrast) private var contrast
+    @State private var clippedEdges: Edge.Set = []
+
+    func body(content: Content) -> some View {
+        if reduceTransparency || contrast == .increased {
+            content
+        } else {
+            content
+                .onScrollGeometryChange(for: Edge.Set.self) { geometry in
+                    let visible = geometry.visibleRect
+                    var edges: Edge.Set = []
+                    if visible.minY > 1 { edges.insert(.top) }
+                    if visible.maxY < geometry.contentSize.height - 1 { edges.insert(.bottom) }
+                    return edges
+                } action: { _, edges in
+                    clippedEdges = edges
+                }
+                .mask {
+                    VStack(spacing: 0) {
+                        if clippedEdges.contains(.top) {
+                            LinearGradient(colors: [.clear, .black], startPoint: .top, endPoint: .bottom)
+                                .frame(height: 16)
+                        }
+                        Rectangle()
+                        if clippedEdges.contains(.bottom) {
+                            LinearGradient(colors: [.black, .clear], startPoint: .top, endPoint: .bottom)
+                                .frame(height: 16)
+                        }
+                    }
+                }
+        }
+    }
+}
+
 private struct ClipboardRow: View {
     let item: ClipboardItem
     let quickPasteNumber: Int?
@@ -411,6 +449,7 @@ private struct ClipboardRow: View {
     let contrast: ColorSchemeContrast
     let metrics: PanelMetrics
     let reduceMotion: Bool
+    let loadImageData: @MainActor (ClipboardPayload) async throws -> Data
     let onPaste: @MainActor () -> Void
     let onCopy: @MainActor () -> Void
     let onPreview: @MainActor () -> Void
@@ -475,7 +514,7 @@ private struct ClipboardRow: View {
             }
         }
         .onDrag {
-            item.dragItemProvider
+            item.dragItemProvider(loadImageData: loadImageData)
         }
         .accessibilityElement(children: .contain)
         .accessibilityAddTraits(isSelected ? [.isSelected] : [])
@@ -532,7 +571,8 @@ private struct ClipboardRow: View {
                     item: item,
                     size: metrics.iconWellSize,
                     cornerRadius: metrics.thumbnailCornerRadius,
-                    showsPin: item.isPinned
+                    showsPin: item.isPinned,
+                    loadImageData: loadImageData
                 )
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 6) {
@@ -575,7 +615,7 @@ private struct ClipboardRow: View {
                 Text(template.folder).lineLimit(1)
             }
 
-            if case .image = item.payload {
+            if item.kind == .image {
                 ClipboardImageInfoView(item: item)
             }
 
@@ -684,7 +724,9 @@ private struct RowIconButton: View {
 
 @MainActor
 private extension ClipboardItem {
-    var dragItemProvider: NSItemProvider {
+    func dragItemProvider(
+        loadImageData: @escaping @MainActor (ClipboardPayload) async throws -> Data
+    ) -> NSItemProvider {
         switch payload {
         case .text(let text):
             return NSItemProvider(object: text as NSString)
@@ -695,6 +737,22 @@ private extension ClipboardItem {
                 return NSItemProvider(object: image)
             }
             return NSItemProvider(object: preview as NSString)
+        case .storedImage(_, let uti, _, _, _):
+            let provider = NSItemProvider()
+            provider.suggestedName = String(localized: "Clipboard image")
+            provider.registerDataRepresentation(forTypeIdentifier: uti ?? "public.image", visibility: .all) { completion in
+                let progress = Progress(totalUnitCount: 1)
+                Task { @MainActor in
+                    defer { progress.completedUnitCount = 1 }
+                    do {
+                        completion(try await loadImageData(payload), nil)
+                    } catch {
+                        completion(nil, error)
+                    }
+                }
+                return progress
+            }
+            return provider
         case .files(let references):
             if let url = references.first(where: \.exists)?.url {
                 return NSItemProvider(object: url as NSURL)

@@ -84,11 +84,13 @@ You can also download `Clippa.app.zip` from the latest GitHub release, unzip it,
 
 ## What It Does
 
-Clippa runs quietly in the menu bar. Press `Command-Shift-V` in any app, select a clipboard item with the keyboard or mouse, then press `Return` or click to paste it back into the app you were using.
+Clippa runs quietly in the background. Press `Command-Shift-V` in any app, select a clipboard item with the keyboard or mouse, then press `Return` or click to paste it back into the app you were using.
 
 Core workflow:
 
 - `Command-Shift-V` opens clipboard history.
+- Turn off **Show Icon in Menu Bar** in **Settings → General** to hide the icon while keeping capture and the shortcut active.
+- Open Clippa again from Applications or press `Command-Comma` in clipboard history to return to Settings.
 - `Up` / `Down` selects items.
 - `Command-[` / `Command-]` switches filters; `Left` / `Right` keeps normal search caret movement.
 - `Command-1` through `Command-9` pastes that position in the current visible results.

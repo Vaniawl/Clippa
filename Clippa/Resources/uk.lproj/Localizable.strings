@@ -120,3 +120,7 @@
 "History could not be saved. Check available disk space and try again." = "Не вдалося зберегти історію. Перевірте вільне місце на диску та спробуйте ще раз.";
 "OK" = "Гаразд";
 "Show Clipboard History" = "Відкрити історію буфера";
+"Show Icon in Menu Bar" = "Показувати іконку в рядку меню";
+"Open Clippa from Applications, or press Command-Comma in clipboard history, to return to Settings." = "Щоб повернутися до налаштувань, відкрийте Clippa з папки «Програми» або натисніть Command-кома в історії буфера.";
+"Encrypted history could not be saved." = "Не вдалося зберегти зашифровану історію.";
+"The encrypted image could not be read." = "Не вдалося прочитати зашифроване зображення.";

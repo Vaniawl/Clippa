@@ -55,13 +55,13 @@ final class ClipboardCoreTests: XCTestCase {
         XCTAssertEqual(TemplateRenderer.variables(in: "{a-b} { spaced name } {x\ny}"), ["a-b"])
     }
 
-    func testTemplateExportImportKeepsMetadataAndDistinctBodies() throws {
+    func testTemplateExportImportKeepsMetadataAndDistinctBodies() async throws {
         let source = makeStore()
         _ = try source.saveTemplate(title: "Reply", folder: "Work", body: "same")
         _ = try source.saveTemplate(title: "Greeting", folder: "Home", body: "same")
         source.add(payload: .text("same"), sourceBundleIdentifier: nil)
         source.togglePin(source.items.first { !$0.isTemplate }!)
-        let data = try source.exportPinnedData()
+        let data = try await source.exportPinnedData()
         let target = makeStore()
         XCTAssertEqual(try target.importPinnedData(data).count, 3)
         XCTAssertEqual(target.items.filter(\.isTemplate).count, 2)
@@ -394,13 +394,60 @@ final class ClipboardCoreTests: XCTestCase {
         XCTAssertEqual(cleanedPayload, .url(URL(string: "https://example.com/?q=clippa")!))
     }
 
-    func testPinnedExportImportRoundTrip() throws {
+    func testContentCleanerDoesNotTurnCommandsOrPathsIntoLinks() {
+        let values = [
+            "gh repo clone Vaniawl/partygame",
+            "outputs/TikTok-Battle-Portable-Windows-v1.0.0.zip",
+            "ivan@Mac ~/Swift/Clippa % swift test"
+        ]
+
+        for value in values {
+            XCTAssertNil(ClipboardContentCleaner.webURL(from: value))
+            XCTAssertEqual(
+                ClipboardPayload.text(value).cleaned(
+                    normalizeText: true,
+                    removeTrackingParameters: true
+                ),
+                .text(value)
+            )
+        }
+
+        XCTAssertEqual(
+            ClipboardContentCleaner.webURL(from: "https://github.com/Vaniawl/partygame.git")?.absoluteString,
+            "https://github.com/Vaniawl/partygame.git"
+        )
+    }
+
+    func testRepairsLegacyPercentEncodedCommandStoredAsURL() {
+        let legacyURL = URL(string: "gh%20repo%20clone%20Vaniawl/partygame")!
+        let legacyItem = ClipboardItem(
+            id: UUID(),
+            payload: .url(legacyURL),
+            createdAt: Date(timeIntervalSince1970: 10),
+            lastUsedAt: Date(timeIntervalSince1970: 20),
+            isPinned: true,
+            sourceBundleIdentifier: "com.vivaldi.Vivaldi"
+        )
+
+        let repaired = legacyItem.repairedForCurrentVersion
+
+        XCTAssertNotEqual(repaired.id, legacyItem.id)
+        XCTAssertEqual(repaired.kind, .text)
+        XCTAssertEqual(repaired.payload, .text("gh repo clone Vaniawl/partygame"))
+        XCTAssertEqual(repaired.preview, "gh repo clone Vaniawl/partygame")
+        XCTAssertEqual(repaired.createdAt, legacyItem.createdAt)
+        XCTAssertEqual(repaired.lastUsedAt, legacyItem.lastUsedAt)
+        XCTAssertTrue(repaired.isPinned)
+        XCTAssertEqual(repaired.sourceBundleIdentifier, legacyItem.sourceBundleIdentifier)
+    }
+
+    func testPinnedExportImportRoundTrip() async throws {
         let source = makeStore()
         source.add(payload: .text("pinned"), sourceBundleIdentifier: nil, date: Date(timeIntervalSince1970: 1))
         source.add(payload: .text("regular"), sourceBundleIdentifier: nil, date: Date(timeIntervalSince1970: 2))
         source.togglePin(source.items.first { $0.preview == "pinned" }!)
 
-        let data = try source.exportPinnedData()
+        let data = try await source.exportPinnedData()
         let target = makeStore()
         let imported = try target.importPinnedData(data, date: Date(timeIntervalSince1970: 3))
 
@@ -451,6 +498,56 @@ final class ClipboardCoreTests: XCTestCase {
         let image = try XCTUnwrap(loadedImage)
 
         XCTAssertLessThanOrEqual(max(image.size.width, image.size.height), 256)
+    }
+
+    func testLocalHistoryKeepsEncryptedImagesLazyAcrossReloadSaveAndUndo() async throws {
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+        let blobs = folder.appendingPathComponent("blobs")
+        defer { try? FileManager.default.removeItem(at: folder) }
+        let history = EncryptedHistoryStore(
+            fileURL: folder.appendingPathComponent("history.aesgcm"),
+            keyStore: LocalHistoryKeyStore(fallbackURL: folder.appendingPathComponent("history.key")),
+            blobFolderURL: blobs
+        )
+        let data = try makePNGData(width: 4, height: 5)
+        let payload = ClipboardPayload.image(data: data, uti: "public.png")
+        var legacyImage = ClipboardItem(payload: payload, isPinned: true)
+        legacyImage.imageMetadata = nil
+        try await history.save(StoredClipboardSnapshot(items: [legacyImage]))
+
+        let store = ClipboardStore(historyStore: history)
+        await store.load()
+        let lazyImage = try XCTUnwrap(store.items.first)
+        let filename = try XCTUnwrap(lazyImage.payload.storedImageFilename)
+        let originalBlob = try Data(contentsOf: blobs.appendingPathComponent(filename))
+        XCTAssertEqual(lazyImage.preview, legacyImage.preview)
+        XCTAssertEqual(lazyImage.payloadHash, payload.stableHash)
+
+        let resolved = try await store.resolvedItem(lazyImage)
+        XCTAssertEqual(resolved.payload, payload)
+        let archive = try await store.exportPinnedData()
+        let archiveItems = try JSONDecoder.clippa.decode(ImageArchiveFixture.self, from: archive).items
+        XCTAssertEqual(archiveItems.map(\.payload), [payload])
+
+        let deleted = try XCTUnwrap(store.delete(lazyImage))
+        store.undoBlobFilenames = [filename]
+        await store.flushPendingSave()
+        XCTAssertEqual(try Data(contentsOf: blobs.appendingPathComponent(filename)), originalBlob)
+
+        store.undoBlobFilenames = []
+        store.restore([deleted])
+        await store.flushPendingSave()
+        let restored = try await history.load()
+        XCTAssertEqual(restored.items.map(\.payload), [payload])
+
+        let newData = try makePNGData(width: 6, height: 7)
+        store.add(payload: .image(data: newData, uti: "public.png"), sourceBundleIdentifier: nil)
+        await store.flushPendingSave()
+        let added = try XCTUnwrap(store.items.first { $0.id != legacyImage.id })
+        XCTAssertNotNil(added.payload.storedImageFilename)
+        XCTAssertEqual(added.imageMetadata?.widthPixels, 6)
+        let addedData = try await store.imageData(for: added.payload)
+        XCTAssertEqual(addedData, newData)
     }
 
     func testPrivacyMarkersAndExcludedBundleIDs() {
@@ -526,6 +623,80 @@ final class ClipboardCoreTests: XCTestCase {
         XCTAssertEqual(settings.showPanelShortcut.displayString, "⌃⌥B")
 
         defaults.removePersistentDomain(forName: suiteName)
+    }
+
+    func testMenuBarIconDefaultsToVisibleAndPersistsBothChoices() throws {
+        let suite = "ClippaTests.menuBarIcon.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+
+        let settings = AppSettings(defaults: defaults)
+        XCTAssertTrue(settings.showsMenuBarIcon)
+
+        settings.showsMenuBarIcon = false
+        let reloaded = AppSettings(defaults: defaults)
+        XCTAssertFalse(reloaded.showsMenuBarIcon)
+
+        reloaded.showsMenuBarIcon = true
+        XCTAssertTrue(AppSettings(defaults: defaults).showsMenuBarIcon)
+    }
+
+    func testPasteboardCaptureResumesWithoutSavingPausedOrInternalWrites() async throws {
+        let suite = "ClippaTests.pasteboardMonitor.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        let pasteboard = NSPasteboard.withUniqueName()
+        let folder = FileManager.default.temporaryDirectory.appendingPathComponent(suite)
+        let history = EncryptedHistoryStore(
+            fileURL: folder.appendingPathComponent("history.aesgcm"),
+            keyStore: LocalHistoryKeyStore(fallbackURL: folder.appendingPathComponent("history.key")),
+            blobFolderURL: folder.appendingPathComponent("blobs")
+        )
+        let store = ClipboardStore(historyStore: history)
+        let settings = AppSettings(defaults: defaults)
+        settings.excludedBundleIdentifiers = []
+        let monitor = PasteboardMonitor(pasteboard: pasteboard, store: store, settings: settings)
+
+        defer {
+            monitor.stop()
+            pasteboard.releaseGlobally()
+            defaults.removePersistentDomain(forName: suite)
+            try? FileManager.default.removeItem(at: folder)
+        }
+
+        func copy(_ value: String) {
+            pasteboard.clearContents()
+            XCTAssertTrue(pasteboard.setString(value, forType: .string))
+        }
+
+        monitor.start()
+        monitor.pauseCapture(for: 60)
+        copy("during manual pause")
+        monitor.resumeCapture()
+        try await Task.sleep(for: .milliseconds(500))
+        XCTAssertTrue(store.items.isEmpty)
+
+        monitor.pauseCapture(for: 0.25)
+        copy("during timed pause")
+        try await Task.sleep(for: .milliseconds(750))
+        XCTAssertTrue(store.items.isEmpty)
+
+        copy("internal write")
+        monitor.noteInternalWrite(changeCount: pasteboard.changeCount)
+        try await Task.sleep(for: .milliseconds(500))
+        XCTAssertTrue(store.items.isEmpty)
+
+        copy("captured after resuming")
+        let deadline = ContinuousClock.now.advanced(by: .seconds(3))
+        while store.items.isEmpty, ContinuousClock.now < deadline {
+            try await Task.sleep(for: .milliseconds(50))
+        }
+        XCTAssertEqual(store.items.map(\.payload), [.text("captured after resuming")])
+
+        monitor.stop()
+        copy("copied after stop")
+        try await Task.sleep(for: .milliseconds(500))
+        XCTAssertEqual(store.items.map(\.payload), [.text("captured after resuming")])
+        await store.flushPendingSave()
     }
 
     func testHistorySettingsPersist() throws {
@@ -666,6 +837,10 @@ final class ClipboardCoreTests: XCTestCase {
         let frame = PanelController.panelFrame(near: NSPoint(x: -700, y: 400), size: NSSize(width: 300, height: 200), screens: [left, right])
         XCTAssertLessThan(frame.maxX, 0)
     }
+}
+
+private struct ImageArchiveFixture: Decodable {
+    var items: [ClipboardItem]
 }
 
 private func makePNGData(width: Int, height: Int) throws -> Data {

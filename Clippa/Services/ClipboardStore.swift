@@ -29,6 +29,7 @@ final class ClipboardStore {
     private var policy: ClipboardHistoryPolicy
     private var persistTask: Task<Void, Never>?
     private var persistRevision = 0
+    var undoBlobFilenames: Set<String> = []
 
     init(
         historyStore: EncryptedHistoryStore = EncryptedHistoryStore(),
@@ -40,7 +41,7 @@ final class ClipboardStore {
 
     func load() async {
         do {
-            let snapshot = try await historyStore.load()
+            let snapshot = try await historyStore.load(deferImages: true)
             items = ordered(snapshot.items)
             enforceRetention(now: Date())
             rebuildVisibleItems()
@@ -229,8 +230,26 @@ final class ClipboardStore {
         }
     }
 
-    func exportPinnedData() throws -> Data {
-        let archive = PinnedClipboardArchive(items: items.filter(\.isPinned))
+    func resolvedItem(_ item: ClipboardItem) async throws -> ClipboardItem {
+        guard item.payload.storedImageFilename != nil else { return item }
+        var resolved = item
+        resolved.payload = try await historyStore.resolvePayload(item.payload)
+        return resolved
+    }
+
+    func imageData(for payload: ClipboardPayload) async throws -> Data {
+        guard case .image(let data, _) = try await historyStore.resolvePayload(payload) else {
+            throw EncryptedHistoryStoreError.unavailableImage
+        }
+        return data
+    }
+
+    func exportPinnedData() async throws -> Data {
+        var pinnedItems: [ClipboardItem] = []
+        for item in items where item.isPinned {
+            pinnedItems.append(try await resolvedItem(item))
+        }
+        let archive = PinnedClipboardArchive(items: pinnedItems)
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
@@ -251,10 +270,10 @@ final class ClipboardStore {
             }
         }
         let imported = archive.items.compactMap { item -> ClipboardItem? in
-            guard existingIdentities.insert(item.archiveIdentity).inserted else {
-                return nil
-            }
+            guard item.payload.storedImageFilename == nil else { return nil }
             var importedItem = item
+            importedItem.payloadHash = item.payload.stableHash
+            guard existingIdentities.insert(importedItem.archiveIdentity).inserted else { return nil }
             importedItem.id = UUID()
             importedItem.createdAt = date
             importedItem.lastUsedAt = date
@@ -332,23 +351,25 @@ final class ClipboardStore {
 
     private func persist(_ mode: PersistenceMode) {
         let snapshot = StoredClipboardSnapshot(items: items)
-        let previous = persistTask
-        previous?.cancel()
+        let previousSave = persistTask
+        previousSave?.cancel()
         persistRevision += 1
-        persistTask = Task { [historyStore] in
-            // Wait for an in-flight write before saving a newer snapshot. Cancellation alone
-            // cannot stop an actor method that is already suspended on encryption or disk IO.
-            await previous?.value
-            guard !Task.isCancelled else { return }
+        let revision = persistRevision
+        persistTask = Task { [weak self, historyStore] in
+            // Wait for an in-flight write before saving a newer snapshot.
+            await previousSave?.value
             if mode == .deferred {
                 do { try await Task.sleep(for: .milliseconds(350)) }
                 catch { return }
             }
+            guard let self, !Task.isCancelled else { return }
             do {
-                try await historyStore.save(snapshot)
+                try await historyStore.save(snapshot, preservingBlobs: undoBlobFilenames)
+                if revision == persistRevision { discardSavedImageBytes() }
             } catch {
-                guard !Task.isCancelled else { return }
-                storageMessage = String(localized: "History could not be saved. Check available disk space and try again.")
+                if revision == persistRevision {
+                    storageMessage = String(localized: "Encrypted history could not be saved.")
+                }
             }
         }
     }
@@ -362,6 +383,22 @@ final class ClipboardStore {
         }
     }
 
+    private func discardSavedImageBytes() {
+        var changed = false
+        for index in items.indices {
+            guard case .image(_, let uti) = items[index].payload else { continue }
+            let item = items[index]
+            items[index].payload = .storedImage(
+                filename: "image-\(item.payloadHash).blob",
+                uti: uti,
+                preview: item.preview,
+                payloadHash: item.payloadHash,
+                metadata: item.imageMetadata
+            )
+            changed = true
+        }
+        if changed { rebuildVisibleItems() }
+    }
 }
 
 private enum PersistenceMode: Sendable {

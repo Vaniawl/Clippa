@@ -120,3 +120,7 @@
 "History could not be saved. Check available disk space and try again." = "History could not be saved. Check available disk space and try again.";
 "OK" = "OK";
 "Show Clipboard History" = "Show Clipboard History";
+"Show Icon in Menu Bar" = "Show Icon in Menu Bar";
+"Open Clippa from Applications, or press Command-Comma in clipboard history, to return to Settings." = "Open Clippa from Applications, or press Command-Comma in clipboard history, to return to Settings.";
+"Encrypted history could not be saved." = "Encrypted history could not be saved.";
+"The encrypted image could not be read." = "The encrypted image could not be read.";

@@ -35,6 +35,8 @@ private struct GeneralSettingsView: View {
         Form {
             Section {
                 Toggle("Launch at Login", isOn: launchAtLoginBinding)
+                Toggle("Show Icon in Menu Bar", isOn: menuBarIconBinding)
+                    .help("Open Clippa from Applications, or press Command-Comma in clipboard history, to return to Settings.")
 
                 LabeledContent("Shortcut") {
                     Text(appState.settings.showPanelShortcut.displayString)
@@ -95,6 +97,13 @@ private struct GeneralSettingsView: View {
             accessibilityTrusted = AccessibilityService.isTrusted
             appState.launchAtLoginController.refresh()
         }
+    }
+
+    private var menuBarIconBinding: Binding<Bool> {
+        Binding(
+            get: { appState.settings.showsMenuBarIcon },
+            set: { appState.setMenuBarIconVisible($0) }
+        )
     }
 
     private var launchAtLoginBinding: Binding<Bool> {
@@ -281,20 +290,20 @@ private struct PrivacySettingsView: View {
                     Spacer()
                     if appState.settings.isCapturePaused {
                         Button("Resume") {
-                            appState.settings.resumeCapture()
+                            appState.monitor.resumeCapture()
                         }
                     }
                 }
 
                 HStack {
                     Button("Pause 15 Min") {
-                        appState.settings.pauseCapture(for: 15 * 60)
+                        appState.monitor.pauseCapture(for: 15 * 60)
                     }
                     Button("Pause 1 Hour") {
-                        appState.settings.pauseCapture(for: 60 * 60)
+                        appState.monitor.pauseCapture(for: 60 * 60)
                     }
                     Button("Pause Until Tomorrow") {
-                        appState.settings.pauseCapture(for: 24 * 60 * 60)
+                        appState.monitor.pauseCapture(for: 24 * 60 * 60)
                     }
                 }
             }
@@ -407,7 +416,7 @@ private struct ExcludedApplicationRow: View {
 }
 
 @MainActor
-final class SettingsWindowController {
+final class SettingsWindowController: NSObject, NSWindowDelegate {
     private var window: NSWindow?
 
     func show(appState: AppState) {
@@ -425,10 +434,15 @@ final class SettingsWindowController {
         )
         window.title = String(localized: "Clippa Settings")
         window.isReleasedWhenClosed = false
+        window.delegate = self
         window.center()
         window.contentView = NSHostingView(rootView: SettingsView(appState: appState))
         self.window = window
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
+    }
+
+    func windowWillClose(_ notification: Notification) {
+        window = nil
     }
 }

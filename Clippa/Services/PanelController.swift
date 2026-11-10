@@ -20,6 +20,7 @@ final class AppState {
     let templateWindowController = TemplateWindowController()
     private var isPasting = false
     private var isExtractingText = false
+    var onMenuBarVisibilityChange: (() -> Void)?
     private var undoHistory: [[ClipboardItem]] = []
     private(set) var isAutoPasteReady = AccessibilityService.isTrusted
 
@@ -84,7 +85,13 @@ final class AppState {
     }
 
     func showSettings() {
+        panelController.close()
         settingsWindowController.show(appState: self)
+    }
+
+    func setMenuBarIconVisible(_ isVisible: Bool) {
+        settings.showsMenuBarIcon = isVisible
+        onMenuBarVisibilityChange?()
     }
 
     func setHistoryRetention(_ retention: HistoryRetention) {
@@ -98,12 +105,18 @@ final class AppState {
     }
 
     func copy(_ item: ClipboardItem) {
-        pasteService.copyPayload(item.payload)
-        store.use(item)
+        Task {
+            guard let resolved = await resolve(item) else { return }
+            pasteService.copyPayload(resolved.payload)
+            store.use(item)
+        }
     }
 
     func preview(_ item: ClipboardItem) {
-        previewController.show(item)
+        Task {
+            guard let resolved = await resolve(item) else { return }
+            previewController.show(resolved)
+        }
     }
 
     func open(_ item: ClipboardItem) {
@@ -125,7 +138,7 @@ final class AppState {
     }
 
     func extractText(_ item: ClipboardItem) {
-        guard !isExtractingText, case .image(let data, _) = item.payload else {
+        guard !isExtractingText, item.kind == .image else {
             NSSound.beep()
             return
         }
@@ -133,6 +146,7 @@ final class AppState {
         store.storageMessage = nil
         Task {
             defer { isExtractingText = false }
+            guard let resolved = await resolve(item), case .image(let data, _) = resolved.payload else { return }
             let text = await ImageTextExtractor.recognizeText(in: data)
             guard !text.isEmpty else {
                 store.storageMessage = String(localized: "No text was found in this image. Try a clearer image or another clip.")
@@ -176,10 +190,12 @@ final class AppState {
         guard panel.runModal() == .OK, let url = panel.url else {
             return
         }
-        do {
-            try store.exportPinnedData().write(to: url, options: .atomic)
-        } catch {
-            showOperationError(title: String(localized: "Export Failed"), message: String(localized: "Pinned clips could not be exported. Choose a writable folder and try again."))
+        Task {
+            do {
+                try await store.exportPinnedData().write(to: url, options: .atomic)
+            } catch {
+                showOperationError(title: String(localized: "Export Failed"), message: String(localized: "Pinned clips could not be exported. Choose a writable folder and try again."))
+            }
         }
     }
 
@@ -214,6 +230,7 @@ final class AppState {
             NSSound.beep()
             return
         }
+        updateUndoBlobFilenames()
         store.restore(items)
     }
 
@@ -244,6 +261,8 @@ final class AppState {
             withSelectedItem(delete)
         case .undo:
             undoLastHistoryAction()
+        case .settings:
+            showSettings()
         case .close:
             panelController.close()
         }
@@ -276,12 +295,12 @@ final class AppState {
         guard !isPasting else { return }
         isPasting = true
         defer { isPasting = false }
-        let target = target
+        guard let resolved = await resolve(item) else { return }
         store.use(item)
         panelController.close()
         try? await Task.sleep(for: .milliseconds(35))
         let outcome = await pasteService.paste(
-            item,
+            resolved,
             into: target,
             addTrailingSpace: settings.addSpaceAfterPaste
         )
@@ -289,6 +308,16 @@ final class AppState {
             return
         }
         pasteFailureController.show(requiresAccessibility: outcome == .copiedOnlyRequiresAccessibility)
+    }
+
+    private func resolve(_ item: ClipboardItem) async -> ClipboardItem? {
+        do {
+            return try await store.resolvedItem(item)
+        } catch {
+            store.storageMessage = String(localized: "The encrypted image could not be read.")
+            NSSound.beep()
+            return nil
+        }
     }
 
     private func withSelectedItem(_ action: (ClipboardItem) -> Void) {
@@ -308,6 +337,11 @@ final class AppState {
         if undoHistory.count > 10 {
             undoHistory.removeFirst(undoHistory.count - 10)
         }
+        updateUndoBlobFilenames()
+    }
+
+    private func updateUndoBlobFilenames() {
+        store.undoBlobFilenames = Set(undoHistory.joined().compactMap { $0.payload.storedImageFilename })
     }
 
     func quit() {
@@ -441,6 +475,8 @@ final class PanelController {
                 return .togglePin
             case UInt16(kVK_Delete), UInt16(kVK_ForwardDelete):
                 return isEditingText ? nil : .delete
+            case UInt16(kVK_ANSI_Comma):
+                return .settings
             case UInt16(kVK_ANSI_Z):
                 return isEditingText ? nil : .undo
             default:
@@ -510,6 +546,7 @@ enum PanelKeyAction: Sendable, Equatable {
     case togglePin
     case delete
     case undo
+    case settings
     case close
 }
 
