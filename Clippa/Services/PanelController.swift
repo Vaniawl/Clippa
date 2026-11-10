@@ -379,6 +379,11 @@ final class PanelController {
         panel.hasShadow = true
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient]
         panel.contentView = hostingView
+        // Clip AppKit-backed glass and content at the same rounded window boundary.
+        hostingView.wantsLayer = true
+        hostingView.layer?.cornerRadius = DesignSystem.panelCornerRadius
+        hostingView.layer?.cornerCurve = .continuous
+        hostingView.layer?.masksToBounds = true
         self.panel = panel
 
         installMonitors(appState: appState)

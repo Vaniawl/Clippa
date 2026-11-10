@@ -37,12 +37,12 @@ struct PanelView: View {
         .padding(metrics.panelPadding)
         .frame(width: DesignSystem.panelWidth, height: DesignSystem.panelHeight)
         .background(panelBackground)
-        .clipShape(.rect(cornerRadius: metrics.panelCornerRadius))
+        .clipShape(.rect(cornerRadius: metrics.panelCornerRadius, style: .continuous))
         .overlay {
-            RoundedRectangle(cornerRadius: metrics.panelCornerRadius)
+            RoundedRectangle(cornerRadius: metrics.panelCornerRadius, style: .continuous)
                 .strokeBorder(panelStroke)
         }
-        .shadow(color: .black.opacity(metrics.shadowOpacity), radius: metrics.shadowRadius, x: 0, y: metrics.shadowY)
+        .focusEffectDisabled()
         .accessibilityElement(children: .contain)
         .accessibilityLabel(Text("Clippa clipboard history"))
         .onAppear {
@@ -143,7 +143,7 @@ struct PanelView: View {
                     }
                 }
             }
-            .scrollIndicators(.hidden)
+            .scrollIndicators(.never)
             .onChange(of: store.selectedFilter) { _, filter in
                 proxy.scrollTo(filter, anchor: .center)
             }
@@ -261,7 +261,7 @@ struct PanelView: View {
                     }
                     .padding(.vertical, 2)
                 }
-                .scrollIndicators(.automatic)
+                .scrollIndicators(.never)
                 .onChange(of: store.selectedItemID) { _, selectedID in
                     guard let selectedID else {
                         return
@@ -288,7 +288,7 @@ struct PanelView: View {
         if #available(macOS 26.0, *), !reduceTransparency {
             Rectangle()
                 .fill(.clear)
-                .glassEffect(.regular, in: .rect(cornerRadius: metrics.panelCornerRadius))
+                .glassEffect(.regular, in: .rect(cornerRadius: metrics.panelCornerRadius, style: .continuous))
         } else {
             Rectangle()
                 .fill(.regularMaterial)
