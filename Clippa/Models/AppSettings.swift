@@ -70,6 +70,12 @@ struct HotKeyShortcut: Codable, Equatable, Sendable {
         return result + keyDisplayName
     }
 
+    var isValid: Bool {
+        let primary = UInt32(cmdKey | controlKey | optionKey)
+        let allowed = primary | UInt32(shiftKey)
+        return modifiers & primary != 0 && modifiers & ~allowed == 0 && Self.keyDisplayName(for: keyCode) != nil
+    }
+
     var keyDisplayName: String {
         Self.keyDisplayName(for: keyCode) ?? "Key \(keyCode)"
     }
@@ -180,6 +186,9 @@ final class AppSettings {
     var showPanelShortcut: HotKeyShortcut {
         didSet { persist() }
     }
+    var showsMenuBarIcon: Bool {
+        didSet { defaults.set(showsMenuBarIcon, forKey: Keys.showsMenuBarIcon) }
+    }
     var addSpaceAfterPaste: Bool {
         didSet { persist() }
     }
@@ -213,7 +222,12 @@ final class AppSettings {
         }
         self.excludedBundleIdentifiers = defaults.array(forKey: Keys.excludedBundleIdentifiers) as? [String] ?? PrivacyFilter.defaultExcludedBundleIdentifiers
         self.hasShownAccessibilityOnboarding = defaults.bool(forKey: Keys.hasShownAccessibilityOnboarding)
-        self.showPanelShortcut = .defaultShowPanel
+        self.showPanelShortcut = defaults.data(forKey: Keys.showPanelShortcut)
+            .flatMap { try? JSONDecoder().decode(HotKeyShortcut.self, from: $0) }
+            .flatMap { $0.isValid ? $0 : nil } ?? .defaultShowPanel
+        self.showsMenuBarIcon = defaults.object(forKey: Keys.showsMenuBarIcon) == nil
+            ? true
+            : defaults.bool(forKey: Keys.showsMenuBarIcon)
         self.addSpaceAfterPaste = defaults.object(forKey: Keys.addSpaceAfterPaste) == nil
             ? true
             : defaults.bool(forKey: Keys.addSpaceAfterPaste)
@@ -300,6 +314,7 @@ final class AppSettings {
         static let excludedBundleIdentifiers = "excludedBundleIdentifiers"
         static let hasShownAccessibilityOnboarding = "hasShownAccessibilityOnboarding"
         static let showPanelShortcut = "showPanelShortcut"
+        static let showsMenuBarIcon = "showMenuBarIcon"
         static let addSpaceAfterPaste = "addSpaceAfterPaste"
         static let normalizeCopiedText = "normalizeCopiedText"
         static let removeTrackingParametersFromLinks = "removeTrackingParametersFromLinks"

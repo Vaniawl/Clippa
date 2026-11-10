@@ -113,6 +113,8 @@ final class ClipboardPreviewController: NSObject, @preconcurrency QLPreviewPanel
             )
         case .text(let text):
             return writeTemporary(Data(text.utf8), named: "Clipboard.txt")
+        case .storedImage:
+            return []
         case .image(let data, let uti):
             let fileExtension = uti.flatMap { UTType($0)?.preferredFilenameExtension } ?? "tiff"
             return writeTemporary(data, named: "Clipboard.\(fileExtension)")

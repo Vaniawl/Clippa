@@ -4,7 +4,7 @@ import SwiftUI
 
 enum DesignSystem {
     static let panelWidth: CGFloat = 560
-    static let panelHeight: CGFloat = 430
+    static let panelHeight: CGFloat = 480
     static let panelCornerRadius: CGFloat = 22
     static let rowHeight: CGFloat = 58
     static let controlHeight: CGFloat = 36
@@ -50,6 +50,7 @@ struct ClipboardThumbnailView: View {
     var size: CGFloat
     var cornerRadius: CGFloat = 8
     var showsPin = false
+    let loadImageData: @MainActor (ClipboardPayload) async throws -> Data
     @State private var image: NSImage?
 
     var body: some View {
@@ -73,18 +74,20 @@ struct ClipboardThumbnailView: View {
         }
         .accessibilityHidden(true)
         .task(id: item.payloadHash) {
-            guard case .image(let data, _) = item.payload else {
-                image = nil
-                return
+            image = nil
+            guard item.kind == .image else { return }
+            if let cached = ClipboardImageCache.cachedImage(for: item.payloadHash) {
+                image = cached
+            } else if let data = try? await loadImageData(item.payload), !Task.isCancelled {
+                image = await ClipboardImageCache.image(for: item.payloadHash, data: data)
             }
-            image = await ClipboardImageCache.image(for: item.payloadHash, data: data)
         }
     }
 
     @ViewBuilder
     private var thumbnail: some View {
         switch item.payload {
-        case .image:
+        case .image, .storedImage:
             if let image {
                 Image(nsImage: image)
                     .resizable()
@@ -94,7 +97,7 @@ struct ClipboardThumbnailView: View {
                 fallbackIcon(symbol: "photo", color: .secondary)
             }
         case .text:
-            fallbackIcon(symbol: item.kind.symbolName, color: .secondary)
+            fallbackIcon(symbol: item.isTemplate ? "text.badge.plus" : item.kind.symbolName, color: .secondary)
         case .url:
             fallbackIcon(symbol: item.kind.symbolName, color: .blue)
         case .files:
@@ -116,15 +119,11 @@ struct ClipboardImageInfoView: View {
     let item: ClipboardItem
 
     var body: some View {
-        if let metadata = item.imageMetadata {
-            HStack(spacing: 6) {
-                Label(imageDescription(metadata: metadata), systemImage: "info.circle")
-                    .labelStyle(.titleAndIcon)
-            }
+        Label(item.imageMetadata.map(imageDescription) ?? item.preview, systemImage: "info.circle")
+            .labelStyle(.titleAndIcon)
             .font(.caption)
             .foregroundStyle(.secondary)
             .lineLimit(1)
-        }
     }
 
     private func imageDescription(metadata: ClipboardImageMetadata) -> String {
@@ -146,6 +145,10 @@ enum ClipboardImageCache {
         cache.totalCostLimit = 64 * 1024 * 1024
         return cache
     }()
+
+    static func cachedImage(for key: String) -> NSImage? {
+        cache.object(forKey: key as NSString)
+    }
 
     static func image(for key: String, data: Data) async -> NSImage? {
         let cacheKey = key as NSString

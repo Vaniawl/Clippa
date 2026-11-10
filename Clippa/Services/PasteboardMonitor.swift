@@ -8,9 +8,10 @@ final class PasteboardMonitor {
     private let pasteboard: NSPasteboard
     private let store: ClipboardStore
     private let settings: AppSettings
-    private var task: Task<Void, Never>?
+    private var timer: Timer?
+    private static let pollingInterval: TimeInterval = 0.35
     private var lastChangeCount: Int
-    private var internalChangeCounts: Set<Int> = []
+    private var internalChangeCount: Int?
 
     init(pasteboard: NSPasteboard = .general, store: ClipboardStore, settings: AppSettings) {
         self.pasteboard = pasteboard
@@ -20,33 +21,54 @@ final class PasteboardMonitor {
     }
 
     func start() {
-        task?.cancel()
+        stop()
         lastChangeCount = pasteboard.changeCount
-        task = Task { [weak self] in
-            while !Task.isCancelled {
-                try? await Task.sleep(for: .milliseconds(350))
-                await self?.poll()
+        internalChangeCount = nil
+
+        let timer: Timer
+        if let pauseUntil = settings.pauseCaptureUntil, pauseUntil > Date() {
+            timer = Timer(fire: pauseUntil, interval: 0, repeats: false) { [weak self] _ in
+                MainActor.assumeIsolated { self?.start() }
             }
+        } else {
+            timer = Timer(timeInterval: Self.pollingInterval, repeats: true) { [weak self] _ in
+                MainActor.assumeIsolated { self?.poll() }
+            }
+            timer.tolerance = 0.05
         }
+        self.timer = timer
+        RunLoop.main.add(timer, forMode: .common)
     }
 
     func stop() {
-        task?.cancel()
-        task = nil
+        timer?.invalidate()
+        timer = nil
+    }
+
+    func pauseCapture(for interval: TimeInterval) {
+        settings.pauseCapture(for: interval)
+        if timer != nil { start() }
+    }
+
+    func resumeCapture() {
+        settings.resumeCapture()
+        if timer != nil { start() }
     }
 
     func noteInternalWrite(changeCount: Int) {
-        internalChangeCounts.insert(changeCount)
+        internalChangeCount = changeCount
     }
 
-    private func poll() async {
+    private func poll() {
         let current = pasteboard.changeCount
         guard current != lastChangeCount else {
             return
         }
         lastChangeCount = current
 
-        if internalChangeCounts.remove(current) != nil {
+        let isInternalWrite = current == internalChangeCount
+        internalChangeCount = nil
+        guard !isInternalWrite else {
             return
         }
         guard !settings.isCapturePaused else {
@@ -79,7 +101,7 @@ final class PasteboardMonitor {
         }
 
         if let string = pasteboard.string(forType: .string) {
-            if let url = URL(string: string), let scheme = url.scheme, !scheme.isEmpty {
+            if let url = ClipboardContentCleaner.webURL(from: string) {
                 return .url(url)
             }
             return .text(string)

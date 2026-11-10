@@ -4,6 +4,7 @@ import Foundation
 enum EncryptedHistoryStoreError: Error {
     case corruptStoreIsolated(URL)
     case missingCombinedRepresentation
+    case unavailableImage
 }
 
 struct StoredClipboardSnapshot: Codable, Sendable {
@@ -15,16 +16,17 @@ actor EncryptedHistoryStore {
     private let keyStore: LocalHistoryKeyStore
     private let blobStore: EncryptedBlobStore
 
-    init(fileURL: URL? = nil, keyStore: LocalHistoryKeyStore = LocalHistoryKeyStore()) {
+    init(fileURL: URL? = nil, keyStore: LocalHistoryKeyStore = LocalHistoryKeyStore(), blobFolderURL: URL? = nil) {
         let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first?
             .appendingPathComponent("Clippa", isDirectory: true)
-        let root = base ?? URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("Clippa", isDirectory: true)
+        let root = fileURL?.deletingLastPathComponent() ?? base ?? URL(fileURLWithPath: NSTemporaryDirectory()).appendingPathComponent("Clippa", isDirectory: true)
         self.fileURL = fileURL ?? root.appendingPathComponent("history.aesgcm")
         self.keyStore = keyStore
-        self.blobStore = EncryptedBlobStore(folderURL: root.appendingPathComponent("BinaryPayloads", isDirectory: true), keyStore: keyStore)
+        let blobFolder = blobFolderURL ?? root.appendingPathComponent("BinaryPayloads", isDirectory: true)
+        self.blobStore = EncryptedBlobStore(folderURL: blobFolder, keyStore: keyStore)
     }
 
-    func load() async throws -> StoredClipboardSnapshot {
+    func load(deferImages: Bool = false) async throws -> StoredClipboardSnapshot {
         guard FileManager.default.fileExists(atPath: fileURL.path) else {
             return StoredClipboardSnapshot(items: [])
         }
@@ -35,7 +37,7 @@ actor EncryptedHistoryStore {
             let box = try AES.GCM.SealedBox(combined: combined)
             let decrypted = try AES.GCM.open(box, using: SymmetricKey(data: keyData))
             let diskSnapshot = try JSONDecoder.clippa.decode(DiskClipboardSnapshot.self, from: decrypted)
-            let items = try await materialize(diskSnapshot.items)
+            let items = try await materialize(diskSnapshot.items, deferImages: deferImages)
             return StoredClipboardSnapshot(items: items)
         } catch {
             let isolated = fileURL.deletingLastPathComponent()
@@ -45,9 +47,9 @@ actor EncryptedHistoryStore {
         }
     }
 
-    func save(_ snapshot: StoredClipboardSnapshot) async throws {
+    func save(_ snapshot: StoredClipboardSnapshot, preservingBlobs: Set<String> = []) async throws {
         try FileManager.default.createDirectory(at: fileURL.deletingLastPathComponent(), withIntermediateDirectories: true)
-        let diskSnapshot = try await diskSnapshot(from: snapshot)
+        let (diskSnapshot, activeBlobs) = try await diskSnapshot(from: snapshot)
         let encoded = try JSONEncoder.clippa.encode(diskSnapshot)
         let keyData = try await keyStore.loadOrCreateKey()
         let sealed = try AES.GCM.seal(encoded, using: SymmetricKey(data: keyData))
@@ -55,9 +57,18 @@ actor EncryptedHistoryStore {
             throw EncryptedHistoryStoreError.missingCombinedRepresentation
         }
         try combined.write(to: fileURL, options: .atomic)
+        try? await blobStore.removeAll(except: activeBlobs.union(preservingBlobs))
     }
 
-    private func diskSnapshot(from snapshot: StoredClipboardSnapshot) async throws -> DiskClipboardSnapshot {
+    func resolvePayload(_ payload: ClipboardPayload) async throws -> ClipboardPayload {
+        guard case .storedImage(let filename, let uti, _, _, _) = payload else { return payload }
+        guard let data = try await blobStore.load(filename: filename) else {
+            throw EncryptedHistoryStoreError.unavailableImage
+        }
+        return .image(data: data, uti: uti)
+    }
+
+    private func diskSnapshot(from snapshot: StoredClipboardSnapshot) async throws -> (DiskClipboardSnapshot, Set<String>) {
         var diskItems: [DiskClipboardItem] = []
         var activeBlobFilenames: Set<String> = []
         for item in snapshot.items {
@@ -74,14 +85,16 @@ actor EncryptedHistoryStore {
                 _ = try await blobStore.save(data, filename: filename)
                 activeBlobFilenames.insert(filename)
                 diskPayload = .imageBlob(filename: filename, uti: uti)
+            case .storedImage(let filename, let uti, _, _, _):
+                activeBlobFilenames.insert(filename)
+                diskPayload = .imageBlob(filename: filename, uti: uti)
             }
             diskItems.append(DiskClipboardItem(item: item, payload: diskPayload))
         }
-        try await blobStore.removeAll(except: activeBlobFilenames)
-        return DiskClipboardSnapshot(items: diskItems)
+        return (DiskClipboardSnapshot(items: diskItems), activeBlobFilenames)
     }
 
-    private func materialize(_ diskItems: [DiskClipboardItem]) async throws -> [ClipboardItem] {
+    private func materialize(_ diskItems: [DiskClipboardItem], deferImages: Bool) async throws -> [ClipboardItem] {
         var items: [ClipboardItem] = []
         for diskItem in diskItems {
             let payload: ClipboardPayload
@@ -93,19 +106,31 @@ actor EncryptedHistoryStore {
             case .files(let refs):
                 payload = .files(refs)
             case .imageBlob(let filename, let uti):
-                let data = try await blobStore.load(filename: filename) ?? Data()
-                payload = .image(data: data, uti: uti)
+                if deferImages {
+                    payload = .storedImage(
+                        filename: filename,
+                        uti: uti,
+                        preview: diskItem.preview,
+                        payloadHash: diskItem.payloadHash,
+                        metadata: diskItem.imageMetadata
+                    )
+                } else {
+                    let data = try await blobStore.load(filename: filename) ?? Data()
+                    payload = .image(data: data, uti: uti)
+                }
             }
             items.append(ClipboardItem(
                 id: diskItem.id,
                 kind: diskItem.kind,
-                createdAt: diskItem.createdAt,
-                lastUsedAt: diskItem.lastUsedAt,
+                createdAt: diskItem.preciseCreatedAt.map(Date.init(timeIntervalSince1970:)) ?? diskItem.createdAt,
+                lastUsedAt: diskItem.preciseLastUsedAt.map(Date.init(timeIntervalSince1970:)) ?? diskItem.lastUsedAt,
                 preview: diskItem.preview,
                 payload: payload,
                 payloadHash: diskItem.payloadHash,
                 isPinned: diskItem.isPinned,
-                sourceBundleIdentifier: diskItem.sourceBundleIdentifier
+                sourceBundleIdentifier: diskItem.sourceBundleIdentifier,
+                imageMetadata: diskItem.imageMetadata,
+                template: diskItem.template
             ))
         }
         return items
@@ -126,6 +151,11 @@ private struct DiskClipboardItem: Codable, Sendable {
     var payloadHash: String
     var isPinned: Bool
     var sourceBundleIdentifier: String?
+    var template: TextTemplate?
+    // Additive precision fields keep the original ISO-8601 dates readable by older builds.
+    var preciseCreatedAt: TimeInterval?
+    var preciseLastUsedAt: TimeInterval?
+    var imageMetadata: ClipboardImageMetadata?
 
     init(item: ClipboardItem, payload: DiskClipboardPayload) {
         self.id = item.id
@@ -137,6 +167,10 @@ private struct DiskClipboardItem: Codable, Sendable {
         self.payloadHash = item.payloadHash
         self.isPinned = item.isPinned
         self.sourceBundleIdentifier = item.sourceBundleIdentifier
+        self.template = item.template
+        self.preciseCreatedAt = item.createdAt.timeIntervalSince1970
+        self.preciseLastUsedAt = item.lastUsedAt.timeIntervalSince1970
+        self.imageMetadata = item.imageMetadata
     }
 }
 

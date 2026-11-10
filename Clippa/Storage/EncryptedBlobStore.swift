@@ -21,12 +21,12 @@ actor EncryptedBlobStore {
         guard let combined = sealed.combined else {
             throw EncryptedBlobStoreError.missingCombinedRepresentation
         }
-        try combined.write(to: folderURL.appendingPathComponent(filename), options: .atomic)
+        try combined.write(to: url(for: filename), options: .atomic)
         return filename
     }
 
     func load(filename: String) async throws -> Data? {
-        let url = folderURL.appendingPathComponent(filename)
+        let url = try url(for: filename)
         guard FileManager.default.fileExists(atPath: url.path) else {
             return nil
         }
@@ -34,6 +34,13 @@ actor EncryptedBlobStore {
         let combined = try Data(contentsOf: url)
         let box = try AES.GCM.SealedBox(combined: combined)
         return try AES.GCM.open(box, using: SymmetricKey(data: keyData))
+    }
+
+    private func url(for filename: String) throws -> URL {
+        guard filename.hasSuffix(".blob"), !filename.contains("/"), !filename.contains("\\") else {
+            throw EncryptedBlobStoreError.invalidFilename
+        }
+        return folderURL.appendingPathComponent(filename)
     }
 
     func removeAll(except filenamesToKeep: Set<String>) throws {
@@ -49,4 +56,5 @@ actor EncryptedBlobStore {
 
 enum EncryptedBlobStoreError: Error {
     case missingCombinedRepresentation
+    case invalidFilename
 }

@@ -19,6 +19,7 @@ final class PasteService {
     }
 
     func copyPayload(_ payload: ClipboardPayload) {
+        guard payload.storedImageFilename == nil else { return }
         pasteboard.clearContents()
         switch payload {
         case .text(let value):
@@ -30,6 +31,8 @@ final class PasteService {
             if let image = NSImage(data: data) {
                 pasteboard.writeObjects([image])
             }
+        case .storedImage:
+            return
         case .files(let refs):
             let urls = refs.map { $0.url as NSURL }
             pasteboard.writeObjects(urls)
@@ -83,7 +86,7 @@ final class PasteService {
         switch payload {
         case .text, .url:
             return true
-        case .image, .files:
+        case .image, .storedImage, .files:
             return false
         }
     }

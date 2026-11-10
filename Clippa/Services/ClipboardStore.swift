@@ -16,11 +16,20 @@ final class ClipboardStore {
     var selectedFilter: ClipboardFilter = .all {
         didSet { rebuildVisibleItems() }
     }
+    var selectedTemplateFolder: String? {
+        didSet { rebuildVisibleItems() }
+    }
+    var templateFolders: [String] {
+        Array(Set(items.compactMap { $0.template?.folder }.filter { !$0.isEmpty }))
+            .sorted { $0.localizedStandardCompare($1) == .orderedAscending }
+    }
     var storageMessage: String?
 
     private let historyStore: EncryptedHistoryStore
     private var policy: ClipboardHistoryPolicy
     private var persistTask: Task<Void, Never>?
+    private var persistRevision = 0
+    var undoBlobFilenames: Set<String> = []
 
     init(
         historyStore: EncryptedHistoryStore = EncryptedHistoryStore(),
@@ -32,7 +41,7 @@ final class ClipboardStore {
 
     func load() async {
         do {
-            let snapshot = try await historyStore.load()
+            let snapshot = try await historyStore.load(deferImages: true)
             items = ordered(snapshot.items)
             enforceRetention(now: Date())
             rebuildVisibleItems()
@@ -49,7 +58,7 @@ final class ClipboardStore {
 
     func add(payload: ClipboardPayload, sourceBundleIdentifier: String?, date: Date = Date()) {
         let hash = payload.stableHash
-        if let index = items.firstIndex(where: { $0.payloadHash == hash }) {
+        if let index = items.firstIndex(where: { !$0.isTemplate && $0.payloadHash == hash }) {
             items[index].lastUsedAt = date
             items[index].createdAt = date
             items[index].sourceBundleIdentifier = sourceBundleIdentifier ?? items[index].sourceBundleIdentifier
@@ -67,10 +76,49 @@ final class ClipboardStore {
         applyOrderingAndRetention(now: date, persistence: .deferred)
     }
 
+    @discardableResult
+    func saveTemplate(
+        id: UUID? = nil,
+        title: String,
+        folder: String,
+        body: String,
+        date: Date = Date()
+    ) throws -> ClipboardItem {
+        let title = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        let folder = folder.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !title.isEmpty else { throw TemplateValidationError.emptyTitle }
+        guard !body.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { throw TemplateValidationError.emptyBody }
+        let metadata = TextTemplate(title: title, folder: folder)
+        let item: ClipboardItem
+        if let id {
+            guard let index = items.firstIndex(where: { $0.id == id && $0.isTemplate }) else {
+                throw TemplateValidationError.missingTemplate
+            }
+            var updated = items[index]
+            updated.template = metadata
+            updated.payload = .text(body)
+            updated.payloadHash = updated.payload.stableHash
+            updated.preview = updated.payload.preview
+            updated.isPinned = true
+            updated.lastUsedAt = date
+            items[index] = updated
+            item = updated
+        } else {
+            item = ClipboardItem(payload: .text(body), createdAt: date, isPinned: true, template: metadata)
+            items.append(item)
+        }
+        selectedTemplateFolder = nil
+        selectedFilter = .templates
+        selectedItemID = item.id
+        applyOrderingAndRetention(now: date)
+        return item
+    }
+
     func togglePinSelected() {
         guard let selectedItemID, let index = items.firstIndex(where: { $0.id == selectedItemID }) else {
             return
         }
+        guard !items[index].isTemplate else { return }
         items[index].isPinned.toggle()
         applyOrderingAndRetention(now: Date())
     }
@@ -128,6 +176,11 @@ final class ClipboardStore {
         applyOrderingAndRetention(now: now)
     }
 
+    func quickPasteItem(at index: Int) -> ClipboardItem? {
+        guard (0..<9).contains(index), visibleItems.indices.contains(index) else { return nil }
+        return visibleItems[index]
+    }
+
     func selectNext() {
         moveSelection(offset: 1)
     }
@@ -177,8 +230,26 @@ final class ClipboardStore {
         }
     }
 
-    func exportPinnedData() throws -> Data {
-        let archive = PinnedClipboardArchive(items: items.filter(\.isPinned))
+    func resolvedItem(_ item: ClipboardItem) async throws -> ClipboardItem {
+        guard item.payload.storedImageFilename != nil else { return item }
+        var resolved = item
+        resolved.payload = try await historyStore.resolvePayload(item.payload)
+        return resolved
+    }
+
+    func imageData(for payload: ClipboardPayload) async throws -> Data {
+        guard case .image(let data, _) = try await historyStore.resolvePayload(payload) else {
+            throw EncryptedHistoryStoreError.unavailableImage
+        }
+        return data
+    }
+
+    func exportPinnedData() async throws -> Data {
+        var pinnedItems: [ClipboardItem] = []
+        for item in items where item.isPinned {
+            pinnedItems.append(try await resolvedItem(item))
+        }
+        let archive = PinnedClipboardArchive(items: pinnedItems)
         let encoder = JSONEncoder()
         encoder.dateEncodingStrategy = .iso8601
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
@@ -190,12 +261,19 @@ final class ClipboardStore {
         let decoder = JSONDecoder()
         decoder.dateDecodingStrategy = .iso8601
         let archive = try decoder.decode(PinnedClipboardArchive.self, from: data)
-        let existingHashes = Set(items.map(\.payloadHash))
-        let imported = archive.items.compactMap { item -> ClipboardItem? in
-            guard !existingHashes.contains(item.payloadHash) else {
-                return nil
+        var existingIdentities = Set(items.map(\.archiveIdentity))
+        for item in archive.items where item.template != nil {
+            guard item.kind == .text, case .text(let body) = item.payload,
+                  let title = item.template?.title, !title.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty,
+                  !body.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                throw TemplateValidationError.emptyBody
             }
+        }
+        let imported = archive.items.compactMap { item -> ClipboardItem? in
+            guard item.payload.storedImageFilename == nil else { return nil }
             var importedItem = item
+            importedItem.payloadHash = item.payload.stableHash
+            guard existingIdentities.insert(importedItem.archiveIdentity).inserted else { return nil }
             importedItem.id = UUID()
             importedItem.createdAt = date
             importedItem.lastUsedAt = date
@@ -211,7 +289,13 @@ final class ClipboardStore {
     }
 
     private func rebuildVisibleItems() {
-        let nextVisibleItems = filteredItems(query: searchQuery, filter: selectedFilter)
+        if let folder = selectedTemplateFolder, !templateFolders.contains(folder) {
+            selectedTemplateFolder = nil
+            return
+        }
+        let nextVisibleItems = filteredItems(query: searchQuery, filter: selectedFilter).filter { item in
+            selectedFilter != .templates || selectedTemplateFolder == nil || item.template?.folder == selectedTemplateFolder
+        }
         if nextVisibleItems.map(\.id) != visibleItems.map(\.id) {
             visibleItemsRevision += 1
         }
@@ -254,7 +338,11 @@ final class ClipboardStore {
     }
 
     private func ordered(_ source: [ClipboardItem]) -> [ClipboardItem] {
-        source.sorted { $0.createdAt > $1.createdAt }
+        source.sorted {
+            if $0.activityDate != $1.activityDate { return $0.activityDate > $1.activityDate }
+            if $0.createdAt != $1.createdAt { return $0.createdAt > $1.createdAt }
+            return $0.id.uuidString < $1.id.uuidString
+        }
     }
 
     private func activityDate(_ item: ClipboardItem) -> Date {
@@ -263,24 +351,53 @@ final class ClipboardStore {
 
     private func persist(_ mode: PersistenceMode) {
         let snapshot = StoredClipboardSnapshot(items: items)
-        persistTask?.cancel()
-        persistTask = Task { [historyStore] in
+        let previousSave = persistTask
+        previousSave?.cancel()
+        persistRevision += 1
+        let revision = persistRevision
+        persistTask = Task { [weak self, historyStore] in
+            // Wait for an in-flight write before saving a newer snapshot.
+            await previousSave?.value
             if mode == .deferred {
-                do {
-                    try await Task.sleep(for: .milliseconds(350))
-                } catch {
-                    return
+                do { try await Task.sleep(for: .milliseconds(350)) }
+                catch { return }
+            }
+            guard let self, !Task.isCancelled else { return }
+            do {
+                try await historyStore.save(snapshot, preservingBlobs: undoBlobFilenames)
+                if revision == persistRevision { discardSavedImageBytes() }
+            } catch {
+                if revision == persistRevision {
+                    storageMessage = String(localized: "Encrypted history could not be saved.")
                 }
             }
-            try? await historyStore.save(snapshot)
         }
     }
 
     func flushPendingSave() async {
-        persistTask?.cancel()
-        persistTask = nil
-        let snapshot = StoredClipboardSnapshot(items: items)
-        try? await historyStore.save(snapshot)
+        persist(.immediate)
+        while let task = persistTask {
+            let revision = persistRevision
+            await task.value
+            if revision == persistRevision { return }
+        }
+    }
+
+    private func discardSavedImageBytes() {
+        var changed = false
+        for index in items.indices {
+            guard case .image(_, let uti) = items[index].payload else { continue }
+            let item = items[index]
+            items[index].payload = .storedImage(
+                filename: "image-\(item.payloadHash).blob",
+                uti: uti,
+                preview: item.preview,
+                payloadHash: item.payloadHash,
+                metadata: item.imageMetadata
+            )
+            changed = true
+        }
+        if changed { rebuildVisibleItems() }
     }
 }
 
@@ -342,7 +459,8 @@ private struct ClipboardSearchQuery {
         if let dateScope, !matches(item.lastUsedAt, scope: dateScope) {
             return false
         }
-        return terms.allSatisfy { item.payload.searchText.localizedStandardContains($0) }
+        let searchableText = [item.payload.searchText, item.template?.title ?? "", item.template?.folder ?? ""].joined(separator: " ")
+        return terms.allSatisfy { searchableText.localizedStandardContains($0) }
     }
 
     private func matches(_ date: Date, scope: DateScope) -> Bool {
@@ -360,17 +478,19 @@ private extension ClipboardItem {
     func matches(filter: ClipboardFilter, parsedQuery: ClipboardSearchQuery) -> Bool {
         switch filter {
         case .all:
-            return parsedQuery.pinned == true || !isPinned
+            return true
         case .pinned:
             return isPinned
+        case .templates:
+            return isTemplate
         case .text:
-            return kind == .text && (parsedQuery.pinned == true || !isPinned)
+            return kind == .text
         case .url:
-            return kind == .url && (parsedQuery.pinned == true || !isPinned)
+            return kind == .url
         case .image:
-            return kind == .image && (parsedQuery.pinned == true || !isPinned)
+            return kind == .image
         case .files:
-            return kind == .files && (parsedQuery.pinned == true || !isPinned)
+            return kind == .files
         }
     }
 }

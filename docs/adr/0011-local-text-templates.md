@@ -1,0 +1,7 @@
+# ADR 0011: Optional encrypted template metadata on text clips
+
+Status: accepted within the owner's 2026-10-24 request to add text templates.
+
+Keep the existing ClipboardStore and encrypted history boundary. Add optional template title/folder metadata to text items and their disk representation; missing metadata decodes as nil. Templates are pinned for retention and excluded from ordinary capture deduplication so copying their body cannot erase template identity. Their contents remain in the existing text payload, encrypted by the existing AES-GCM store. Export/import includes optional metadata with content-aware identity. No network service or additional permission is introduced.
+
+Use last activity time for display ordering. Keep the existing createdAt field for compatibility, with stable ID tie-breaking. Preserve full-precision creation/use times in optional numeric companion fields on disk while retaining the original ISO-8601 fields. Existing files without those companion fields load using the old dates; older builds can still decode the unchanged date fields. Serialize saves through a task chain so an older in-flight snapshot cannot overwrite a newer flush. Existing iPhone/CloudKit development remains separate; template synchronization is not introduced by this change. The updated reader accepts old history. Older decoders ignore optional metadata/precision keys, but saving in an older build discards those fields; use the updated build to preserve templates and subsecond ordering.

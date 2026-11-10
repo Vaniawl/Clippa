@@ -30,6 +30,7 @@ enum ClipboardItemKind: String, Codable, CaseIterable, Sendable {
 enum ClipboardFilter: String, CaseIterable, Identifiable, Sendable {
     case all
     case pinned
+    case templates
     case text
     case url
     case image
@@ -41,6 +42,7 @@ enum ClipboardFilter: String, CaseIterable, Identifiable, Sendable {
         switch self {
         case .all: String(localized: "All")
         case .pinned: String(localized: "Pinned")
+        case .templates: String(localized: "Templates")
         case .text: String(localized: "Text")
         case .url: String(localized: "Links")
         case .image: String(localized: "Images")
@@ -52,6 +54,7 @@ enum ClipboardFilter: String, CaseIterable, Identifiable, Sendable {
         switch self {
         case .all: "tray.full"
         case .pinned: "pin"
+        case .templates: "text.badge.plus"
         case .text: "text.alignleft"
         case .url: "link"
         case .image: "photo"
@@ -106,13 +109,14 @@ enum ClipboardPayload: Codable, Equatable, Sendable {
     case text(String)
     case url(URL)
     case image(data: Data, uti: String?)
+    case storedImage(filename: String, uti: String?, preview: String, payloadHash: String, metadata: ClipboardImageMetadata?)
     case files([FileReference])
 
     var kind: ClipboardItemKind {
         switch self {
         case .text: .text
         case .url: .url
-        case .image: .image
+        case .image, .storedImage: .image
         case .files: .files
         }
     }
@@ -125,6 +129,8 @@ enum ClipboardPayload: Codable, Equatable, Sendable {
             url.absoluteString
         case .image(let data, _):
             ByteCountFormatter.string(fromByteCount: Int64(data.count), countStyle: .file)
+        case .storedImage(_, _, let preview, _, _):
+            preview
         case .files(let refs):
             refs.map(\.displayName).joined(separator: ", ")
         }
@@ -136,7 +142,7 @@ enum ClipboardPayload: Codable, Equatable, Sendable {
             value
         case .url(let url):
             url.absoluteString
-        case .image:
+        case .image, .storedImage:
             ClipboardItemKind.image.displayName
         case .files(let refs):
             refs.map { "\($0.displayName) \($0.path)" }.joined(separator: " ")
@@ -154,6 +160,8 @@ enum ClipboardPayload: Codable, Equatable, Sendable {
         case .image(let data, let uti):
             hasher.update(data: Data((uti ?? "").utf8))
             hasher.update(data: data)
+        case .storedImage(_, _, _, let payloadHash, _):
+            return payloadHash
         case .files(let refs):
             for path in refs.map(\.path).sorted() {
                 hasher.update(data: Data(path.utf8))
@@ -162,23 +170,31 @@ enum ClipboardPayload: Codable, Equatable, Sendable {
         return hasher.finalize().map { String(format: "%02x", $0) }.joined()
     }
 
+    var storedImageFilename: String? {
+        guard case .storedImage(let filename, _, _, _, _) = self else { return nil }
+        return filename
+    }
+
     var imageMetadata: ClipboardImageMetadata? {
-        guard case .image(let data, let uti) = self else {
-            return nil
+        switch self {
+        case .image(let data, let uti): ClipboardImageMetadata(data: data, uti: uti)
+        case .storedImage(_, _, _, _, let metadata): metadata
+        default: nil
         }
-        return ClipboardImageMetadata(data: data, uti: uti)
     }
 
     func cleaned(normalizeText: Bool, removeTrackingParameters: Bool) -> ClipboardPayload {
         switch self {
         case .text(let value):
             let text = normalizeText ? ClipboardContentCleaner.normalizedText(value) : value
+            guard let url = ClipboardContentCleaner.webURL(from: text) else {
+                return .text(text)
+            }
             if removeTrackingParameters,
-               let url = URL(string: text),
                let cleaned = ClipboardContentCleaner.removingTrackingParameters(from: url) {
                 return .url(cleaned)
             }
-            return .text(text)
+            return .url(url)
         case .url(let url):
             guard removeTrackingParameters,
                   let cleaned = ClipboardContentCleaner.removingTrackingParameters(from: url)
@@ -186,7 +202,7 @@ enum ClipboardPayload: Codable, Equatable, Sendable {
                 return self
             }
             return .url(cleaned)
-        case .image, .files:
+        case .image, .storedImage, .files:
             return self
         }
     }
@@ -216,6 +232,17 @@ enum ClipboardContentCleaner {
             return url
         }
         components.queryItems = filtered.isEmpty ? nil : filtered
+        return components.url
+    }
+
+    static func webURL(from value: String) -> URL? {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.rangeOfCharacter(from: .whitespacesAndNewlines) == nil,
+              let components = URLComponents(string: trimmed),
+              let scheme = components.scheme?.lowercased(),
+              scheme == "http" || scheme == "https",
+              let host = components.host, !host.isEmpty
+        else { return nil }
         return components.url
     }
 
@@ -255,6 +282,17 @@ struct ClipboardItem: Identifiable, Codable, Equatable, Sendable {
     var isPinned: Bool
     var sourceBundleIdentifier: String?
     var imageMetadata: ClipboardImageMetadata?
+    var template: TextTemplate?
+
+    var isTemplate: Bool { template != nil && kind == .text }
+    var activityDate: Date { max(createdAt, lastUsedAt) }
+
+    var archiveIdentity: String {
+        guard let template else { return payloadHash }
+        // Encode the tuple unambiguously; identical bodies can have distinct named templates.
+        let encoded = (try? JSONEncoder().encode([payloadHash, template.title, template.folder])) ?? Data()
+        return encoded.base64EncodedString()
+    }
 
     init(
         id: UUID,
@@ -266,7 +304,8 @@ struct ClipboardItem: Identifiable, Codable, Equatable, Sendable {
         payloadHash: String,
         isPinned: Bool,
         sourceBundleIdentifier: String?,
-        imageMetadata: ClipboardImageMetadata? = nil
+        imageMetadata: ClipboardImageMetadata? = nil,
+        template: TextTemplate? = nil
     ) {
         self.id = id
         self.kind = kind
@@ -278,6 +317,7 @@ struct ClipboardItem: Identifiable, Codable, Equatable, Sendable {
         self.isPinned = isPinned
         self.sourceBundleIdentifier = sourceBundleIdentifier
         self.imageMetadata = imageMetadata ?? payload.imageMetadata
+        self.template = template
     }
 
     init(
@@ -286,7 +326,8 @@ struct ClipboardItem: Identifiable, Codable, Equatable, Sendable {
         createdAt: Date = Date(),
         lastUsedAt: Date? = nil,
         isPinned: Bool = false,
-        sourceBundleIdentifier: String? = nil
+        sourceBundleIdentifier: String? = nil,
+        template: TextTemplate? = nil
     ) {
         self.id = id
         self.kind = payload.kind
@@ -298,6 +339,7 @@ struct ClipboardItem: Identifiable, Codable, Equatable, Sendable {
         self.isPinned = isPinned
         self.sourceBundleIdentifier = sourceBundleIdentifier
         self.imageMetadata = payload.imageMetadata
+        self.template = template
     }
 }
 
