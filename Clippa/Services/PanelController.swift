@@ -39,12 +39,10 @@ final class AppState {
         self.pasteService = PasteService(monitor: monitor)
     }
 
-    func start() {
+    func start() async {
         refreshAccessibilityState()
-        Task {
-            await store.load()
-            monitor.start()
-        }
+        await store.load()
+        monitor.start()
         registerShowPanelShortcut()
         if !settings.hasShownAccessibilityOnboarding && !AccessibilityService.isTrusted {
             settings.hasShownAccessibilityOnboarding = true
@@ -345,6 +343,7 @@ final class AppState {
     }
 
     func quit() {
+        monitor.stop()
         Task {
             await store.flushPendingSave()
             NSApp.terminate(nil)
@@ -369,6 +368,7 @@ final class PanelController {
     }
 
     func show(appState: AppState, requiresEditableTarget: Bool = false) {
+        guard !isVisible else { return }
         let frontmostApplication = NSWorkspace.shared.frontmostApplication
         let targetApplication = frontmostApplication?.bundleIdentifier == Bundle.main.bundleIdentifier ? nil : frontmostApplication
         let focusedElement = AccessibilityService.focusedEditableTextElement(in: targetApplication)

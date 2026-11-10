@@ -124,3 +124,33 @@
 "Open Clippa from Applications, or press Command-Comma in clipboard history, to return to Settings." = "Open Clippa from Applications, or press Command-Comma in clipboard history, to return to Settings.";
 "Encrypted history could not be saved." = "Encrypted history could not be saved.";
 "The encrypted image could not be read." = "The encrypted image could not be read.";
+
+// Template editor
+"Edit your template" = "Edit your template";
+"Create a template" = "Create a template";
+"Save a reply, message, or snippet for quick reuse." = "Save a reply, message, or snippet for quick reuse.";
+"e.g. Follow-up email" = "e.g. Follow-up email";
+"Template name, required" = "Template name, required";
+"Optional" = "Optional";
+"e.g. Work" = "e.g. Work";
+"Folder, optional" = "Folder, optional";
+"Use the same folder name to group related templates." = "Use the same folder name to group related templates.";
+"1 character" = "1 character";
+"%@ characters" = "%@ characters";
+"Template text, required" = "Template text, required";
+"Use variables in braces, such as name, date, or time." = "Use variables in braces, such as name, date, or time.";
+"Write your message, reply, or snippet…" = "Write your message, reply, or snippet…";
+"Personalize with {name}, {date}, or {time}." = "Personalize with {name}, {date}, or {time}.";
+"Variable guide" = "Variable guide";
+"Personalize your text" = "Personalize your text";
+"Put a variable in braces wherever the text should change." = "Put a variable in braces wherever the text should change.";
+"Fill in when pasting" = "Fill in when pasting";
+"Clippa asks for a value each time you use the template." = "Clippa asks for a value each time you use the template.";
+"Filled automatically" = "Filled automatically";
+"The current date and time are added when you use the template." = "The current date and time are added when you use the template.";
+"Names in other languages work too, including {ім’я} and {дата}." = "Names in other languages work too, including {ім’я} and {дата}.";
+"Done" = "Done";
+"Name and text are required." = "Name and text are required.";
+"Save Changes" = "Save Changes";
+"Create Template" = "Create Template";
+"Save template (⌘S)" = "Save template (⌘S)";

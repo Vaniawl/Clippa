@@ -124,3 +124,33 @@
 "Open Clippa from Applications, or press Command-Comma in clipboard history, to return to Settings." = "Щоб повернутися до налаштувань, відкрийте Clippa з папки «Програми» або натисніть Command-кома в історії буфера.";
 "Encrypted history could not be saved." = "Не вдалося зберегти зашифровану історію.";
 "The encrypted image could not be read." = "Не вдалося прочитати зашифроване зображення.";
+
+// Template editor
+"Edit your template" = "Редагувати шаблон";
+"Create a template" = "Створити шаблон";
+"Save a reply, message, or snippet for quick reuse." = "Збережіть відповідь, повідомлення або фрагмент для повторного використання.";
+"e.g. Follow-up email" = "Напр. «Лист після зустрічі»";
+"Template name, required" = "Назва шаблону, обов’язкове поле";
+"Optional" = "Необов’язково";
+"e.g. Work" = "Напр. «Робота»";
+"Folder, optional" = "Папка, необов’язкове поле";
+"Use the same folder name to group related templates." = "Використовуйте однакову назву папки, щоб групувати пов’язані шаблони.";
+"1 character" = "1 символ";
+"%@ characters" = "Кількість символів: %@";
+"Template text, required" = "Текст шаблону, обов’язкове поле";
+"Use variables in braces, such as name, date, or time." = "Використовуйте змінні у фігурних дужках, наприклад {ім’я}, {дата} або {час}.";
+"Write your message, reply, or snippet…" = "Напишіть повідомлення, відповідь або фрагмент…";
+"Personalize with {name}, {date}, or {time}." = "Додайте {ім’я}, {дата} або {час}.";
+"Variable guide" = "Довідка про змінні";
+"Personalize your text" = "Налаштуйте текст під себе";
+"Put a variable in braces wherever the text should change." = "Вставте змінну у фігурних дужках там, де текст має змінюватися.";
+"Fill in when pasting" = "Заповнюється під час вставлення";
+"Clippa asks for a value each time you use the template." = "Clippa запитує значення щоразу, коли ви використовуєте шаблон.";
+"Filled automatically" = "Заповнюється автоматично";
+"The current date and time are added when you use the template." = "Під час використання шаблону додаються поточні дата й час.";
+"Names in other languages work too, including {ім’я} and {дата}." = "Працюють також англійські назви змінних, наприклад {name} і {date}.";
+"Done" = "Готово";
+"Name and text are required." = "Потрібно вказати назву й текст.";
+"Save Changes" = "Зберегти зміни";
+"Create Template" = "Створити шаблон";
+"Save template (⌘S)" = "Зберегти шаблон (⌘S)";

@@ -17,6 +17,7 @@ struct ClippaApp {
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     let appState = AppState()
     private var statusItem: NSStatusItem?
+    private var isReady = false
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
@@ -24,8 +25,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
         appState.onMenuBarVisibilityChange = { [weak self] in
             self?.updateStatusItem()
         }
-        updateStatusItem()
-        appState.start()
+        Task {
+            await appState.start()
+            isReady = true
+            updateStatusItem()
+        }
     }
 
     func applicationDidBecomeActive(_ notification: Notification) {
@@ -33,6 +37,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate {
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        guard isReady else { return false }
         if appState.templateWindowController.activateIfVisible() { return false }
         appState.showSettings()
         return false

@@ -187,12 +187,14 @@ enum ClipboardPayload: Codable, Equatable, Sendable {
         switch self {
         case .text(let value):
             let text = normalizeText ? ClipboardContentCleaner.normalizedText(value) : value
+            guard let url = ClipboardContentCleaner.webURL(from: text) else {
+                return .text(text)
+            }
             if removeTrackingParameters,
-               let url = URL(string: text),
                let cleaned = ClipboardContentCleaner.removingTrackingParameters(from: url) {
                 return .url(cleaned)
             }
-            return .text(text)
+            return .url(url)
         case .url(let url):
             guard removeTrackingParameters,
                   let cleaned = ClipboardContentCleaner.removingTrackingParameters(from: url)
@@ -230,6 +232,17 @@ enum ClipboardContentCleaner {
             return url
         }
         components.queryItems = filtered.isEmpty ? nil : filtered
+        return components.url
+    }
+
+    static func webURL(from value: String) -> URL? {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard trimmed.rangeOfCharacter(from: .whitespacesAndNewlines) == nil,
+              let components = URLComponents(string: trimmed),
+              let scheme = components.scheme?.lowercased(),
+              scheme == "http" || scheme == "https",
+              let host = components.host, !host.isEmpty
+        else { return nil }
         return components.url
     }
 

@@ -42,7 +42,6 @@ struct PanelView: View {
             RoundedRectangle(cornerRadius: metrics.panelCornerRadius, style: .continuous)
                 .strokeBorder(panelStroke)
         }
-        .focusEffectDisabled()
         .accessibilityElement(children: .contain)
         .accessibilityLabel(Text("Clippa clipboard history"))
         .onAppear {
@@ -105,6 +104,7 @@ struct PanelView: View {
             TextField(String(localized: "Search clipboard"), text: $store.searchQuery)
                 .textFieldStyle(.plain)
                 .focused($isSearchFocused)
+                .focusEffectDisabled()
 
             if !store.searchQuery.isEmpty {
                 Button {
@@ -262,7 +262,7 @@ struct PanelView: View {
                     }
                     .padding(.vertical, 2)
                 }
-                .scrollIndicators(.never)
+                .scrollIndicators(.automatic)
                 .modifier(HistoryScrollEdgeFade())
                 .onChange(of: store.selectedItemID) { _, selectedID in
                     guard let selectedID else {

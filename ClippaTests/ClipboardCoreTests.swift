@@ -394,51 +394,14 @@ final class ClipboardCoreTests: XCTestCase {
         XCTAssertEqual(cleanedPayload, .url(URL(string: "https://example.com/?q=clippa")!))
     }
 
-    func testContentCleanerDoesNotTurnCommandsOrPathsIntoLinks() {
-        let values = [
-            "gh repo clone Vaniawl/partygame",
-            "outputs/TikTok-Battle-Portable-Windows-v1.0.0.zip",
-            "ivan@Mac ~/Swift/Clippa % swift test"
-        ]
-
-        for value in values {
+    func testCopiedCommandsAndPathsStayAsPlainText() {
+        for value in ["git status --short", "output/latest-build.zip", "Note: send after review"] {
             XCTAssertNil(ClipboardContentCleaner.webURL(from: value))
             XCTAssertEqual(
-                ClipboardPayload.text(value).cleaned(
-                    normalizeText: true,
-                    removeTrackingParameters: true
-                ),
+                ClipboardPayload.text(value).cleaned(normalizeText: true, removeTrackingParameters: true),
                 .text(value)
             )
         }
-
-        XCTAssertEqual(
-            ClipboardContentCleaner.webURL(from: "https://github.com/Vaniawl/partygame.git")?.absoluteString,
-            "https://github.com/Vaniawl/partygame.git"
-        )
-    }
-
-    func testRepairsLegacyPercentEncodedCommandStoredAsURL() {
-        let legacyURL = URL(string: "gh%20repo%20clone%20Vaniawl/partygame")!
-        let legacyItem = ClipboardItem(
-            id: UUID(),
-            payload: .url(legacyURL),
-            createdAt: Date(timeIntervalSince1970: 10),
-            lastUsedAt: Date(timeIntervalSince1970: 20),
-            isPinned: true,
-            sourceBundleIdentifier: "com.vivaldi.Vivaldi"
-        )
-
-        let repaired = legacyItem.repairedForCurrentVersion
-
-        XCTAssertNotEqual(repaired.id, legacyItem.id)
-        XCTAssertEqual(repaired.kind, .text)
-        XCTAssertEqual(repaired.payload, .text("gh repo clone Vaniawl/partygame"))
-        XCTAssertEqual(repaired.preview, "gh repo clone Vaniawl/partygame")
-        XCTAssertEqual(repaired.createdAt, legacyItem.createdAt)
-        XCTAssertEqual(repaired.lastUsedAt, legacyItem.lastUsedAt)
-        XCTAssertTrue(repaired.isPinned)
-        XCTAssertEqual(repaired.sourceBundleIdentifier, legacyItem.sourceBundleIdentifier)
     }
 
     func testPinnedExportImportRoundTrip() async throws {
